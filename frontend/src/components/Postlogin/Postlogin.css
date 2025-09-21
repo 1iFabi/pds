@@ -1,27 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-
-/* =================================
-   Base y Estilos Globales
-   ================================= */
-html {
-  font-size: 85.5%;
-  -webkit-text-size-adjust: 100%;
-  text-size-adjust: 100%;
-}
-
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-body {
-  font-family: 'Inter', sans-serif;
-  background-color: #f5f6fa;
-  overflow: auto; /* Cambiado para permitir scroll global */
-}
-
-
 /* =================================
    Layout Principal
    ================================= */
