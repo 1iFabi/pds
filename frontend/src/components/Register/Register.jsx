@@ -1,6 +1,7 @@
 // components/Register/Register.jsx
 import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { API_ENDPOINTS, apiRequest } from "../../config/api.js";
 import "./Register.css";
 // Reutilizamos los estilos del Login para el layout 50/50 y los inputs
 import "../Login/Login.css";
@@ -56,7 +57,11 @@ const Register = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [registrationError, setRegistrationError] = useState('');
+  const [registrationSuccess, setRegistrationSuccess] = useState(false);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (!isPasswordValid) {
@@ -69,8 +74,42 @@ const Register = () => {
       return;
     }
     
-    console.log("Datos del formulario:", formData);
-    // TODO: lógica real de registro
+    if (!formData.terminos) {
+      alert('Debes aceptar los términos y condiciones');
+      return;
+    }
+    
+    setIsLoading(true);
+    setRegistrationError('');
+    
+    try {
+      const result = await apiRequest(API_ENDPOINTS.REGISTER, {
+        method: 'POST',
+        body: JSON.stringify({
+          nombre: formData.nombre,
+          correo: formData.correo,
+          telefono: formData.telefono,
+          contraseña: formData.contraseña,
+          repetirContraseña: formData.repetirContraseña,
+          terminos: formData.terminos
+        }),
+      });
+      
+      if (result.ok && result.data.success) {
+        setRegistrationSuccess(true);
+        alert('Registro exitoso. Ahora puedes iniciar sesión.');
+        // Redirigir al login después de un registro exitoso
+        setTimeout(() => {
+          navigate('/login');
+        }, 1500);
+      } else {
+        setRegistrationError(result.data.error || 'Error en el registro');
+      }
+    } catch (error) {
+      console.error('Error de conexión:', error);
+      setRegistrationError('Error de conexión con el servidor. Verifica que el backend esté ejecutándose.');
+    }
+      setIsLoading(false);
   };
 
   const handleLoginClick = (e) => {
@@ -111,7 +150,7 @@ const Register = () => {
     }
   }, [showPasswordValidation]);
 
-  return (
+return (
     <div className={`auth register-layout mirror ${isTransitioning ? "page-exit" : "page-enter"}`}>
       {/* Lado izquierdo (idéntico layout al login) */}
       <section className="auth-left register-left">
@@ -309,12 +348,42 @@ const Register = () => {
               <span>Acepto los términos y condiciones</span>
             </label>
 
+            {/* Mostrar errores de registro */}
+            {registrationError && (
+              <div className="registration-error" style={{
+                color: '#dc3545',
+                backgroundColor: '#f8d7da',
+                border: '1px solid #f5c6cb',
+                borderRadius: '4px',
+                padding: '10px',
+                marginBottom: '15px',
+                fontSize: '14px'
+              }}>
+                {registrationError}
+              </div>
+            )}
+            
+            {/* Mostrar mensaje de éxito */}
+            {registrationSuccess && (
+              <div className="registration-success" style={{
+                color: '#155724',
+                backgroundColor: '#d4edda',
+                border: '1px solid #c3e6cb',
+                borderRadius: '4px',
+                padding: '10px',
+                marginBottom: '15px',
+                fontSize: '14px'
+              }}>
+                ¡Registro exitoso! Redirigiendo al login...
+              </div>
+            )}
+
             <button 
               type="submit" 
-              className={`login-button ${(!isPasswordValid || !passwordsMatch) ? 'button-disabled' : ''}`}
-              disabled={!isPasswordValid || !passwordsMatch}
+              className={`login-button ${(!isPasswordValid || !passwordsMatch || isLoading) ? 'button-disabled' : ''}`}
+              disabled={!isPasswordValid || !passwordsMatch || isLoading}
             >
-              Registrarse
+              {isLoading ? 'Registrando...' : 'Registrarse'}
             </button>
 
             <p className="login-help">
