@@ -157,6 +157,46 @@
   color:#0d5e8c;
 }
 
+/* ========== TEMA BRAND (azul #277EAF) ========== */
+.navbar--brand{
+  --nav-fg:#ffffff;
+  --nav-bg:#277EAF;
+
+  color:var(--nav-fg);
+  background: var(--nav-bg);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+
+  border-bottom: 1px solid rgba(0,0,0,.06);
+  box-shadow: 0 8px 20px rgba(0,0,0,.18) inset;
+}
+
+/* links en brand */
+.navbar--brand .nav-left a:not(.login-btn),
+.navbar--brand .nav-right a:not(.login-btn){
+  color:#ffffff;
+  opacity: var(--nav-link-opacity);
+}
+.navbar--brand .nav-left a:not(.login-btn):hover,
+.navbar--brand .nav-right a:not(.login-btn):hover{
+  opacity: var(--nav-link-opacity-hover);
+}
+
+/* botón en brand */
+.navbar--brand .login-btn{
+  color:#fff;
+  border-color: rgba(255,255,255,.9);
+  background: transparent;
+}
+.navbar--brand .login-btn:hover{
+  background: rgba(255,255,255,.14);
+  border-color:#fff;
+  color:#fff;
+}
+
+/* responsive hereda de los existentes */
+
+
 /* responsive */
 @media (max-width:900px){
   .navbar{column-gap:28px; padding:16px 14px;}

@@ -4,6 +4,7 @@ import { Routes, Route, useLocation } from "react-router-dom";
 import Navbar from "./components/Navbar/Navbar";
 import Hero from "./components/Hero/Hero";
 import Descubre from "./components/Descubre/Descubre";
+import Conoce from "./components/Conoce/Conoce";
 import Login from "./components/Login/Login";
 import Register from "./components/Register/Register";
 import Postlogin from "./components/Postlogin/Postlogin";
@@ -82,6 +83,7 @@ export default function App() {
             <>
               <Hero />
               <Descubre />
+              <Conoce />
             </>
           }
         />
