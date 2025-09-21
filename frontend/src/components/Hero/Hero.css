@@ -5,7 +5,7 @@
   grid-template-rows: 1fr auto;
   color: #fff;
   font-family: 'Inter', sans-serif;
-  overflow: hidden;
+  overflow: auto; /* Restored scroll functionality */
   grid-template-columns: 20px 60px 1fr minmax(200px,420px) 80px;
   padding-inline: var(--page-padding);
 }

@@ -1,81 +1,151 @@
-import { useState } from "react";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./Login.css";
+import logo from "/public/cNormal.png";
+import cromo from "/public/login.png";
 
 export default function Login() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [showPwd, setShowPwd] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const navigate = useNavigate();
 
-  const onChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const onChange = (e) =>
+    setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
-      // TODO: reemplaza por tu backend real (Django u otro)
-      // const res = await fetch("/api/login", { method:"POST", headers:{'Content-Type':'application/json'}, body: JSON.stringify(form) });
-      // if (!res.ok) throw new Error("Credenciales inválidas");
-      await new Promise(r => setTimeout(r, 700)); // demo
-      alert("Login OK (demo)");
-      // navigate("/") si quieres redirigir
+      // TODO: reemplaza por tu backend real
+      await new Promise((r) => setTimeout(r, 700));
+      navigate("/postlogin");
     } catch (err) {
-      alert(err.message || "Error al iniciar sesión");
+      alert(err?.message || "Error al iniciar sesión");
     } finally {
       setLoading(false);
     }
   };
 
+  const handleRegisterClick = (e) => {
+    e.preventDefault();
+    setIsTransitioning(true);
+    
+    // Esperar a que termine la animación de salida
+    setTimeout(() => {
+      navigate('/register');
+    }, 150); // ← Reducido de 300ms a 150ms
+  };
+
   return (
-    <section className="login" data-nav-theme="light">
-      <div className="login-card">
-        <h1>Inicia Sesión</h1>
-        <p className="login-sub">Accede a tus reportes genéticos</p>
+    <div className={`auth ${isTransitioning ? 'page-exit' : 'page-enter'}`}>
+      {/* Columna izquierda */}
+      <section className="auth-left">
+        <div className="left-inner">
+          <div className="logo-container">
+            <a href="/">
+              <img src={logo} alt="Logo cNormal" className="welcome-logo" draggable="false" />
+            </a>
+          </div>
+          <h1 className="title">¡Bienvenido!</h1>
+          <p className="subtitle">Ingresa tu correo y contraseña para acceder a tu cuenta.</p>
+          <div className="title-underline" />
 
-        <form onSubmit={handleSubmit} className="login-form">
-          <label>
-            <span>Correo</span>
-            <input
-              type="email"
-              name="email"
-              placeholder="tucorreo@dominio.com"
-              value={form.email}
-              onChange={onChange}
-              required
-            />
-          </label>
-
-          <label className="pwd-field">
-            <span>Contraseña</span>
-            <div className="pwd-wrap">
+          <form onSubmit={handleSubmit} className="login-form login-card">
+            {/* Email */}
+            <div className="uv-field">
+              <span className="uv-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="20" height="20">
+                  <path
+                    d="M20 8l-8 5-8-5V6l8 5 8-5v2zm0 3v7H4v-7l8 5 8-5z"
+                    fill="currentColor"
+                  />
+                </svg>
+              </span>
               <input
+                className="uv-input"
+                type="email"
+                name="email"
+                value={form.email}
+                onChange={onChange}
+                autoComplete="username"
+                placeholder=" "
+                required
+              />
+              <label className="uv-label">Correo</label>
+              <span className="uv-focus-bg" />
+            </div>
+
+            {/* Password */}
+            <div className="uv-field">
+              <span className="uv-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="20" height="20">
+                  <path
+                    d="M17 10h-1V7a4 4 0 10-8 0v3H7a2 2 0 00-2 2v7a2 2 0 002 2h10a2 2 0 002-2v-7a2 2 0 00-2-2zm-6 0V7a3 3 0 016 0v3h-6z"
+                    fill="currentColor"
+                  />
+                </svg>
+              </span>
+              <input
+                className="uv-input"
                 type={showPwd ? "text" : "password"}
                 name="password"
-                placeholder="••••••••"
                 value={form.password}
                 onChange={onChange}
+                autoComplete="current-password"
+                placeholder=" "
                 required
-                minLength={6}
               />
+              <label className="uv-label">Contraseña</label>
+              <span className="uv-focus-bg" />
               <button
                 type="button"
                 className="pwd-toggle"
-                onClick={() => setShowPwd(s => !s)}
-                aria-label="Mostrar/ocultar contraseña"
+                onClick={() => setShowPwd((s) => !s)}
+                aria-label={showPwd ? "Ocultar contraseña" : "Mostrar contraseña"}
               >
-                {showPwd ? "Ocultar" : "Mostrar"}
+                {showPwd ? (
+                  <svg viewBox="0 0 24 24" width="18" height="18">
+                    <path
+                      d="M12 5c-5 0-9 4.5-10 7 1 2.5 5 7 10 7s9-4.5 10-7c-1-2.5-5-7-10-7zm0 11a4 4 0 110-8 4 4 0 010 8z"
+                      fill="currentColor"
+                    />
+                    <path d="M4 4l16 16" stroke="currentColor" strokeWidth="2" />
+                  </svg>
+                ) : (
+                  <svg viewBox="0 0 24 24" width="18" height="18">
+                    <path
+                      d="M12 5c-5 0-9 4.5-10 7 1 2.5 5 7 10 7s9-4.5 10-7c-1-2.5-5-7-10-7zm0 11a4 4 0 110-8 4 4 0 010 8z"
+                      fill="currentColor"
+                    />
+                  </svg>
+                )}
               </button>
             </div>
-          </label>
 
-          <button className="login-btn" type="submit" disabled={loading}>
-            {loading ? "Entrando..." : "Iniciar sesión"}
-          </button>
+            <button className="login-button" type="submit" disabled={loading}>
+              {loading ? "Ingresando..." : "Ingresa tu cuenta"}
+            </button>
 
-          <div className="login-help">
-            <a href="#">¿Olvidaste tu contraseña?</a>
-          </div>
-        </form>
-      </div>
-    </section>
+            <p className="login-help">
+              ¿No tienes cuenta?{" "}
+              <a className="login-link" href="#" onClick={handleRegisterClick}>
+                Regístrate
+              </a>
+            </p>
+
+            <a href="#" className="login-link subtle">
+              ¿No te llegó el correo?
+            </a>
+          </form>
+        </div>
+      </section>
+
+      {/* Columna derecha (imagen) */}
+      <section className="auth-right">
+        <img src={cromo} alt="imagen de cromosomas" />
+      </section>
+    </div>
   );
 }

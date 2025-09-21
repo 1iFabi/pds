@@ -5,18 +5,18 @@ import Navbar from "./components/Navbar/Navbar";
 import Hero from "./components/Hero/Hero";
 import Descubre from "./components/Descubre/Descubre";
 import Login from "./components/Login/Login";
+import Register from "./components/Register/Register";
+import Postlogin from "./components/Postlogin/Postlogin";
 
 export default function App() {
   const [navTheme, setNavTheme] = useState("dark");
   const location = useLocation();
 
   useEffect(() => {
-    // Si NO estamos en la home, fija el tema (por ejemplo light en /login)
     if (location.pathname !== "/") {
       setNavTheme("light");
-      return; // evita enganchar el scroll observer fuera de la home
+      return;
     }
-
     const NAV_H = parseInt(
       getComputedStyle(document.documentElement)
         .getPropertyValue("--nav-h")
@@ -25,9 +25,8 @@ export default function App() {
     );
 
     let ticking = false;
-
     const pickTheme = () => {
-      const y = NAV_H + 1; // línea justo debajo de la navbar
+      const y = NAV_H + 1;
       const sections = document.querySelectorAll("[data-nav-theme]");
       let foundTheme = null;
 
@@ -68,9 +67,14 @@ export default function App() {
     };
   }, [location.pathname, navTheme]);
 
+  // Función para determinar si mostrar la Navbar
+  const shouldShowNavbar = () => {
+    return location.pathname !== "/postlogin" && location.pathname !== "/register"; // Oculta navbar en postlogin y register
+  };
+
   return (
     <>
-      <Navbar theme={navTheme} />
+      {shouldShowNavbar() && <Navbar theme={navTheme} />}
       <Routes>
         <Route
           path="/"
@@ -82,6 +86,8 @@ export default function App() {
           }
         />
         <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/postlogin" element={<Postlogin />} />
       </Routes>
     </>
   );

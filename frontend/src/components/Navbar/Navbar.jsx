@@ -1,6 +1,6 @@
 // src/components/Navbar/Navbar.jsx
 import "./Navbar.css";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { HashLink } from "react-router-hash-link";
 
 const base = import.meta.env.BASE_URL;
@@ -9,6 +9,11 @@ const Navbar = ({ theme = "dark" }) => {
   const isLight = theme === "light";
   // tus logos están en public/  →  public/cNormal.png, public/cSolido.png
   const logoSrc = theme === "light" ? `${base}cNormal.png` : `${base}cSolido.png`;
+
+  const location = useLocation();
+  const isLoginPage = location.pathname === "/login";
+
+  if (isLoginPage) return null; // Ocultar el navbar en la página de login
 
   return (
     <nav className={`navbar navbar--${theme}`} aria-label="Principal">
