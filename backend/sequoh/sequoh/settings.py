@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -23,9 +24,48 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-isazy3kl)20lf!i%30g4xj1$s8mjz+an9pq6smoa=$!1-eqzty'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('RAILWAY_ENVIRONMENT') != 'production'
 
-ALLOWED_HOSTS = ['pds-kappa.vercel.app', 'localhost', '127.0.0.1']
+# Hosts permitidos (sin cadenas vacías)
+ALLOWED_HOSTS = [h for h in [
+    os.getenv("RAILWAY_PUBLIC_DOMAIN", ""),
+    os.getenv("APP_DOMAIN", ""),
+    "pdsgenomia.up.railway.app",
+    ".railway.app",
+    "localhost",
+    "127.0.0.1",
+] if h]
+
+# Obtener la URL de Railway dinámicamente
+RAILWAY_PUBLIC_DOMAIN = os.getenv("RAILWAY_PUBLIC_DOMAIN")
+
+# ORÍGENES DE CONFIANZA CSRF (única definición)
+CSRF_TRUSTED_ORIGINS = [
+    "https://pds-kappa.vercel.app",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "https://pdsgenomia.up.railway.app",
+]
+if RAILWAY_PUBLIC_DOMAIN:
+    CSRF_TRUSTED_ORIGINS += [
+        f"https://{RAILWAY_PUBLIC_DOMAIN}",
+        f"http://{RAILWAY_PUBLIC_DOMAIN}",
+    ]
+
+# CORS (única definición)
+CORS_ALLOWED_ORIGINS = [
+    "https://pds-kappa.vercel.app",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "https://pdsgenomia.up.railway.app",
+]
+if RAILWAY_PUBLIC_DOMAIN:
+    CORS_ALLOWED_ORIGINS += [
+        f"https://{RAILWAY_PUBLIC_DOMAIN}",
+        f"http://{RAILWAY_PUBLIC_DOMAIN}",
+    ]
 
 
 # Application definition
@@ -45,6 +85,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -76,12 +117,32 @@ WSGI_APPLICATION = 'sequoh.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+# Database configuration for Docker and production
+if 'DATABASE_URL' in os.environ:
+    if 'postgresql://' in os.environ['DATABASE_URL']:
+        import dj_database_url
+        DATABASES = {
+            'default': dj_database_url.config(
+                default=os.environ.get('DATABASE_URL'),
+                conn_max_age=600,
+                conn_health_checks=True,
+            )
+        }
+    else:
+        # For SQLite in Docker development
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': BASE_DIR / 'db.sqlite3',
+            }
+        }
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
     }
-}
 
 
 # Password validation
@@ -118,7 +179,14 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# Seguridad tras proxy (Railway/Reverse Proxy)
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+CSRF_COOKIE_SECURE = not DEBUG
+SESSION_COOKIE_SECURE = not DEBUG
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -126,16 +194,8 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # CORS configuration for development and production
-CORS_ALLOWED_ORIGINS = [
-    "https://pds-kappa.vercel.app",  # Production domain
-    "http://localhost:5173",  # Vite default port
-    "http://127.0.0.1:5173",
-    "http://localhost:3000",  # React default port
-    "http://127.0.0.1:3000",
-]
-
-# Allow all origins in development (remove in production)
-CORS_ALLOW_ALL_ORIGINS = True
+# Permitir todos los orígenes solo en desarrollo
+CORS_ALLOW_ALL_ORIGINS = DEBUG
 
 # CORS headers
 CORS_ALLOW_HEADERS = [
@@ -148,11 +208,4 @@ CORS_ALLOW_HEADERS = [
     'user-agent',
     'x-csrftoken',
     'x-requested-with',
-]
-
-# CSRF trusted origins for API endpoints
-CSRF_TRUSTED_ORIGINS = [
-    "https://pds-kappa.vercel.app",  # Production domain
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
 ]
