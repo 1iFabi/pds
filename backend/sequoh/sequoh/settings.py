@@ -30,7 +30,43 @@ ALLOWED_HOSTS = [    os.getenv("RAILWAY_PUBLIC_DOMAIN", ""),
     os.getenv("APP_DOMAIN", ""),
     ".railway.app",
     "localhost",
-    "127.0.0.1",]  # Railway will add its domain automatically
+    "127.0.0.1",
+    "pdsgenomia.up.railway.app",]  # Railway will add its domain automatically
+
+# Obtener la URL de Railway dinámicamente
+RAILWAY_PUBLIC_DOMAIN = os.getenv("RAILWAY_PUBLIC_DOMAIN")
+
+# CSRF trusted origins para API endpoints
+CSRF_TRUSTED_ORIGINS = [
+    "https://pds-kappa.vercel.app",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "https://pdsgenomia.up.railway.app",  # Tu URL de Railway
+]
+
+# Agregar Railway domain si existe (por si cambia la URL)
+if RAILWAY_PUBLIC_DOMAIN:
+    CSRF_TRUSTED_ORIGINS.extend([
+        f"https://{RAILWAY_PUBLIC_DOMAIN}",
+        f"http://{RAILWAY_PUBLIC_DOMAIN}",
+    ])
+
+# También agregar a CORS_ALLOWED_ORIGINS
+CORS_ALLOWED_ORIGINS = [
+    "https://pds-kappa.vercel.app",  # Production frontend
+    "http://localhost:5173",        # Local development
+    "http://127.0.0.1:5173",
+    "http://localhost:3000", 
+    "http://127.0.0.1:3000",
+    "https://pdsgenomia.up.railway.app",  # Tu URL de Railway
+]
+
+# Agregar Railway domain a CORS también
+if RAILWAY_PUBLIC_DOMAIN:
+    CORS_ALLOWED_ORIGINS.extend([
+        f"https://{RAILWAY_PUBLIC_DOMAIN}",
+        f"http://{RAILWAY_PUBLIC_DOMAIN}",
+    ])
 
 
 # Application definition
