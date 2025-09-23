@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -23,50 +24,48 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-isazy3kl)20lf!i%30g4xj1$s8mjz+an9pq6smoa=$!1-eqzty'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-import os
 DEBUG = os.environ.get('RAILWAY_ENVIRONMENT') != 'production'
 
-ALLOWED_HOSTS = [    os.getenv("RAILWAY_PUBLIC_DOMAIN", ""),
+# Hosts permitidos (sin cadenas vacías)
+ALLOWED_HOSTS = [h for h in [
+    os.getenv("RAILWAY_PUBLIC_DOMAIN", ""),
     os.getenv("APP_DOMAIN", ""),
+    "pdsgenomia.up.railway.app",
     ".railway.app",
     "localhost",
     "127.0.0.1",
-    "pdsgenomia.up.railway.app",]  # Railway will add its domain automatically
+] if h]
 
 # Obtener la URL de Railway dinámicamente
 RAILWAY_PUBLIC_DOMAIN = os.getenv("RAILWAY_PUBLIC_DOMAIN")
 
-# CSRF trusted origins para API endpoints
+# ORÍGENES DE CONFIANZA CSRF (única definición)
 CSRF_TRUSTED_ORIGINS = [
     "https://pds-kappa.vercel.app",
     "http://localhost:5173",
     "http://127.0.0.1:5173",
-    "https://pdsgenomia.up.railway.app",  # Tu URL de Railway
+    "https://pdsgenomia.up.railway.app",
 ]
-
-# Agregar Railway domain si existe (por si cambia la URL)
 if RAILWAY_PUBLIC_DOMAIN:
-    CSRF_TRUSTED_ORIGINS.extend([
+    CSRF_TRUSTED_ORIGINS += [
         f"https://{RAILWAY_PUBLIC_DOMAIN}",
         f"http://{RAILWAY_PUBLIC_DOMAIN}",
-    ])
+    ]
 
-# También agregar a CORS_ALLOWED_ORIGINS
+# CORS (única definición)
 CORS_ALLOWED_ORIGINS = [
-    "https://pds-kappa.vercel.app",  # Production frontend
-    "http://localhost:5173",        # Local development
+    "https://pds-kappa.vercel.app",
+    "http://localhost:5173",
     "http://127.0.0.1:5173",
-    "http://localhost:3000", 
+    "http://localhost:3000",
     "http://127.0.0.1:3000",
-    "https://pdsgenomia.up.railway.app",  # Tu URL de Railway
+    "https://pdsgenomia.up.railway.app",
 ]
-
-# Agregar Railway domain a CORS también
 if RAILWAY_PUBLIC_DOMAIN:
-    CORS_ALLOWED_ORIGINS.extend([
+    CORS_ALLOWED_ORIGINS += [
         f"https://{RAILWAY_PUBLIC_DOMAIN}",
         f"http://{RAILWAY_PUBLIC_DOMAIN}",
-    ])
+    ]
 
 
 # Application definition
@@ -184,22 +183,19 @@ STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
+# Seguridad tras proxy (Railway/Reverse Proxy)
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+CSRF_COOKIE_SECURE = not DEBUG
+SESSION_COOKIE_SECURE = not DEBUG
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # CORS configuration for development and production
-CORS_ALLOWED_ORIGINS = [
-    "https://pds-kappa.vercel.app",  # Production frontend
-    "http://localhost:5173",        # Local development
-    "http://127.0.0.1:5173",
-    "http://localhost:3000", 
-    "http://127.0.0.1:3000",
-]
-
-# Allow all origins in development (remove in production)
-CORS_ALLOW_ALL_ORIGINS = True
+# Permitir todos los orígenes solo en desarrollo
+CORS_ALLOW_ALL_ORIGINS = DEBUG
 
 # CORS headers
 CORS_ALLOW_HEADERS = [
@@ -212,11 +208,4 @@ CORS_ALLOW_HEADERS = [
     'user-agent',
     'x-csrftoken',
     'x-requested-with',
-]
-
-# CSRF trusted origins for API endpoints
-CSRF_TRUSTED_ORIGINS = [
-    "https://pds-kappa.vercel.app",
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
 ]
