@@ -16,8 +16,15 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.http import JsonResponse
+
+
+def index(request):
+    return JsonResponse({"status": "ok", "app": "sequoh", "admin": "/admin/", "auth": "/api/auth/"})
+
 
 urlpatterns = [
+    path('', index, name='index'),
     path('admin/', admin.site.urls),
     # Esta línea incluye las URLs de tu aplicación de autenticación
     path('api/auth/', include('autenticacion.urls')),
