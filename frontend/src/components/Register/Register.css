@@ -1,0 +1,1176 @@
+/* ========================================= */
+/* ERROR DE CONTRASEÑA NO COINCIDENTE */
+/* ========================================= *//* Tablets *//* Register.css */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+.register-container {
+  min-height: 100vh;
+  display: flex;
+  position: relative;
+  font-family: 'Inter', sans-serif;
+}
+
+.register-background {
+  flex: 1;
+  background: linear-gradient(135deg, 
+    #4A90E2 0%, 
+    #7B68EE 25%, 
+    #DA70D6 50%, 
+    #FF69B4 75%, 
+    #4A90E2 100%);
+  position: relative;
+  /* Cambiado overflow para evitar interferencias */
+  overflow: visible;
+}
+
+.dna-pattern {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.1) 2px, transparent 2px),
+    radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.1) 2px, transparent 2px),
+    radial-gradient(circle at 40% 40%, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+  background-size: 100px 100px, 150px 150px, 80px 80px;
+  animation: float 20s ease-in-out infinite;
+}
+
+.dna-pattern::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: url("data:image/svg+xml,%3Csvg width='200' height='200' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M50 100 Q 75 50, 100 100 T 150 100' stroke='rgba(255,255,255,0.1)' stroke-width='2' fill='none'/%3E%3Cpath d='M50 120 Q 75 70, 100 120 T 150 120' stroke='rgba(255,255,255,0.1)' stroke-width='2' fill='none'/%3E%3C/svg%3E") repeat;
+  opacity: 0.3;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  33% { transform: translateY(-20px) rotate(2deg); }
+  66% { transform: translateY(10px) rotate(-1deg); }
+}
+
+.register-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.95) 100%);
+  padding: 2rem;
+}
+
+.register-form-container {
+  background: white;
+  padding: 3rem;
+  border-radius: 20px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  width: 100%;
+  max-width: 420px;
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.logo-section {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+/* Estilos para la imagen del logo */
+.logo-image {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+  margin-bottom: 1rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(74, 144, 226, 0.2);
+}
+
+.logo {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #4A90E2;
+}
+
+.dna-icon {
+  position: relative;
+  width: 32px;
+  height: 32px;
+}
+
+.dna-strand {
+  position: absolute;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, #4A90E2, #7B68EE);
+  border-radius: 1px;
+}
+
+.dna-strand:nth-child(1) {
+  top: 8px;
+  transform: rotate(15deg);
+}
+
+.dna-strand:nth-child(2) {
+  top: 20px;
+  transform: rotate(-15deg);
+}
+
+.form-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.form-header h1 {
+  font-size: 2rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 0.5rem 0;
+}
+
+.form-header p {
+  color: #64748b;
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.register-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.input-group label {
+  font-weight: 500;
+  color: #374151;
+  font-size: 0.9rem;
+}
+
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon {
+  position: absolute;
+  left: 1rem;
+  width: 20px;
+  height: 20px;
+  color: #9ca3af;
+  z-index: 1;
+}
+
+.input-wrapper input {
+  width: 100%;
+  padding: 0.875rem 1rem 0.875rem 3rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  background: #f9fafb;
+  box-sizing: border-box;
+}
+
+.input-wrapper input:focus {
+  outline: none;
+  border-color: #4A90E2;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+}
+
+.input-wrapper input::placeholder {
+  color: #9ca3af;
+}
+
+.checkbox-group {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin: 0.5rem 0;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #4b5563;
+  line-height: 1.4;
+}
+
+.checkbox-label input[type="checkbox"] {
+  display: none;
+}
+
+.checkmark {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #d1d5db;
+  border-radius: 4px;
+  background: white;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.checkbox-label input[type="checkbox"]:checked + .checkmark {
+  background: #4A90E2;
+  border-color: #4A90E2;
+}
+
+.checkbox-label input[type="checkbox"]:checked + .checkmark::after {
+  content: '✓';
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.register-button {
+  background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%);
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(74, 144, 226, 0.4);
+  margin-top: 1rem;
+}
+
+.register-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(74, 144, 226, 0.5);
+  background: linear-gradient(135deg, #357ABD 0%, #2563EB 100%);
+}
+
+.register-button:active {
+  transform: translateY(0);
+}
+
+.login-link {
+  text-align: center;
+  margin-top: 1.5rem;
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+.login-link a {
+  color: #4A90E2;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.login-link a:hover {
+  text-decoration: underline;
+}
+
+/* ========================================= */
+/* VALIDADOR DE CONTRASEÑA - NUEVOS ESTILOS */
+/* ========================================= */
+
+.password-field-container {
+  position: relative;
+}
+
+.password-validator {
+  position: absolute;
+  top: 0;
+  left: calc(100% + 15px); /* Reducido de 20px */
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 0.875rem; /* Reducido de 1rem */
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  z-index: 10;
+  min-width: 240px; /* Reducido de 280px */
+  max-width: 280px; /* Reducido de 320px */
+  animation: slideInRight 0.3s ease;
+}
+
+.validator-header {
+  margin-bottom: 0.75rem;
+  border-bottom: 1px solid #f3f4f6;
+  padding-bottom: 0.5rem;
+}
+
+.validator-title {
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.9rem;
+}
+
+.validator-rules {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.validator-rule {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+}
+
+.validator-rule.valid {
+  color: #10b981;
+}
+
+.validator-rule.invalid {
+  color: #ef4444;
+}
+
+.validator-icon {
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+.validator-rule.valid .validator-icon {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.validator-rule.invalid .validator-icon {
+  background: #fecaca;
+  color: #dc2626;
+}
+
+.validator-text {
+  line-height: 1.2;
+}
+
+@keyframes slideInRight {
+  0% {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* ========================================= */
+/* BOTÓN PARA MOSTRAR/OCULTAR CONTRASEÑA */
+/* ========================================= */
+
+.pwd-toggle {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  z-index: 2;
+}
+
+.pwd-toggle:hover {
+  color: #4A90E2;
+  background: rgba(74, 144, 226, 0.1);
+}
+
+.pwd-toggle:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+}
+
+.pwd-toggle svg {
+  display: block;
+}
+
+.input-error {
+  border-color: #ef4444 !important;
+  background-color: #fef2f2 !important;
+}
+
+.password-error {
+  position: absolute;
+  bottom: -22px;
+  left: 0;
+  font-size: 0.8rem;
+  color: #ef4444;
+  font-weight: 500;
+}
+
+/* ========================================= */
+/* BOTÓN DESHABILITADO */
+/* ========================================= */
+
+.button-disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: #9ca3af !important;
+  box-shadow: none !important;
+}
+
+.button-disabled:hover {
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* ========================================= */
+/* LAYOUT ESPECÍFICO PARA REGISTER */
+/* ========================================= */
+
+.register-layout {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+}
+
+.register-left {
+  padding: 1rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  min-height: 100vh;
+}
+
+.register-inner {
+  max-width: 380px; /* Reducido aún más de 400px */
+  margin: 0 auto;
+  width: 100%;
+}
+
+.register-title {
+  margin-bottom: 0.5rem;
+  font-size: 1.8rem; /* Ligeramente más pequeño */
+}
+
+.register-subtitle {
+  margin-bottom: 1.8rem; /* Reducido de 2rem */
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+.register-form {
+  gap: 1rem; /* Reducido de 1.2rem */
+}
+
+.login-card {
+  padding: 1.8rem; /* Reducido para que sea más compacto */
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+}
+
+/* ========================================= */
+/* PANTALLAS GRANDES (1920x1080 y superiores) */
+/* ========================================= */
+
+@media (min-width: 1400px) {
+  .register-left {
+    padding: 2rem 3rem; /* Reducido de 4rem */
+  }
+  
+  .register-inner {
+    max-width: 420px; /* Reducido de 450px */
+  }
+  
+  .login-card {
+    padding: 2rem; /* Mantenido compacto */
+    max-width: none;
+  }
+  
+  .password-validator {
+    left: calc(100% + 18px); /* Reducido */
+    min-width: 250px; /* Reducido */
+    max-width: 290px; /* Reducido */
+    padding: 1rem;
+  }
+  
+  .validator-rule {
+    font-size: 0.85rem;
+    gap: 0.5rem;
+  }
+  
+  .validator-icon {
+    width: 16px;
+    height: 16px;
+    font-size: 12px;
+  }
+  
+  .validator-title {
+    font-size: 0.9rem;
+  }
+  
+  .register-title {
+    font-size: 2rem;
+  }
+  
+  .register-subtitle {
+    font-size: 0.95rem;
+  }
+}
+
+@media (min-width: 1600px) {
+  .register-left {
+    padding: 2rem 4rem; /* Reducido */
+  }
+  
+  .register-inner {
+    max-width: 450px; /* Reducido de 500px */
+  }
+  
+  .login-card {
+    padding: 2.2rem; /* Ligeramente más grande */
+  }
+  
+  .password-validator {
+    left: calc(100% + 20px);
+    min-width: 260px; /* Reducido */
+    max-width: 300px; /* Reducido */
+    padding: 1.1rem; /* Reducido */
+  }
+  
+  .register-title {
+    font-size: 2.1rem;
+  }
+  
+  .register-subtitle {
+    font-size: 1rem;
+  }
+}
+
+@media (min-width: 1920px) {
+  .register-left {
+    padding: 2rem 5rem; /* Reducido */
+  }
+  
+  .register-inner {
+    max-width: 480px; /* Reducido de 520px */
+  }
+  
+  .login-card {
+    padding: 2.4rem; /* Reducido */
+  }
+  
+  .password-validator {
+    left: calc(100% + 22px); /* Reducido */
+    min-width: 270px; /* Reducido */
+    max-width: 310px; /* Reducido */
+    padding: 1.2rem; /* Reducido */
+  }
+  
+  .validator-rule {
+    font-size: 0.88rem; /* Ligeramente más pequeño */
+    gap: 0.55rem;
+  }
+  
+  .validator-icon {
+    width: 17px; /* Ligeramente más pequeño */
+    height: 17px;
+    font-size: 12px;
+  }
+  
+  .validator-title {
+    font-size: 0.95rem; /* Reducido */
+    margin-bottom: 0.7rem; /* Reducido */
+  }
+  
+  .register-title {
+    font-size: 2.2rem; /* Reducido */
+  }
+  
+  .register-subtitle {
+    font-size: 1.05rem; /* Ligeramente más pequeño */
+  }
+}
+
+/* ========================================= */
+/* AJUSTES ESPECÍFICOS PARA PANTALLAS ULTRA ANCHAS */
+/* ========================================= */
+
+@media (min-width: 2560px) {
+  .register-left {
+    padding: 4rem 12rem;
+  }
+  
+  .register-inner {
+    max-width: 800px;
+  }
+  
+  .login-card {
+    padding: 4rem;
+  }
+  
+  .password-validator {
+    left: calc(100% + 40px);
+    min-width: 400px;
+    max-width: 450px;
+    padding: 2rem;
+  }
+}
+
+/* ========================================= */
+/* RESPONSIVE DESIGN MEJORADO */
+/* ========================================= */
+
+/* ========================================= */
+/* RESPONSIVE DESIGN MEJORADO */
+/* ========================================= */
+
+/* Pantallas medianas-grandes */
+@media (min-width: 1200px) and (max-width: 1399px) {
+  .password-validator {
+    left: calc(100% + 15px);
+    min-width: 260px;
+    max-width: 300px;
+  }
+}
+
+@media (max-width: 1200px) {
+  .password-validator {
+    left: calc(100% + 10px);
+    min-width: 220px;
+  }
+}
+
+/* ========================================= */
+/* MEJORAS PARA EL FORMULARIO EN PANTALLAS GRANDES */
+/* ========================================= */
+
+@media (min-width: 1400px) {
+  .register-form {
+    gap: 1.2rem; /* Ligeramente más compacto */
+  }
+  
+  .uv-input {
+    padding: 0.85rem 3rem 0.85rem 3rem; /* Más compacto */
+    font-size: 0.95rem; /* Más pequeño */
+  }
+  
+  .uv-icon {
+    left: 1rem;
+    width: 19px; /* Ligeramente más pequeño */
+    height: 19px;
+  }
+  
+  .uv-label {
+    font-size: 0.9rem; /* Más pequeño */
+  }
+  
+  .login-button {
+    padding: 0.9rem 1.8rem; /* Más compacto */
+    font-size: 0.95rem;
+  }
+  
+  .checkbox-line {
+    font-size: 0.9rem;
+  }
+  
+  .checkbox-line input[type="checkbox"] {
+    width: 17px;
+    height: 17px;
+  }
+}
+
+@media (min-width: 1920px) {
+  .register-form {
+    gap: 1.3rem; /* Más compacto */
+  }
+  
+  .uv-input {
+    padding: 0.9rem 3.2rem 0.9rem 3.2rem; /* Ajustado */
+    font-size: 1rem; /* Reducido */
+  }
+  
+  .uv-icon {
+    left: 1.1rem;
+    width: 20px; /* Reducido */
+    height: 20px;
+  }
+  
+  .uv-label {
+    font-size: 0.95rem; /* Reducido */
+  }
+  
+  .login-button {
+    padding: 1rem 2.2rem; /* Más compacto */
+    font-size: 1rem; /* Reducido */
+  }
+  
+  .checkbox-line {
+    font-size: 0.95rem; /* Reducido */
+  }
+  
+  .checkbox-line input[type="checkbox"] {
+    width: 18px; /* Reducido */
+    height: 18px;
+  }
+}
+@media (max-width: 1024px) {
+  .register-container {
+    flex-direction: column;
+  }
+  
+  .register-background {
+    min-height: 40vh;
+  }
+  
+  .register-content {
+    min-height: 60vh;
+  }
+
+  /* Layout específico para register con auth */
+  .register-layout {
+    flex-direction: column;
+  }
+  
+  .register-left {
+    order: 2;
+    padding: 2rem 1.5rem;
+  }
+  
+  .register-right {
+    order: 1;
+    min-height: 40vh;
+  }
+  
+  .register-right img {
+    object-position: center top;
+  }
+  
+  /* Reposicionar validador en tablets */
+  .password-validator {
+    position: static;
+    margin-top: 0.5rem;
+    margin-left: 0;
+    min-width: auto;
+    width: 100%;
+  }
+}
+
+/* Móviles grandes */
+@media (max-width: 768px) {
+  .register-content {
+    padding: 1rem;
+  }
+  
+  .register-form-container {
+    padding: 2rem 1.5rem;
+  }
+
+  .register-left {
+    padding: 1.5rem 1rem;
+  }
+  
+  .register-inner {
+    max-width: none;
+  }
+  
+  .register-title {
+    font-size: 1.75rem;
+  }
+  
+  .register-subtitle {
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .form-header h1 {
+    font-size: 1.5rem;
+  }
+  
+  .input-wrapper input {
+    padding: 0.75rem 1rem 0.75rem 2.75rem;
+  }
+
+  .register-form {
+    gap: 1rem;
+  }
+  
+  .validator-title {
+    font-size: 0.85rem;
+  }
+  
+  .validator-rule {
+    font-size: 0.8rem;
+  }
+  
+  .validator-text {
+    line-height: 1.3;
+  }
+}
+
+/* Móviles pequeños */
+@media (max-width: 480px) {
+  .register-layout {
+    min-height: 100vh;
+  }
+  
+  .register-right {
+    min-height: 30vh;
+  }
+  
+  .register-left {
+    padding: 1rem 0.75rem;
+  }
+  
+  .register-title {
+    font-size: 1.5rem;
+    margin-bottom: 0.25rem;
+  }
+  
+  .register-subtitle {
+    font-size: 0.85rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .register-content {
+    padding: 1rem;
+  }
+  
+  .register-form-container {
+    padding: 2rem 1.5rem;
+  }
+
+  .login-card {
+    padding: 1.5rem;
+    border-radius: 16px;
+  }
+  
+  .password-validator {
+    padding: 0.75rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px -3px rgba(0, 0, 0, 0.1);
+  }
+  
+  .validator-rules {
+    gap: 0.4rem;
+  }
+  
+  .validator-rule {
+    font-size: 0.75rem;
+  }
+  
+  .validator-icon {
+    width: 14px;
+    height: 14px;
+    font-size: 10px;
+  }
+  
+  .checkbox-line {
+    font-size: 0.85rem;
+    gap: 0.5rem;
+  }
+  
+  .checkbox-line input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+/* Móviles muy pequeños */
+@media (max-width: 360px) {
+  .register-left {
+    padding: 0.75rem 0.5rem;
+  }
+  
+  .register-title {
+    font-size: 1.25rem;
+  }
+  
+  .register-subtitle {
+    font-size: 0.8rem;
+  }
+
+  .register-content {
+    padding: 0.75rem;
+  }
+  
+  .register-form-container {
+    padding: 1.5rem 1rem;
+  }
+
+  .login-card {
+    padding: 1.25rem 1rem;
+  }
+  
+  .password-validator {
+    padding: 0.5rem;
+    min-width: auto;
+  }
+  
+  .validator-header {
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.4rem;
+  }
+  
+  .validator-title {
+    font-size: 0.8rem;
+  }
+  
+  .validator-rules {
+    gap: 0.3rem;
+  }
+  
+  .validator-rule {
+    font-size: 0.7rem;
+    gap: 0.4rem;
+  }
+  
+  .validator-icon {
+    width: 12px;
+    height: 12px;
+    font-size: 9px;
+  }
+}
+
+/* ========================================= */
+/* LANDSCAPE MÓVIL */
+/* ========================================= */
+
+@media (max-height: 500px) and (orientation: landscape) {
+  .register-layout {
+    flex-direction: row;
+  }
+  
+  .register-right {
+    order: 2;
+    min-height: 100vh;
+    flex: 0.4;
+  }
+  
+  .register-left {
+    order: 1;
+    flex: 0.6;
+    padding: 1rem;
+  }
+  
+  .register-inner {
+    max-width: none;
+  }
+  
+  .register-title {
+    font-size: 1.25rem;
+    margin-bottom: 0.25rem;
+  }
+  
+  .register-subtitle {
+    font-size: 0.8rem;
+    margin-bottom: 1rem;
+  }
+  
+  .register-form {
+    gap: 0.75rem;
+  }
+
+  .register-content {
+    padding: 1rem;
+  }
+  
+  .register-form-container {
+    padding: 1.5rem;
+  }
+  
+  .login-card {
+    padding: 1rem;
+  }
+  
+  /* Validador compacto en landscape */
+  .password-validator {
+    position: fixed;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+    min-width: 200px;
+    z-index: 100;
+  }
+}
+
+/* ========================================= */
+/* TRANSICIONES DE PÁGINA */
+/* ========================================= */
+
+/* Animación de entrada */
+.auth.page-enter {
+  animation: pageEnter 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+/* Animación de salida */
+.auth.page-exit {
+  animation: pageExit 0.15s cubic-bezier(0.55, 0.085, 0.68, 0.53) forwards;
+}
+
+@keyframes pageEnter {
+  0% {
+    opacity: 0;
+    transform: translateX(-30px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes pageExit {
+  0% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(30px) scale(0.98);
+  }
+}
+
+/* Animaciones más suaves para dispositivos móviles */
+@media (prefers-reduced-motion: reduce) {
+  .auth.page-enter,
+  .auth.page-exit {
+    animation-duration: 0.2s;
+  }
+  
+  @keyframes pageEnter {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+  }
+  
+  @keyframes pageExit {
+    0% { opacity: 1; }
+    100% { opacity: 0; }
+  }
+
+  .password-validator {
+    animation: none;
+  }
+}
+
+/* Optimización de rendimiento */
+.auth {
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}
+
+/* Transición específica para el link de registro */
+.login-link {
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.login-link:hover {
+  transform: translateY(-1px);
+}
+
+.login-link:active {
+  transform: translateY(0);
+}
+
+/* Efecto de loading durante la transición */
+.auth.page-exit .login-form {
+  pointer-events: none;
+}
+
+.auth.page-exit .login-button {
+  opacity: 0.7;
+}
+
+/* Staggered animation para elementos del formulario */
+.auth.page-enter .uv-field {
+  animation: slideInUp 0.5s ease forwards;
+}
+
+.auth.page-enter .uv-field:nth-child(1) { animation-delay: 0.1s; }
+.auth.page-enter .uv-field:nth-child(2) { animation-delay: 0.15s; }
+.auth.page-enter .login-button { animation-delay: 0.2s; }
+.auth.page-enter .login-help { animation-delay: 0.25s; }
+
+@keyframes slideInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* components/Register/Register.css */
+
+/* Ajuste del label de subtítulo para que no haga nowrap en register */
+.subtitle {
+  white-space: normal;
+  margin: 0 0 32px 0; /* un poco más compacto que en login */
+}
+
+/* Checkbox en una sola línea, consistente con la tarjeta */
+.checkbox-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #4b5563;
+  font-size: 0.9rem;
+  user-select: none;
+}
+
+.checkbox-line input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+}
+
+/* Invierte el orden solo en Register (espejo) en desktop */
+.auth.mirror {
+  flex-direction: row-reverse;
+}
+
+/* En mobile seguimos apilando en columna como en Login.css */
+@media (max-width: 1024px) {
+  .auth.mirror {
+    flex-direction: column;
+  }
+}
+
+/* ========================================= */
+/* ANIMACIÓN DEL FONDO DE ADN */
+/* ========================================= */
+
+/* Animación del fondo de ADN durante transiciones */
+.register-container.page-enter .dna-pattern {
+  animation: dnaFadeIn 0.6s ease forwards;
+}
+
+@keyframes dnaFadeIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

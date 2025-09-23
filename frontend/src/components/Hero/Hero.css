@@ -1,0 +1,112 @@
+.hero {
+  position: relative;
+  min-height: 100vh;
+  display: grid;
+  grid-template-rows: 1fr auto;
+  color: #fff;
+  font-family: 'Inter', sans-serif;
+  overflow: auto; /* Restored scroll functionality */
+  grid-template-columns: 20px 60px 1fr minmax(200px,420px) 80px;
+  padding-inline: var(--page-padding);
+}
+
+/* ===== Video ===== */
+/* ===== A LAS FIGURITAS PONERLE UN TEXTO QUE AL HOVEARLO APAREZCA ===== */
+.hero-media { position: absolute; inset: 0; }
+.hero-video {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover; object-position: center;
+  filter: saturate(1.05) contrast(1.05);
+}
+.hero-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(180deg,
+    rgba(0,0,0,.55),
+    rgba(0,0,0,.35) 40%,
+    rgba(0,0,0,.65)
+  );
+}
+
+/* ===== Rail ===== */
+.hero-rail {
+  grid-column: 3;
+  grid-row: 1 / span 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 16px;
+  z-index: 1;
+}
+.rail-btn {
+  width: 44px; height: 44px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.25);
+  backdrop-filter: blur(4px);
+  display: grid; place-items: center;
+  cursor: pointer;
+  transition: transform .15s ease, background .2s ease;
+}
+.rail-btn:hover {
+  transform: translateY(-2px);
+  background: rgba(255,255,255,0.18);
+}
+.rail-icon { font-size: 18px; line-height: 1; }
+
+/* ===== Título abajo-izquierda ===== */
+.hero-bl {
+  grid-column: 3;
+  grid-row: 2;
+  align-self: end;
+  z-index: 1;
+  margin-bottom: clamp(70px, 6vh, 80px); 
+}
+.hero-title {
+  margin: 0;
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  font-size: clamp(28px, 6vw, 56px);
+  text-wrap: balance;
+  text-shadow: 0 2px 18px rgba(0,0,0,.25);
+}
+
+/* ===== Texto + CTA abajo-derecha ===== */
+.hero-br {
+  grid-column: 4;
+  grid-row: 2;
+  align-self: end;
+  justify-self: end;
+  max-width: 38ch;
+  display: grid;
+  gap: 12px;
+  z-index: 1;
+  margin-bottom: clamp(70px, 6vh, 80px);
+}
+
+.hero-kicker {
+  margin: 0;
+  font-size: clamp(15px, 1.4vw, 14px);
+  opacity: .9;
+}
+
+.cta {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: #fff;
+  color: #111;
+  font-weight: 600;
+  text-decoration: none;
+  transition: transform .15s ease, box-shadow .2s ease, opacity .2s ease;
+  box-shadow: 0 8px 20px rgba(0,0,0,.25);
+}
+.cta:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(0,0,0,.28);
+  opacity: .95;
+}
