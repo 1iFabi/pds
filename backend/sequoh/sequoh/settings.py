@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-isazy3kl)20lf!i%30g4xj1$s8mjz+an9pq6smoa=$!1-eqzty
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['pds-kappa.vercel.app', 'localhost', '127.0.0.1']
 
 
 # Application definition
@@ -125,8 +125,9 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# CORS configuration for development
+# CORS configuration for development and production
 CORS_ALLOWED_ORIGINS = [
+    "https://pds-kappa.vercel.app",  # Production domain
     "http://localhost:5173",  # Vite default port
     "http://127.0.0.1:5173",
     "http://localhost:3000",  # React default port
@@ -149,8 +150,9 @@ CORS_ALLOW_HEADERS = [
     'x-requested-with',
 ]
 
-# Disable CSRF for API endpoints (only for development)
+# CSRF trusted origins for API endpoints
 CSRF_TRUSTED_ORIGINS = [
+    "https://pds-kappa.vercel.app",  # Production domain
     "http://localhost:5173",
     "http://127.0.0.1:5173",
 ]
