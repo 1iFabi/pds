@@ -1,10 +1,10 @@
 // src/App.jsx
-
 import { useEffect, useState } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 import Navbar from "./components/Navbar/Navbar";
 import Hero from "./components/Hero/Hero";
 import Descubre from "./components/Descubre/Descubre";
+import Conoce from "./components/Conoce/Conoce";
 import Login from "./components/Login/Login";
 import Postlogin from "./components/Postlogin/Postlogin";
 import GenomaPricing from "./components/GenomaPricing/GenomaPricing";
@@ -87,6 +87,7 @@ export default function App() {
             <>
               <Hero />
               <Descubre />
+              <Conoce />
               <GenomaPricing />
               <SobreNosotros/>
             </>
@@ -94,8 +95,6 @@ export default function App() {
         />
         <Route path="/login" element={<Login />} />
         <Route path="/dashboard" element={<Postlogin />} />
-        <Route path="/obten-el-tuyo" element={<GenomaPricing />} />
-        <Route path="/sobre-nosotros" element= {<SobreNosotros/>}/>
       </Routes>
     </>
   );

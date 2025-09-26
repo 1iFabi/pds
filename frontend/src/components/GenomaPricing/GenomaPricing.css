@@ -16,18 +16,6 @@
   --button-border-radius: 18px;
 }
 
-/* --- Reset de CSS --- */
-html, body {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  height: 100%;
-}
-
-*, *::before, *::after {
-  box-sizing: border-box;
-}
-
 /* --- Contenedor Principal --- */
 .genoma-pricing {
   width: 100%;
