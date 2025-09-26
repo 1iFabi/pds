@@ -1,19 +1,19 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './GenomaPricing.css';
 
 const GenomaPricing = () => {
   const [imageError, setImageError] = useState(false);
+  const navigate = useNavigate();
 
   // --- PASO 1: CREA LA FUNCIÓN DE NAVEGACIÓN ---
   // Esta función redirige al usuario a la página de registro.
   const handleRegisterClick = () => {
-    // Cambia '/registro' por la URL exacta de tu página de registro.
-    // Por ejemplo: '/signup', '/contacto', o una URL completa como 'https://tu-sitio.com/registro'
-    window.location.href = '/registro';
+    navigate('/register');
   };
 
   return (
-    <div className="genoma-pricing" data-nav-theme="light">
+    <div id="obten" className="genoma-pricing" data-nav-theme="light">
       <div className="main-content">
         <div className="content-container">
           {/* Sección de Precios */}

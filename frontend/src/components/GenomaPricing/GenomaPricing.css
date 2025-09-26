@@ -304,3 +304,8 @@
     text-align: center;
   }
 }
+
+/* Eliminar scrollbar horizontal */
+body {
+  overflow-x: hidden;
+}
