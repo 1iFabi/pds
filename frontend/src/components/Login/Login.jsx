@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { API_ENDPOINTS, apiRequest } from "../../config/api.js";
 import "./Login.css";
 import logo from "/public/cNormal.png";
 import cromo from "/public/login.png";
@@ -14,15 +15,33 @@ export default function Login() {
   const onChange = (e) =>
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
 
+  const [loginError, setLoginError] = useState('');
+  const [loginSuccess, setLoginSuccess] = useState(false);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setLoginError('');
+    
     try {
-      // TODO: reemplaza por tu backend real
-      await new Promise((r) => setTimeout(r, 700));
-      navigate("/postlogin");
-    } catch (err) {
-      alert(err?.message || "Error al iniciar sesión");
+      const result = await apiRequest(API_ENDPOINTS.LOGIN, {
+        method: 'POST',
+        body: JSON.stringify({
+          username: form.email,  // El backend espera username
+          password: form.password
+        }),
+      });
+      
+      if (result.ok && result.data.success) {
+        setLoginSuccess(true);
+        alert("Login exitoso");
+        navigate('/postlogin'); // Redirige al componente Postlogin
+      } else {
+        setLoginError(result.data.error || 'Error al iniciar sesión');
+      }
+    } catch (error) {
+      console.error('Error de conexión:', error);
+      setLoginError('Error de conexión con el servidor. Verifica que el backend esté ejecutándose.');
     } finally {
       setLoading(false);
     }
@@ -123,6 +142,36 @@ export default function Login() {
                 )}
               </button>
             </div>
+
+            {/* Mostrar errores de login */}
+            {loginError && (
+              <div className="login-error" style={{
+                color: '#dc3545',
+                backgroundColor: '#f8d7da',
+                border: '1px solid #f5c6cb',
+                borderRadius: '4px',
+                padding: '10px',
+                marginBottom: '15px',
+                fontSize: '14px'
+              }}>
+                {loginError}
+              </div>
+            )}
+            
+            {/* Mostrar mensaje de éxito */}
+            {loginSuccess && (
+              <div className="login-success" style={{
+                color: '#155724',
+                backgroundColor: '#d4edda',
+                border: '1px solid #c3e6cb',
+                borderRadius: '4px',
+                padding: '10px',
+                marginBottom: '15px',
+                fontSize: '14px'
+              }}>
+                ¡Login exitoso!
+              </div>
+            )}
 
             <button className="login-button" type="submit" disabled={loading}>
               {loading ? "Ingresando..." : "Ingresa tu cuenta"}
