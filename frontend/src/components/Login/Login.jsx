@@ -17,6 +17,7 @@ export default function Login() {
 
   const [loginError, setLoginError] = useState('');
   const [loginSuccess, setLoginSuccess] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -34,8 +35,11 @@ export default function Login() {
       
       if (result.ok && result.data.success) {
         setLoginSuccess(true);
-        alert("Login exitoso");
-        navigate('/postlogin'); // Redirige al componente Postlogin
+        setShowSuccessModal(true);
+        // Redirigir después de mostrar el modal
+        setTimeout(() => {
+          navigate('/dashboard'); // Redirige al dashboard
+        }, 2000);
       } else {
         setLoginError(result.data.error || 'Error al iniciar sesión');
       }
@@ -63,9 +67,13 @@ export default function Login() {
       <section className="auth-left">
         <div className="left-inner">
           <div className="logo-container">
-            <a href="/">
+            <button
+              type="button"
+              onClick={() => navigate('/')}
+              style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+            >
               <img src={logo} alt="Logo cNormal" className="welcome-logo" draggable="false" />
-            </a>
+            </button>
           </div>
           <h1 className="title">¡Bienvenido!</h1>
           <p className="subtitle">Ingresa tu correo y contraseña para acceder a tu cuenta.</p>
@@ -143,16 +151,23 @@ export default function Login() {
               </button>
             </div>
 
-            {/* Mostrar errores de login */}
+            {/* Botón de login */}
+            <button className="login-button" type="submit" disabled={loading}>
+              {loading ? "Ingresando..." : "Ingresa tu cuenta"}
+            </button>
+
+            {/* Mostrar errores de login - centrado y cerca del botón */}
             {loginError && (
               <div className="login-error" style={{
                 color: '#dc3545',
                 backgroundColor: '#f8d7da',
                 border: '1px solid #f5c6cb',
                 borderRadius: '4px',
-                padding: '10px',
-                marginBottom: '15px',
-                fontSize: '14px'
+                padding: '8px 12px',
+                marginTop: '8px',
+                marginBottom: '0px',
+                fontSize: '14px',
+                textAlign: 'center'
               }}>
                 {loginError}
               </div>
@@ -173,9 +188,6 @@ export default function Login() {
               </div>
             )}
 
-            <button className="login-button" type="submit" disabled={loading}>
-              {loading ? "Ingresando..." : "Ingresa tu cuenta"}
-            </button>
 
             <p className="login-help">
               ¿No tienes cuenta?{" "}
@@ -185,7 +197,7 @@ export default function Login() {
             </p>
 
             <a href="#" className="login-link subtle">
-              ¿No te llegó el correo?
+              ¿Olvidaste tu contraseña?
             </a>
           </form>
         </div>
@@ -195,6 +207,40 @@ export default function Login() {
       <section className="auth-right">
         <img src={cromo} alt="imagen de cromosomas" />
       </section>
+
+      {/* Modal de éxito */}
+      {showSuccessModal && (
+        <div className="success-modal-overlay">
+          <div className="success-modal">
+            <div className="success-icon">
+              <svg viewBox="0 0 24 24" width="64" height="64" fill="none">
+                <circle 
+                  cx="12" 
+                  cy="12" 
+                  r="10" 
+                  stroke="#10b981" 
+                  strokeWidth="2.5"
+                  strokeDasharray="63"
+                  strokeDashoffset="63"
+                  className="success-circle"
+                />
+                <path 
+                  d="M9 12l2 2 4-4" 
+                  stroke="#10b981" 
+                  strokeWidth="2.5" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                  strokeDasharray="8"
+                  strokeDashoffset="8"
+                  className="success-check"
+                />
+              </svg>
+            </div>
+            <h2 className="success-title">Login exitoso</h2>
+            <p className="success-message">Redirigiendo al dashboard...</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

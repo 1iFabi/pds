@@ -11,7 +11,6 @@ const Navbar = ({ theme = "dark" }) => {
   const drawerRef = useRef(null);
   const btnRef = useRef(null);
 
-  const isLight = theme === "light";
   const logoSrc =
     theme === "light" ? `${base}cNormal.png` : `${base}cSolido.png`;
 
@@ -45,6 +44,13 @@ const Navbar = ({ theme = "dark" }) => {
     if (typeof fn === "function") fn();
   };
 
+  // Función para recargar la página
+  const handleLogoClick = (e) => {
+    e.preventDefault();
+    setIsOpen(false); // Cerrar drawer si está abierto
+    window.location.href = '/';
+  };
+
   return (
     <>
       <nav className={`navbar navbar--${theme}`} aria-label="Principal">
@@ -58,9 +64,9 @@ const Navbar = ({ theme = "dark" }) => {
 
         {/* centro (logo) */}
         <div className="nav-logo" aria-label="Genomia logo">
-          <Link to="/" className="logo-link" onClick={closeAnd()}>
+          <a href="/" className="logo-link" onClick={handleLogoClick}>
             <img src={logoSrc} alt="Genomia logo" />
-          </Link>
+          </a>
         </div>
 
         {/* derecha: links desktop */}
@@ -118,9 +124,9 @@ const Navbar = ({ theme = "dark" }) => {
           aria-label="Menú"
         >
           <div className="drawer-header">
-            <Link to="/" className="logo-link" onClick={closeAnd()}>
+            <a href="/" className="logo-link" onClick={handleLogoClick}>
               <img src={logoSrc} alt="Genomia logo" />
-            </Link>
+            </a>
             <button
               className="drawer-close"
               aria-label="Cerrar menú"

@@ -42,7 +42,7 @@ const SobreNosotros = () => {
   ];
 
   return (
-    <div className="sobre-nosotros-container">
+    <div id="equipo" className="sobre-nosotros-container" data-nav-theme="light">
       {/* Sección Sobre Nosotros */}
       <div className="sobre-nosotros-header">
         <h1 className="sobre-nosotros-title">

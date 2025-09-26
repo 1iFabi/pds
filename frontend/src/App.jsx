@@ -6,6 +6,7 @@ import Hero from "./components/Hero/Hero";
 import Descubre from "./components/Descubre/Descubre";
 import Conoce from "./components/Conoce/Conoce";
 import Login from "./components/Login/Login";
+import Register from "./components/Register/Register";
 import Postlogin from "./components/Postlogin/Postlogin";
 import GenomaPricing from "./components/GenomaPricing/GenomaPricing";
 import SobreNosotros from "./components/SobreNosotros/SobreNosotros";
@@ -74,7 +75,8 @@ export default function App() {
 
   // Función para determinar si mostrar la Navbar
   const shouldShowNavbar = () => {
-    return location.pathname !== "/dashboard"; // Oculta navbar en el dashboard
+    const hiddenRoutes = ["/login", "/register", "/dashboard"];
+    return !hiddenRoutes.includes(location.pathname);
   };
 
   return (
@@ -94,6 +96,7 @@ export default function App() {
           }
         />
         <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
         <Route path="/dashboard" element={<Postlogin />} />
       </Routes>
     </>
