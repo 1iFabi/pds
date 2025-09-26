@@ -8,4 +8,16 @@ export default defineConfig({
     react(),
     tailwindcss()
   ],
+  // Configuración para Vercel
+  base: '/',
+  build: {
+    outDir: 'dist',
+    assetsDir: 'assets',
+    // Asegurar que los assets mantengan nombres consistentes
+    rollupOptions: {
+      output: {
+        assetFileNames: 'assets/[name]-[hash][extname]'
+      }
+    }
+  }
 })
