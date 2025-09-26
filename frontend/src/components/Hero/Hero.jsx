@@ -6,7 +6,7 @@ import { faDna, faGlobe, faNotesMedical } from "@fortawesome/free-solid-svg-icon
 
 export default function Hero() {
   const videoRef = useRef(null);
-  const base = import.meta.env.BASE_URL; // <- clave para assets en /public
+  const base = import.meta.env.BASE_URL;
 
   useEffect(() => {
     const mql = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -23,25 +23,26 @@ export default function Hero() {
           muted
           loop
           playsInline
-          // opción 1: src directo (si tu webm está en public/HelixDNA.webm)
           src={`${base}HelixDNA.webm`}
-        >
-          {/* opción 2: <source> con fallback mp4 */}
-          {/* 
-          <source src={`${base}HelixDNA.webm`} type="video/webm" />
-          <source src={`${base}HelixDNA.mp4`} type="video/mp4" />
-          */}
-        </video>
+        ></video>
         <div className="hero-overlay" />
       </div>
-
-      <div className="hero-rail">
-        <button className="rail-btn"><FontAwesomeIcon icon={faDna} size="lg" /></button>
-        <button className="rail-btn"><FontAwesomeIcon icon={faGlobe} size="lg" /></button>
-        <button className="rail-btn"><FontAwesomeIcon icon={faNotesMedical} size="lg" /></button>
-      </div>
+      
+      {/* The .hero-rail div is no longer here */}
 
       <div className="hero-bl">
+        {/* It has been moved inside the title's container */}
+        <div className="hero-rail">
+          <button className="rail-btn" data-label="ADN">
+            <FontAwesomeIcon icon={faDna} size="lg" />
+          </button>
+          <button className="rail-btn" data-label="Mundo">
+            <FontAwesomeIcon icon={faGlobe} size="lg" />
+          </button>
+          <button className="rail-btn" data-label="Salud">
+            <FontAwesomeIcon icon={faNotesMedical} size="lg" />
+          </button>
+        </div>
         <h1 className="hero-title">
           Descubre la historia que tu<br />ADN tiene para contarte.
         </h1>

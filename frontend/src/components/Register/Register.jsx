@@ -60,6 +60,7 @@ const Register = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [registrationError, setRegistrationError] = useState('');
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -97,11 +98,11 @@ const Register = () => {
       
       if (result.ok && result.data.success) {
         setRegistrationSuccess(true);
-        alert('Registro exitoso. Ahora puedes iniciar sesión.');
-        // Redirigir al login después de un registro exitoso
+        setShowSuccessModal(true);
+        // Redirigir al login después de mostrar el modal
         setTimeout(() => {
           navigate('/login');
-        }, 1500);
+        }, 2000);
       } else {
         setRegistrationError(result.data.error || 'Error en el registro');
       }
@@ -157,14 +158,18 @@ return (
         <div className="left-inner register-inner">
           {/* Solo la imagen del logo, sin texto "SeqUOH" */}
           <div className="logo-container">
-            <a href="/">
+            <button
+              type="button"
+              onClick={() => navigate('/')}
+              style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+            >
               <img
                 src={logo}
                 alt="Logo"
                 className="welcome-logo"
                 draggable="false"
               />
-            </a>
+            </button>
           </div>
 
           <h1 className="title register-title">Crea tu cuenta</h1>
@@ -400,6 +405,40 @@ return (
       <section className="auth-right register-right">
         <img src={cromo} alt="imagen de cromosomas" />
       </section>
+
+      {/* Modal de éxito */}
+      {showSuccessModal && (
+        <div className="success-modal-overlay">
+          <div className="success-modal">
+            <div className="success-icon">
+              <svg viewBox="0 0 24 24" width="64" height="64" fill="none">
+                <circle 
+                  cx="12" 
+                  cy="12" 
+                  r="10" 
+                  stroke="#10b981" 
+                  strokeWidth="2.5"
+                  strokeDasharray="63"
+                  strokeDashoffset="63"
+                  className="success-circle"
+                />
+                <path 
+                  d="M9 12l2 2 4-4" 
+                  stroke="#10b981" 
+                  strokeWidth="2.5" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                  strokeDasharray="8"
+                  strokeDashoffset="8"
+                  className="success-check"
+                />
+              </svg>
+            </div>
+            <h2 className="success-title">Registro exitoso</h2>
+            <p className="success-message">Redirigiendo al login...</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

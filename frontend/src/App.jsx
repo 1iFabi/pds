@@ -8,16 +8,20 @@ import Conoce from "./components/Conoce/Conoce";
 import Login from "./components/Login/Login";
 import Register from "./components/Register/Register";
 import Postlogin from "./components/Postlogin/Postlogin";
+import GenomaPricing from "./components/GenomaPricing/GenomaPricing";
+import SobreNosotros from "./components/SobreNosotros/SobreNosotros";
 
 export default function App() {
   const [navTheme, setNavTheme] = useState("dark");
   const location = useLocation();
 
   useEffect(() => {
+    // Si NO estamos en la home, fija el tema (por ejemplo light en /login)
     if (location.pathname !== "/") {
       setNavTheme("light");
-      return;
+      return; // evita enganchar el scroll observer fuera de la home
     }
+
     const NAV_H = parseInt(
       getComputedStyle(document.documentElement)
         .getPropertyValue("--nav-h")
@@ -26,8 +30,9 @@ export default function App() {
     );
 
     let ticking = false;
+
     const pickTheme = () => {
-      const y = NAV_H + 1;
+      const y = NAV_H + 1; // línea justo debajo de la navbar
       const sections = document.querySelectorAll("[data-nav-theme]");
       let foundTheme = null;
 
@@ -70,7 +75,8 @@ export default function App() {
 
   // Función para determinar si mostrar la Navbar
   const shouldShowNavbar = () => {
-    return location.pathname !== "/postlogin" && location.pathname !== "/register"; // Oculta navbar en postlogin y register
+    const hiddenRoutes = ["/login", "/register", "/dashboard"];
+    return !hiddenRoutes.includes(location.pathname);
   };
 
   return (
@@ -84,12 +90,14 @@ export default function App() {
               <Hero />
               <Descubre />
               <Conoce />
+              <GenomaPricing />
+              <SobreNosotros/>
             </>
           }
         />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/postlogin" element={<Postlogin />} />
+        <Route path="/dashboard" element={<Postlogin />} />
       </Routes>
     </>
   );

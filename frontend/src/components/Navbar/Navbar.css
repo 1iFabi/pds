@@ -8,17 +8,17 @@
   --nav-btn-hover-bg: rgba(255,255,255,.12);
 }
 
-/* ====== base ====== */
+/* =================== BASE =================== */
 .navbar{
-  position:fixed;
-  top:0; left:0; right:0;
-  width:100%;
-  z-index:60;
+  position:fixed; top:0; left:0; right:0;
+  width:100%; z-index:70;
+  min-height:68px;
   box-sizing:border-box;
-  display:grid;
-  grid-template-columns:1fr auto 1fr;
+  display:grid; grid-template-columns:1fr auto 1fr;
   align-items:center;
-  column-gap:80px;
+  /* --- UPDATED --- */
+  /* Restored the 80px max gap while keeping it fluid */
+  column-gap: clamp(40px, 5vw, 80px);
   padding:20px 30px;
   font-family:'Inter',sans-serif;
   color:var(--nav-fg);
@@ -30,12 +30,15 @@
 }
 
 .nav-left, .nav-right{
-  display:flex; align-items:center; gap:80px;
+  display:flex; align-items:center;
+  /* --- UPDATED --- */
+  /* Restored the 80px max gap for the links */
+  gap: clamp(24px, 4vw, 80px);
 }
 .nav-left{  justify-self:end;   justify-content:flex-end; }
 .nav-right{ justify-self:start; justify-content:flex-start; }
 
-/* === Links normales (excluye el botón) === */
+/* links (no botón) */
 .nav-left a:not(.login-btn),
 .nav-right a:not(.login-btn){
   color:var(--nav-fg);
@@ -46,14 +49,12 @@
   white-space:nowrap; line-height:1;
   padding:6px 2px; position:relative;
 }
-
 .nav-left a:not(.login-btn):hover,
 .nav-right a:not(.login-btn):hover{
   opacity:var(--nav-link-opacity-hover);
   transform:translateY(-1px);
 }
-
-/* subrayado animado (excluye el botón) */
+/* subrayado animado */
 .nav-left a:not(.login-btn)::before,
 .nav-right a:not(.login-btn)::before{
   content:"";
@@ -65,145 +66,181 @@
   width:100%; left:0; opacity:.8;
 }
 
-/* Logo */
-.nav-logo, .logo-link{
-  display:flex; align-items:center; justify-content:center;
-}
-.nav-logo img{ height:60px; width:auto; display:block; }
+/* logo */
+.nav-logo, .logo-link{ display:flex; align-items:center; justify-content:center; }
+.nav-logo img{ height:60px; width:auto; display:block; transition: transform .2s ease; }
+.nav-logo img:active{ transform: scale(.95); }
 
-/* === BOTÓN LOGIN === */
-/* funciona si es <a class="login-btn"> o <Link class="login-btn"> */
+/* botón login */
 .login-btn{
-  display:inline-flex;               /* asegura padding y centrado */
-  align-items:center;
-  justify-content:center;
-  gap:8px;
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
   box-sizing:border-box;
-
-  padding:12px 20px;                 /* más padding */
-  background:transparent;
-  color:var(--nav-fg);
+  padding:12px 20px;
+  background:transparent; color:var(--nav-fg);
   border:2px solid var(--nav-btn-border);
   border-radius:9999px;
-
   font-weight:800; line-height:1; text-decoration:none;
   cursor:pointer;
+  white-space: nowrap; /* Prevents text from wrapping on smaller screens */
   transition:background-color .2s, border-color .2s, transform .2s, color .25s;
 }
-
-/* por si alguien dejó un <button><a> adentro */
-.login-btn a{
-  color:inherit; text-decoration:none;
-  display:contents;                  /* no rompe el layout del botón */
-}
-
-/* evita el subrayado animado en el botón, por si algún selector lo alcanzaba */
+.login-btn a{ color:inherit; text-decoration:none; display:contents; }
 .login-btn::before{ content:none !important; display:none !important; }
+.login-btn:hover{ transform:translateY(-1px); }
 
-.login-btn:hover{
-  transform:translateY(-1px);
-}
-
-/* ===== THEMES (solo background y vibe) ===== */
-
-/* Dark: cristal negro con glow azul */
+/* =================== THEMES =================== */
 .navbar--dark{
-  --nav-fg:#f7fafc;
-  --nav-bg: transparent; /* base */
+  --nav-fg:#f7fafc; --nav-bg: transparent;
   background:
     linear-gradient(180deg, rgba(7,10,14,.72), rgba(7,10,14,.50)),
     radial-gradient(900px 60px at 50% 0%, rgba(0,153,255,.12), transparent 70%);
-  backdrop-filter: blur(22px);
-  -webkit-backdrop-filter: blur(22px);
+  backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px);
   border-bottom: 1px solid rgba(255,255,255,.10);
   box-shadow: 0 8px 24px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.06);
 }
+.navbar--dark .login-btn{ color:#fff; border-color:#fff; }
+.navbar--dark .login-btn:hover{ background:rgba(255,255,255,.12); border-color:#fff; }
 
-/* borde/texto del botón en DARK = blanco */
-.navbar--dark .login-btn{
-  color:#fff;
-  border-color:#fff;
-  background:transparent;
-}
-.navbar--dark .login-btn:hover{
-  background:rgba(255,255,255,.12);
-  border-color:#fff;
-}
-
-/* Light: frosted #f8fafc con acentos azul petróleo */
 .navbar--light{
-  --nav-fg:#0d5e8c; /* azul petróleo oscuro */
-  --nav-bg: transparent;
-
+  --nav-fg:#0d5e8c; --nav-bg: transparent;
   background:
     linear-gradient(180deg, rgba(248,250,252,.96), rgba(241,245,249,.92)),
     radial-gradient(900px 60px at 50% 0%, rgba(13,94,140,.08), transparent 70%);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-
+  backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
   border-bottom: 1px solid rgba(13,59,79,.18);
   box-shadow: 0 4px 12px rgba(13,59,79,.10), inset 0 1px 0 rgba(255,255,255,.9);
 }
+.navbar--light .login-btn{ color:#0d5e8c; border-color:#0d5e8c; }
+.navbar--light .login-btn:hover{ background: rgba(13,94,140,.12); color:#0d5e8c; }
 
-/* borde/texto del botón en LIGHT = azul */
-.navbar--light .login-btn{
-  color:#0d5e8c;
-  border-color:#0d5e8c;
-  background:transparent;
-}
-.navbar--light .login-btn:hover{
-  background: rgba(13,94,140,.12);
-  border-color:#0d5e8c;
-  color:#0d5e8c;
-}
-
-/* ========== TEMA BRAND (azul #277EAF) ========== */
 .navbar--brand{
-  --nav-fg:#ffffff;
-  --nav-bg:#277EAF;
-
-  color:var(--nav-fg);
-  background: var(--nav-bg);
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-
+  --nav-fg:#ffffff; --nav-bg:#277EAF;
+  color:var(--nav-fg); background: var(--nav-bg);
+  backdrop-filter:none; -webkit-backdrop-filter:none;
   border-bottom: 1px solid rgba(0,0,0,.06);
   box-shadow: 0 8px 20px rgba(0,0,0,.18) inset;
 }
+.navbar--brand .login-btn{ color:#fff; border-color: rgba(255,255,255,.9); }
+.navbar--brand .login-btn:hover{ background: rgba(255,255,255,.14); border-color:#fff; }
 
-/* links en brand */
-.navbar--brand .nav-left a:not(.login-btn),
-.navbar--brand .nav-right a:not(.login-btn){
-  color:#ffffff;
-  opacity: var(--nav-link-opacity);
+/* =================== BURGER / DRAWER =================== */
+.nav-toggle{
+  display:none; position:absolute; right:14px; top:50%;
+  transform:translateY(-50%);
+  height:40px; width:40px;
+  border:2px solid var(--nav-btn-border); border-radius:12px;
+  background:transparent; color:var(--nav-fg);
+  align-items:center; justify-content:center; cursor:pointer;
+  transition:transform .2s, background-color .2s, border-color .2s, opacity .2s;
+  -webkit-tap-highlight-color: transparent; touch-action: manipulation; outline:none;
+  z-index:85;
 }
-.navbar--brand .nav-left a:not(.login-btn):hover,
-.navbar--brand .nav-right a:not(.login-btn):hover{
-  opacity: var(--nav-link-opacity-hover);
+.nav-toggle:hover{ transform:translateY(-50%) translateY(-1px); }
+.nav-toggle:active{ transform:translateY(-50%) scale(.98); }
+.navbar--dark .nav-toggle:hover{ background: rgba(255,255,255,.08); }
+.navbar--light .nav-toggle:hover{ background: rgba(13,94,140,.10); }
+.navbar--brand .nav-toggle:hover{ background: rgba(255,255,255,.15); }
+
+/* overlay */
+.drawer-overlay{
+  position:fixed; inset:0; z-index:80;
+  background:rgba(0,0,0,0);
+  pointer-events:none; opacity:0;
+  transition:opacity .25s ease, background .25s ease;
+}
+.drawer-overlay.is-open{
+  opacity:1;
+  background: linear-gradient(180deg, rgba(0,0,0,.55), rgba(0,0,0,.28));
+  backdrop-filter: blur(3px);
+  pointer-events:auto;
 }
 
-/* botón en brand */
-.navbar--brand .login-btn{
-  color:#fff;
-  border-color: rgba(255,255,255,.9);
-  background: transparent;
+/* drawer */
+.mobile-drawer{
+  position:fixed; top:0; right:0; height:100dvh; width:min(88vw, 320px);
+  display:flex; flex-direction:column; gap:8px;
+  padding:16px 14px 24px; box-sizing:border-box;
+  color:var(--nav-fg); background: var(--nav-bg);
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  border-left: 1px solid rgba(255,255,255,.10);
+  box-shadow: -12px 0 28px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.06);
+  transform:translateX(100%); transition:transform .28s ease; z-index:81;
 }
-.navbar--brand .login-btn:hover{
-  background: rgba(255,255,255,.14);
-  border-color:#fff;
-  color:#fff;
+.drawer-overlay.is-open .mobile-drawer{ transform:translateX(0); }
+
+/* theming del drawer */
+.mobile-drawer.navbar--dark{
+  background:
+    linear-gradient(180deg, rgba(7,10,14,.86), rgba(7,10,14,.72)),
+    radial-gradient(900px 60px at 50% 0%, rgba(0,153,255,.10), transparent 70%);
+  border-left: 1px solid rgba(255,255,255,.10);
+}
+.mobile-drawer.navbar--light{
+  background:
+    linear-gradient(180deg, rgba(248,250,252,.96), rgba(241,245,249,.92)),
+    radial-gradient(900px 60px at 50% 0%, rgba(13,94,140,.08), transparent 70%);
+  border-left: 1px solid rgba(13,59,79,.18);
+  box-shadow: -8px 0 12px rgba(13,59,79,.10), inset 0 1px 0 rgba(255,255,255,.9);
+}
+.mobile-drawer.navbar--brand{
+  background:#277EAF;
+  border-left: 1px solid rgba(0,0,0,.06);
+  box-shadow:-10px 0 20px rgba(0,0,0,.18) inset;
 }
 
-/* responsive hereda de los existentes */
-
-
-/* responsive */
-@media (max-width:900px){
-  .navbar{column-gap:28px; padding:16px 14px;}
-  .nav-left,.nav-right{gap:16px}
-  .nav-logo img{height:48px}
+/* contenido del drawer */
+.drawer-header{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:4px 2px 8px;
 }
-@media (max-width:720px){
-  .navbar{column-gap:16px}
-  .nav-left a:nth-last-child(n+3){display:none}
+.drawer-header .logo-link img{ height:44px; width:auto; display:block; }
+.drawer-close{
+  height:40px; width:40px;
+  border:2px solid var(--nav-btn-border); border-radius:12px;
+  background:transparent; color:var(--nav-fg);
+  display:inline-flex; align-items:center; justify-content:center; cursor:pointer;
+}
+
+.drawer-links{
+  display:flex; flex-direction:column; gap:16px;
+  padding:8px 4px; overflow:auto;
+}
+.drawer-links a{
+  color:var(--nav-fg); text-decoration:none; font-weight:700;
+  opacity:var(--nav-link-opacity);
+  padding:8px 6px; line-height:1; position:relative;
+  transform: translateX(8px); opacity: 0;
+  transition: opacity .3s ease, transform .3s ease;
+}
+.drawer-overlay.is-open .drawer-links a{ opacity:1; transform: translateX(0); }
+.drawer-links .drawer-sep{ height:1px; background: currentColor; opacity:.12; margin:4px 0; }
+/* delays para aparición agradable */
+.drawer-links a:nth-child(1){transition-delay:.05s;}
+.drawer-links a:nth-child(2){transition-delay:.10s;}
+.drawer-links a:nth-child(3){transition-delay:.15s;}
+.drawer-links a:nth-child(4){transition-delay:.20s;}
+.drawer-links a:nth-child(6){transition-delay:.25s;} /* salta el .drawer-sep */
+.drawer-links a:nth-child(7){transition-delay:.30s;}
+.drawer-links a:nth-child(8){transition-delay:.35s;}
+
+.mobile-drawer .login-btn{ margin-top:8px; }
+
+/* =================== RESPONSIVE =================== */
+/* laptop angosta / tablet apaisada → burger */
+@media (max-width: 1100px){
+  .nav-desktop{ display:none; }
+  .navbar{ grid-template-columns: 1fr auto 1fr; padding:14px 12px; }
+  .nav-logo{ justify-self:start; margin-left:8px; }
+  .nav-toggle{ display:inline-flex; right:10px; }
+}
+
+/* mobile */
+@media (max-width: 720px){
+  .navbar{ column-gap:12px; }
+  .nav-logo img{ height:44px; }
+}
+
+/* xs: drawer full width */
+@media (max-width: 400px){
+  .mobile-drawer{ width:100vw; }
 }
