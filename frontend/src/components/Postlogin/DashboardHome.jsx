@@ -67,7 +67,7 @@ const DashboardHome = ({ menuItems, setActiveSection }) => {
             onClick={() => setChatOpen((v) => !v)} 
         >
             <img
-            src="/public/postlogin/asistente_ia.png"  
+            src="/postlogin/asistente_ia.png"
             alt=""
             className="chatbot-fab-icon"
             />
