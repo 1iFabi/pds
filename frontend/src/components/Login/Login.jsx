@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { API_ENDPOINTS, apiRequest } from "../../config/api.js";
 import "./Login.css";
-import logo from "/public/cNormal.png";
-import cromo from "/public/login.png";
+import logo from "/cNormal.png";
+import cromo from "/login.png";
 
 export default function Login() {
   const [form, setForm] = useState({ email: "", password: "" });
