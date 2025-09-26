@@ -115,7 +115,7 @@ const GenomaPricing = () => {
                   </div>
                 </div>
               ) : (
-                <img src="/public/obten_el_tuyo.png" alt="Científico con microscopio - Obtén el tuyo" className="hero-image" onError={() => setImageError(true)} />
+                <img src="/obten_el_tuyo.png" alt="Científico con microscopio - Obtén el tuyo" className="hero-image" onError={() => setImageError(true)} />
               )}
             </div>
           </div>

@@ -6,8 +6,8 @@ import "./Register.css";
 // Reutilizamos los estilos del Login para el layout 50/50 y los inputs
 import "../Login/Login.css";
 
-import logo from "/public/cNormal.png";
-import cromo from "/public/login.png";
+import logo from "/cNormal.png";
+import cromo from "/login.png";
 
 const Register = () => {
   const [formData, setFormData] = useState({
