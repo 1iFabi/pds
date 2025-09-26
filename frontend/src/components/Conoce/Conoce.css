@@ -1,9 +1,9 @@
 .conoce-section{
-  --uoh:#277EAF;
+  --uoh:#108ac2;
   --fg:#fff;
   --fg-soft:rgba(255,255,255,.85);
   --chip-bg:#fff;
-  --chip-fg:#277EAF;
+  --chip-fg:#108ac2;
   --card-bg:rgba(0,0,0,.12);
   background:var(--uoh);
   min-height:100vh;
@@ -34,7 +34,7 @@
 .conoce-breadcrumb{
   display:inline-block;
   background:#fff;
-  color:#277EAF;
+  color:#108ac2;
   padding:6px 16px;
   border-radius:999px;
   font-size:15px;

@@ -1,0 +1,311 @@
+/* src/components/GenomaPricing/GenomaPricing.css */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* --- Variables Globales (Custom Properties) --- */
+:root {
+  --color-primary: #277eaf;
+  --color-primary-light: #e8f7ff;
+  --color-background-start: #e8f1ff;
+  --color-background-end: #f0f6ff;
+  --color-text-primary: #707070;
+  --color-white: #ffffff;
+
+  --card-border-radius: 32px;
+  --box-border-radius: 20px;
+  --button-border-radius: 18px;
+}
+
+/* --- Contenedor Principal --- */
+.genoma-pricing {
+  width: 100%;
+  height: 100vh;
+  background: linear-gradient(135deg, var(--color-background-start) 0%, var(--color-background-end) 100%);
+  font-family: 'Inter', sans-serif;
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding-top: 100px;
+}
+
+.main-content {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.content-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  padding: 0 clamp(2rem, 5vw, 60px) 0 clamp(2rem, 10vw, 120px);
+  position: relative;
+  z-index: 2;
+}
+
+/* --- SECCIÓN DE PRECIOS (TARJETA) --- */
+.pricing-section {
+  flex-shrink: 0;
+}
+
+.pricing-card {
+  background: var(--color-white);
+  border-radius: var(--card-border-radius);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(39, 126, 175, 0.1);
+
+  /* ===== AJUSTE CLAVE #1: Dimensiones de la tarjeta ===== */
+  /* Más ancha, pero menos alta, y más pequeña en general */
+  width: 440px; /* Un poco más ancha */
+  min-height: auto; /* Dejamos que el contenido defina la altura */
+
+  /* ===== AJUSTE CLAVE #2: Reducción proporcional del contenido ===== */
+  /* Se establece una base más pequeña. Ahora 1em = 14px dentro de esta tarjeta */
+  font-size: 14px;
+  /* Usamos 'em' para que el padding sea relativo a la nueva base de 14px */
+  padding: 0.5em 1.2em;
+  overflow: hidden; /* Más seguro que 'visible' */
+}
+
+/* --- SECCIÓN DE ILUSTRACIÓN (IMAGEN) --- */
+.illustration-section {
+  position: absolute;
+  bottom: -0.01;
+  right: -32px;
+  width: clamp(400px, 45vw, 700px);
+  height: 94vh;
+  z-index: 1;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+}
+
+.hero-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: bottom right;
+}
+
+/* --- Estilos internos de la tarjeta (ahora usan 'em' para escalar) --- */
+.card-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.5em; /* ← Reducido de 0.8em */
+  margin-bottom: 1em; /* ← Reducido de 1.2em */
+}
+
+.card-badge {
+  background-color: var(--color-primary);
+  color: white;
+  font-size: 0.9em;
+  font-weight: 500;
+  padding: 0.5em 1.1em; /* ← Ligeramente más compacto */
+  border-radius: 21px;
+  display: inline-block;
+  margin-bottom: 0.3em; /* ← Reducido de 0.5em */
+}
+
+.card-title {
+  font-size: clamp(1.7rem, 3.7vw, 2.2rem); /* ← Un poco más grande */
+  font-weight: 600;
+  color: var(--color-primary);
+  line-height: 1.1;
+  margin: 0 0 0.5em 0;
+  letter-spacing: -0.02em;
+}
+
+
+.card-subtitle {
+  color: var(--color-text-primary);
+  font-size: 0.9em;
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* --- Bloque azul y su contenido: versión más compacta y proporcional --- */
+.pricing-box {
+  background: var(--color-primary);
+  border-radius: var(--box-border-radius);
+  padding: 0.8em;
+  color: var(--color-white);
+  margin: 0.8em 0;
+}
+
+.box-content-wrapper {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 1.2em;
+  margin-bottom: 0.8em;
+  align-items: center;
+}
+
+.price-header {
+  margin-bottom: 0.5em;
+  text-align: left;
+}
+
+.price-title {
+  font-size: 1.8em;       /* Más grande */
+  font-weight: 700;       /* Letra gruesa */
+  color: var(--color-white); /* Blanca */
+  margin: 0 0 0.25em 0;
+}
+
+.price-description {
+  font-size: 0.8em;
+  opacity: 0.9;
+  line-height: 1.3;
+}
+
+.price-display {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.price-amount {
+  display: inline-block;
+  background-color: var(--color-primary-light);
+  color: var(--color-primary);
+  font-size: 1.4em; /* Ligeramente más pequeño */
+  font-weight: 700;
+  padding: 0.4em 1.2em; /* Más compacto */
+  border-radius: var(--box-border-radius);
+  line-height: 1.2;
+  margin-bottom: 0.3em;
+  white-space: nowrap;
+}
+
+.price-conversion {
+  font-size: 0.8em;
+  opacity: 0.8;
+}
+
+.features-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  margin-bottom: 0.5em;
+  font-size: 0.9em;
+}
+
+.checkmark {
+  width: 1.1em;
+  height: 1.1em;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7em;
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+.cta-button {
+  width: 100%;
+  background: var(--color-white);
+  color: var(--color-primary);
+  border: none;
+  padding: 0.8em;
+  border-radius: var(--button-border-radius);
+  font-size: 1em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  margin-top: 0.8em;
+  margin-bottom: 0; /* ← Aseguramos que no haya margen abajo */
+}
+
+.cta-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(39, 126, 175, 0.2);
+}
+
+.cta-button:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* ================================= */
+/* RESPONSIVE DESIGN                 */
+/* ================================= */
+
+@media (max-width: 1024px) {
+  html, body {
+    overflow: auto;
+  }
+
+  .genoma-pricing {
+    height: auto;
+    min-height: 100vh;
+    padding-top: 80px;
+    padding-bottom: 3rem;
+  }
+
+  .content-container {
+    flex-direction: column;
+    justify-content: flex-start;
+    padding: 1rem;
+    gap: 2rem;
+  }
+
+  .pricing-card {
+    width: 100%;
+    max-width: 420px;
+    /* Reseteamos el font-size para que no afecte en móvil */
+    font-size: initial;
+    padding: 1.2rem;
+  }
+
+  .illustration-section {
+    order: 1;
+    position: relative;
+    right: auto;
+    bottom: auto;
+    width: 100%;
+    max-width: 450px;
+    height: auto;
+    max-height: 300px;
+    margin-bottom: 0;
+  }
+
+  .pricing-section {
+    order: 2;
+  }
+}
+
+@media (max-width: 480px) {
+  .card-title {
+      font-size: 1.8rem;
+  }
+
+  .box-content-wrapper {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .price-display {
+    align-items: center;
+  }
+
+  .price-header {
+    text-align: center;
+  }
+}
+
+/* Eliminar scrollbar horizontal */
+body {
+  overflow-x: hidden;
+}
