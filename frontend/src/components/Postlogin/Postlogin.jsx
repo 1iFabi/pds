@@ -9,12 +9,12 @@ const Postlogin = () => {
   const navigate = useNavigate();
 
   const menuItems = [
-    { id: 'enfermedades', icon: '/public/heart.png', label: 'Enfermedades', description: 'Explora tu genética en relación con la salud, descubriendo predisposiciones a enfermedades complejas y mutaciones.' },
-    { id: 'ancestria', icon: '/public/ancestria.png', label: 'Ancestría', description: 'Explora tu genética ancestral para conocer tus orígenes. Descubrir conexiones con distintas poblaciones.' },
-    { id: 'biomarcadores', icon: '/public/biomarcadores.png', label: 'Biomarcadores', description: 'Explora los biomarcadores genéticos para identificar características específicas en tu ADN.' },
-    { id: 'farmacogenetica', icon: '/public/farmacogenetica.png', label: 'Farmacogenética', description: 'Explora cómo tu genética influye en la forma en que tu cuerpo responde a medicamentos.' },
-    { id: 'rasgos', icon: '/public/rasgos.png', label: 'Rasgos', description: 'Descubre los rasgos genéticos que definen tus características físicas y comportamentales.' },
-    { id: 'biometricas', icon: '/public/biometrica.png', label: 'Biométrica', description: 'Explora tus datos biométricos para comprender características físicas y fisiológicas.' },
+    { id: 'enfermedades', icon: '/postlogin/heart.png', label: 'Enfermedades', description: 'Explora tu genética en relación con la salud, descubriendo predisposiciones a enfermedades complejas y mutaciones.' },
+    { id: 'ancestria', icon: '/postlogin/ancestria.png', label: 'Ancestría', description: 'Explora tu genética ancestral para conocer tus orígenes. Descubrir conexiones con distintas poblaciones.' },
+    { id: 'biomarcadores', icon: '/postlogin/biomarcadores.png', label: 'Biomarcadores', description: 'Explora los biomarcadores genéticos para identificar características específicas en tu ADN.' },
+    { id: 'farmacogenetica', icon: '/postlogin/farmacogenetica.png', label: 'Farmacogenética', description: 'Explora cómo tu genética influye en la forma en que tu cuerpo responde a medicamentos.' },
+    { id: 'rasgos', icon: '/postlogin/rasgos.png', label: 'Rasgos', description: 'Descubre los rasgos genéticos que definen tus características físicas y comportamentales.' },
+    { id: 'biometricas', icon: '/postlogin/biometrica.png', label: 'Biométrica', description: 'Explora tus datos biométricos para comprender características físicas y fisiológicas.' },
   ];
   
   const handleLogout = () => {
@@ -110,7 +110,7 @@ const Postlogin = () => {
               className={`menu-item ${activeSection === 'pregunta' ? 'active' : ''}`}
               onClick={() => setActiveSection('pregunta')}
           >
-              <img src="/public/robotia.png" alt="Pregunta a la IA" className="menu-icon" />
+              <img src="/postlogin/robotia.png" alt="Pregunta a la IA" className="menu-icon" />
               <span className="menu-label">Pregunta a la IA</span>
           </button>
         </nav>
