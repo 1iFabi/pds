@@ -12,7 +12,7 @@ const Navbar = ({ theme = "dark" }) => {
   const btnRef = useRef(null);
 
   const logoSrc =
-    theme === "light" ? `${base}cNormal.png` : `${base}cSolido.png`;
+    (theme === "light" || theme === "contacto") ? `${base}cNormal.png` : `${base}cSolido.png`;
 
   // Bloquea scroll cuando el drawer está abierto
   useEffect(() => {
@@ -72,7 +72,10 @@ const Navbar = ({ theme = "dark" }) => {
         {/* derecha: links desktop */}
         <div className="nav-right nav-desktop">
           <HashLink smooth to="/#faq">Preguntas</HashLink>
-          <HashLink smooth to="/#equipo">Equipo</HashLink>
+          <Link to="/" onClick={() => setTimeout(() => {
+            const element = document.getElementById('equipo');
+            if (element) element.scrollIntoView({ behavior: 'smooth' });
+          }, 100)}>Equipo</Link>
           <HashLink smooth to="/#contacto">Contacto</HashLink>
           <Link to="/login" className="login-btn">Inicia Sesión</Link>
         </div>
@@ -153,7 +156,12 @@ const Navbar = ({ theme = "dark" }) => {
             <div className="drawer-sep" />
 
             <HashLink smooth to="/#faq" onClick={closeAnd()}>Preguntas</HashLink>
-            <HashLink smooth to="/#equipo" onClick={closeAnd()}>Equipo</HashLink>
+            <Link to="/" onClick={closeAnd(() => {
+              setTimeout(() => {
+                const element = document.getElementById('equipo');
+                if (element) element.scrollIntoView({ behavior: 'smooth' });
+              }, 100);
+            })}>Equipo</Link>
             <HashLink smooth to="/#contacto" onClick={closeAnd()}>Contacto</HashLink>
 
             <Link to="/login" className="login-btn" onClick={closeAnd()}>

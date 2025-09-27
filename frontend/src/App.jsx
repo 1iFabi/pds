@@ -10,6 +10,7 @@ import Register from "./components/Register/Register";
 import Postlogin from "./components/Postlogin/Postlogin";
 import GenomaPricing from "./components/GenomaPricing/GenomaPricing";
 import SobreNosotros from "./components/SobreNosotros/SobreNosotros";
+import Contacto from "./components/Contacto/Contacto";
 
 export default function App() {
   const [navTheme, setNavTheme] = useState("dark");
@@ -92,9 +93,11 @@ export default function App() {
               <Conoce />
               <GenomaPricing />
               <SobreNosotros/>
+              <Contacto />
             </>
           }
         />
+        <Route path="/contacto" element={<Contacto />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/dashboard" element={<Postlogin />} />
