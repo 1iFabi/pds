@@ -123,6 +123,16 @@
 .navbar--brand .login-btn{ color:#fff; border-color: rgba(255,255,255,.9); }
 .navbar--brand .login-btn:hover{ background: rgba(255,255,255,.14); border-color:#fff; }
 
+.navbar--contacto{
+  --nav-fg:#277EAF; --nav-bg:#f8fafc;
+  color:var(--nav-fg); background: var(--nav-bg);
+  backdrop-filter:none; -webkit-backdrop-filter:none;
+  border-bottom: 1px solid rgba(39,126,175,.08);
+  box-shadow: 0 2px 8px rgba(39,126,175,.06);
+}
+.navbar--contacto .login-btn{ color:#277EAF; border-color:#277EAF; }
+.navbar--contacto .login-btn:hover{ background: rgba(39,126,175,.08); color:#1e5f8a; border-color:#1e5f8a; }
+
 /* =================== BURGER / DRAWER =================== */
 .nav-toggle{
   display:none; position:absolute; right:14px; top:50%;
@@ -140,6 +150,7 @@
 .navbar--dark .nav-toggle:hover{ background: rgba(255,255,255,.08); }
 .navbar--light .nav-toggle:hover{ background: rgba(13,94,140,.10); }
 .navbar--brand .nav-toggle:hover{ background: rgba(255,255,255,.15); }
+.navbar--contacto .nav-toggle:hover{ background: rgba(39,126,175,.08); }
 
 /* overlay */
 .drawer-overlay{
@@ -186,6 +197,11 @@
   background:#277EAF;
   border-left: 1px solid rgba(0,0,0,.06);
   box-shadow:-10px 0 20px rgba(0,0,0,.18) inset;
+}
+.mobile-drawer.navbar--contacto{
+  background:#f8fafc;
+  border-left: 1px solid rgba(39,126,175,.15);
+  box-shadow: -8px 0 12px rgba(39,126,175,.08);
 }
 
 /* contenido del drawer */
