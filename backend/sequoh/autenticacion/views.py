@@ -6,8 +6,13 @@ from django.contrib.auth.models import User
 from django.db import IntegrityError
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
+from .email_utils import send_welcome_email, send_password_reset_email
 import json
 import re
+import uuid
 
 @method_decorator(csrf_exempt, name='dispatch')
 class LoginAPIView(APIView):
@@ -24,6 +29,7 @@ class LoginAPIView(APIView):
             if user is not None:
                 # Si el usuario es válido, inicia la sesión en Django
                 login(request, user)
+                
                 return Response({"mensaje": "Inicio de sesión exitoso", "success": True})
             else:
                 # Si las credenciales son incorrectas, devuelve un error
@@ -93,6 +99,16 @@ class RegisterAPIView(APIView):
             user.last_name = telefono
             user.save()
             
+            # Enviar email de bienvenida
+            try:
+                send_welcome_email(
+                    user_email=user.email,
+                    user_name=user.first_name
+                )
+            except Exception as e:
+                # No fallar el registro si hay error con el email
+                print(f"Error enviando email de bienvenida: {e}")
+            
             return Response({
                 "mensaje": "Usuario registrado exitosamente", 
                 "success": True,
@@ -105,6 +121,164 @@ class RegisterAPIView(APIView):
             return Response({"error": "Error al crear el usuario, el correo ya existe"}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response({"error": f"Error interno del servidor: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    def validate_password(self, password):
+        """Valida que la contraseña cumpla con los requisitos"""
+        errors = []
+        
+        if len(password) < 10:
+            errors.append("La contraseña debe tener al menos 10 caracteres")
+        
+        if not re.search(r'[A-Z]', password):
+            errors.append("La contraseña debe contener al menos una letra mayúscula")
+        
+        if not re.search(r'[0-9]', password):
+            errors.append("La contraseña debe contener al menos un número")
+        
+        if not re.search(r'[!@#$%^&*(),.?":{}|<>]', password):
+            errors.append("La contraseña debe contener al menos un símbolo especial")
+        
+        return ". ".join(errors) if errors else None
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class PasswordResetRequestView(APIView):
+    """
+    API para solicitar el reset de contraseña
+    """
+    def post(self, request):
+        try:
+            data = json.loads(request.body)
+            email = data.get('email', '').strip().lower()
+            
+            if not email:
+                return Response(
+                    {"error": "El correo electrónico es obligatorio"}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Validar formato de email
+            if not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email):
+                return Response(
+                    {"error": "El formato del correo electrónico no es válido"}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            try:
+                user = User.objects.get(email=email)
+                
+                # Generar token de reset
+                token = default_token_generator.make_token(user)
+                uid = urlsafe_base64_encode(force_bytes(user.pk))
+                
+                # Crear el token completo que incluye tanto uid como token
+                reset_token = f"{uid}-{token}"
+                
+                # Enviar email de recuperación
+                email_sent = send_password_reset_email(
+                    user_email=user.email,
+                    user_name=user.first_name or user.username,
+                    reset_token=reset_token
+                )
+                
+                if email_sent:
+                    return Response({
+                        "message": "Si el correo existe, recibirás un enlace para restablecer tu contraseña",
+                        "success": True
+                    }, status=status.HTTP_200_OK)
+                else:
+                    return Response({
+                        "error": "Error enviando el correo de recuperación"
+                    }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                    
+            except User.DoesNotExist:
+                # Por seguridad, no revelamos si el email existe o no
+                return Response({
+                    "message": "Si el correo existe, recibirás un enlace para restablecer tu contraseña",
+                    "success": True
+                }, status=status.HTTP_200_OK)
+                
+        except json.JSONDecodeError:
+            return Response(
+                {"error": "Formato de solicitud inválido"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            return Response(
+                {"error": f"Error interno del servidor: {str(e)}"}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class PasswordResetConfirmView(APIView):
+    """
+    API para confirmar el reset de contraseña con el token
+    """
+    def post(self, request):
+        try:
+            data = json.loads(request.body)
+            token = data.get('token', '').strip()
+            new_password = data.get('password', '')
+            confirm_password = data.get('confirmPassword', '')
+            
+            if not all([token, new_password, confirm_password]):
+                return Response(
+                    {"error": "Todos los campos son obligatorios"}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            if new_password != confirm_password:
+                return Response(
+                    {"error": "Las contraseñas no coinciden"}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Validar contraseña
+            password_errors = self.validate_password(new_password)
+            if password_errors:
+                return Response(
+                    {"error": password_errors}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Decodificar el token
+            try:
+                uid_b64, token_str = token.split('-', 1)
+                uid = force_str(urlsafe_base64_decode(uid_b64))
+                user = User.objects.get(pk=uid)
+            except (ValueError, TypeError, OverflowError, User.DoesNotExist):
+                return Response(
+                    {"error": "Token de recuperación inválido"}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Verificar que el token sea válido
+            if not default_token_generator.check_token(user, token_str):
+                return Response(
+                    {"error": "Token de recuperación expirado o inválido"}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Cambiar la contraseña
+            user.set_password(new_password)
+            user.save()
+            
+            return Response({
+                "message": "Contraseña restablecida exitosamente",
+                "success": True
+            }, status=status.HTTP_200_OK)
+            
+        except json.JSONDecodeError:
+            return Response(
+                {"error": "Formato de solicitud inválido"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            return Response(
+                {"error": f"Error interno del servidor: {str(e)}"}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
     
     def validate_password(self, password):
         """Valida que la contraseña cumpla con los requisitos"""
