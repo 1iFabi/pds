@@ -193,6 +193,30 @@ SESSION_COOKIE_SECURE = not DEBUG
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# EMAIL CONFIGURATION
+# Configuración para desarrollo con Mailpit
+if DEBUG:
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = '127.0.0.1'  # localhost
+    EMAIL_PORT = 1025         # Puerto SMTP de Mailpit
+    EMAIL_USE_TLS = False
+    EMAIL_USE_SSL = False
+    EMAIL_HOST_USER = ''
+    EMAIL_HOST_PASSWORD = ''
+else:
+    # Configuración para producción (puedes cambiar según tu proveedor)
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
+    EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
+    EMAIL_USE_TLS = True
+    EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+    EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+
+# Configuración adicional de email
+DEFAULT_FROM_EMAIL = 'SeqUOH <no-reply@sequoh.com>'
+SERVER_EMAIL = 'SeqUOH Server <server@sequoh.com>'
+EMAIL_SUBJECT_PREFIX = '[SeqUOH] '
+
 # CORS configuration for development and production
 # Permitir todos los orígenes solo en desarrollo
 CORS_ALLOW_ALL_ORIGINS = DEBUG

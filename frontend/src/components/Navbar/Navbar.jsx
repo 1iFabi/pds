@@ -14,6 +14,22 @@ const Navbar = ({ theme = "dark" }) => {
   const logoSrc =
     (theme === "light" || theme === "contacto") ? `${base}cNormal.png` : `${base}cSolido.png`;
 
+  // Función para detectar si es dispositivo móvil
+  const isMobile = () => {
+    return window.innerWidth <= 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  };
+
+  // Función para manejar navegación con delay en móviles
+  const handleNavigation = (navigationFn, delay = 300) => {
+    if (isMobile()) {
+      setTimeout(() => {
+        navigationFn();
+      }, delay);
+    } else {
+      navigationFn();
+    }
+  };
+
   // Bloquea scroll cuando el drawer está abierto
   useEffect(() => {
     document.documentElement.style.overflow = isOpen ? "hidden" : "";
@@ -41,14 +57,18 @@ const Navbar = ({ theme = "dark" }) => {
 
   const closeAnd = (fn) => () => {
     setIsOpen(false);
-    if (typeof fn === "function") fn();
+    if (typeof fn === "function") {
+      handleNavigation(fn, 400); // Usar delay un poco mayor para el drawer
+    }
   };
 
   // Función para recargar la página
   const handleLogoClick = (e) => {
     e.preventDefault();
     setIsOpen(false); // Cerrar drawer si está abierto
-    window.location.href = '/';
+    handleNavigation(() => {
+      window.location.href = '/';
+    }, 350);
   };
 
   return (
@@ -72,12 +92,21 @@ const Navbar = ({ theme = "dark" }) => {
         {/* derecha: links desktop */}
         <div className="nav-right nav-desktop">
           <HashLink smooth to="/#faq">Preguntas</HashLink>
-          <Link to="/" onClick={() => setTimeout(() => {
-            const element = document.getElementById('equipo');
-            if (element) element.scrollIntoView({ behavior: 'smooth' });
-          }, 100)}>Equipo</Link>
+          <Link to="/" onClick={() => handleNavigation(() => {
+            setTimeout(() => {
+              const element = document.getElementById('equipo');
+              if (element) element.scrollIntoView({ behavior: 'smooth' });
+            }, 100);
+          })}>Equipo</Link>
           <HashLink smooth to="/#contacto">Contacto</HashLink>
-          <Link to="/login" className="login-btn">Inicia Sesión</Link>
+          <Link to="/login" className="login-btn" onClick={(e) => {
+            if (isMobile()) {
+              e.preventDefault();
+              handleNavigation(() => {
+                window.location.href = '/login';
+              });
+            }
+          }}>Inicia Sesión</Link>
         </div>
 
         {/* botón burger (solo mobile) */}
@@ -164,7 +193,9 @@ const Navbar = ({ theme = "dark" }) => {
             })}>Equipo</Link>
             <HashLink smooth to="/#contacto" onClick={closeAnd()}>Contacto</HashLink>
 
-            <Link to="/login" className="login-btn" onClick={closeAnd()}>
+            <Link to="/login" className="login-btn" onClick={closeAnd(() => {
+              // No necesita función adicional, el delay ya está en closeAnd
+            })}>
               Inicia Sesión
             </Link>
           </nav>

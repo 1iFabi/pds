@@ -13,6 +13,9 @@ body {
   display: flex;
   width: 100vw;
   height: 100vh;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 /* ===== LADO IZQUIERDO (corregido según mock) ===== */
@@ -23,6 +26,8 @@ body {
   background: #f8fafc;              /* fondo más claro */
   display: flex;
   flex-direction: column;
+  justify-content: center;
+  align-items: center;
   box-sizing: border-box;
   overflow: hidden;
 }
@@ -52,15 +57,14 @@ body {
 
 /* Contenedor principal centrado */
 .left-inner {
-  flex: 1;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   padding: 0 48px;
   max-width: 480px;
-  margin: 0 auto;
   width: 100%;
+  min-height: 0;
 }
 
 /* Sección del título */
@@ -177,7 +181,7 @@ body {
   display: none; /* No necesario en este diseño */
 }
 
-/* Botón de toggle para password */
+/* Botón de toggle para password - Mejorado para compatibilidad cross-browser */
 .pwd-toggle {
   position: absolute;
   right: 12px;
@@ -186,16 +190,68 @@ body {
   background: none;
   border: none;
   cursor: pointer;
-  color: #9ca3af;
-  padding: 4px;
+  color: #6b7280;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border-radius: 4px;
-  transition: color 0.2s ease;
+  transition: all 0.2s ease;
   z-index: 2;
+  outline: none;
+  /* Mejor compatibilidad con navegadores */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 
 .pwd-toggle:hover {
-  color: #6b7280;
+  color: #374151;
+  background-color: #f9fafb;
 }
+
+.pwd-toggle:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+.pwd-toggle:active {
+  transform: translateY(-50%) scale(0.95);
+}
+
+/* SVG dentro del botón de contraseña */
+.pwd-toggle svg {
+  display: block;
+  width: 18px;
+  height: 18px;
+  stroke-width: 2;
+  /* Mejor compatibilidad cross-browser */
+  fill: none;
+  stroke: currentColor;
+  pointer-events: none;
+  transition: all 0.2s ease;
+}
+
+/* Específicamente para IE y navegadores más antiguos */
+.pwd-toggle svg path,
+.pwd-toggle svg line,
+.pwd-toggle svg circle {
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Asegurar que el input de contraseña tenga espacio para el botón */
+.uv-field:has(.pwd-toggle) .uv-input {
+  padding-right: 48px;
+}
+
 
 /* Botón principal */
 .login-button {
@@ -270,15 +326,39 @@ body {
 }
 
 /* ===== Responsivo ===== */
+
+/* Para pantallas grandes (desktop) */
+@media (min-width: 1025px) {
+  .auth-left {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .left-inner {
+    max-width: 480px;
+    padding: 0 48px;
+  }
+}
+
+/* Para pantallas medianas y pequeñas */
 @media (max-width: 1024px) {
   body { overflow: auto; }
-  .auth { flex-direction: column; }
+  .auth { 
+    flex-direction: column; 
+    height: auto;
+    min-height: 100vh;
+  }
   .auth-left, .auth-right { width: 100%; }
   .auth-right { display: none; }
   
   .auth-left {
-    height: 100vh;
-    padding: 0 24px;
+    min-height: 100vh;
+    height: auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px 24px;
   }
   
   .brand {
@@ -288,6 +368,8 @@ body {
   
   .left-inner {
     padding: 0 24px;
+    width: 100%;
+    max-width: 400px;
   }
   
   .title {
@@ -498,4 +580,104 @@ body {
   to {
     stroke-dashoffset: 0;
   }
+}
+
+/* ========================================= */
+/* VALIDADORES DE CONTRASEÑA */
+/* ========================================= */
+
+.password-validator {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 12px;
+  margin: 8px 0;
+  font-size: 14px;
+}
+
+.validator-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 6px;
+  transition: all 0.3s ease;
+}
+
+.validator-item:last-child {
+  margin-bottom: 0;
+}
+
+.validator-icon {
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 8px;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+.validator-item.valid .validator-icon {
+  background: #10b981;
+  color: white;
+}
+
+.validator-item.invalid .validator-icon {
+  background: #ef4444;
+  color: white;
+}
+
+.validator-item.valid {
+  color: #065f46;
+}
+
+.validator-item.invalid {
+  color: #991b1b;
+}
+
+/* Password match indicator */
+.password-match {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  margin: 8px 0;
+  padding: 8px 12px;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+}
+
+.password-match.valid {
+  background: #dcfce7;
+  border: 1px solid #bbf7d0;
+  color: #065f46;
+}
+
+.password-match.invalid {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+}
+
+.password-match .validator-icon {
+  width: 16px;
+  height: 16px;
+  margin-right: 8px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: bold;
+}
+
+.password-match.valid .validator-icon {
+  background: #10b981;
+  color: white;
+}
+
+.password-match.invalid .validator-icon {
+  background: #ef4444;
+  color: white;
 }

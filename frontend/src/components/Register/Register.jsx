@@ -152,7 +152,7 @@ const Register = () => {
   }, [showPasswordValidation]);
 
 return (
-    <div className={`auth register-layout mirror ${isTransitioning ? "page-exit" : "page-enter"}`}>
+    <div className={`auth register-page register-layout mirror ${isTransitioning ? "page-exit" : "page-enter"}`}>
       {/* Lado izquierdo (idéntico layout al login) */}
       <section className="auth-left register-left">
         <div className="left-inner register-inner">
@@ -177,7 +177,7 @@ return (
           <div className="title-underline" />
 
           {/* Reutilizo la tarjeta/inputs del login para consistencia visual */}
-          <form onSubmit={handleSubmit} className="login-form login-card register-form">
+          <form onSubmit={handleSubmit} className="login-form login-card register-form form-container">
             {/* Nombre */}
             <div className="uv-field">
               <span className="uv-icon" aria-hidden="true">
@@ -256,18 +256,19 @@ return (
             </div>
 
             {/* Contraseña con validación */}
-            <div className="uv-field password-field-container">
+            <div className="password-wrapper">
+              <div className="uv-field password-field-container">
               <span className="uv-icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24" width="20" height="20">
                   <path
-                    d="M17 10h-1V7a4 4 0 10-8 0v3H7a2 2 0 00-2 2v7a2 2 0 002 2h10a2 2 0 002-2v-7a2 2 0 00-2-2zm-6 0V7a3 3 0 016 0v3h-6z"
+                    d="M17 10h-1V7a4 4 0 10-8 0v3H7a2 2 0 00-2 2v7a2 2 0 002 2h10a2 2 0 002-2v-7a2 2 0 00-2-2zm-6 0V7a3 3 0 616 0v3h-6z"
                     fill="currentColor"
                   />
                 </svg>
               </span>
               <input
                 className="uv-input"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 name="contraseña"
                 value={formData.contraseña}
                 onChange={handleInputChange}
@@ -279,40 +280,64 @@ return (
               <label className="uv-label">Contraseña</label>
               <span className="uv-focus-bg" />
               
-              {/* Validador de contraseña */}
-              {(showPasswordValidation || formData.contraseña.length > 0) && (
-                <div className="password-validator">
-                  <div className="validator-header">
-                    <span className="validator-title">Requisitos:</span>
+              {/* Botón mostrar/ocultar contraseña */}
+              <button
+                type="button"
+                className="pwd-toggle"
+                onClick={() => setShowPassword(prev => !prev)}
+                aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                tabIndex="-1"
+              >
+                {showPassword ? (
+                  // Ícono de ojo tachado (ocultar)
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                    <line x1="1" y1="1" x2="23" y2="23"/>
+                  </svg>
+                ) : (
+                  // Ícono de ojo normal (mostrar)
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                  </svg>
+                )}
+              </button>
+            </div>
+            
+            {/* Validador de contraseña - responsivo: derecha en desktop, abajo en móvil */}
+            {(showPasswordValidation || formData.contraseña.length > 0) && (
+              <div className="password-validator password-validator-responsive">
+                <div className="validator-header">
+                  <span className="validator-title">Requisitos:</span>
+                </div>
+                <div className="validator-rules">
+                  <div className={`validator-rule ${passwordValidation.minLength ? 'valid' : 'invalid'}`}>
+                    <span className="validator-icon">
+                      {passwordValidation.minLength ? '✓' : '×'}
+                    </span>
+                    <span className="validator-text">Mínimo 10 caracteres</span>
                   </div>
-                  <div className="validator-rules">
-                    <div className={`validator-rule ${passwordValidation.minLength ? 'valid' : 'invalid'}`}>
-                      <span className="validator-icon">
-                        {passwordValidation.minLength ? '✓' : '×'}
-                      </span>
-                      <span className="validator-text">Mínimo 10 caracteres</span>
-                    </div>
-                    <div className={`validator-rule ${passwordValidation.hasUppercase ? 'valid' : 'invalid'}`}>
-                      <span className="validator-icon">
-                        {passwordValidation.hasUppercase ? '✓' : '×'}
-                      </span>
-                      <span className="validator-text">1 letra mayúscula</span>
-                    </div>
-                    <div className={`validator-rule ${passwordValidation.hasNumber ? 'valid' : 'invalid'}`}>
-                      <span className="validator-icon">
-                        {passwordValidation.hasNumber ? '✓' : '×'}
-                      </span>
-                      <span className="validator-text">1 número</span>
-                    </div>
-                    <div className={`validator-rule ${passwordValidation.hasSymbol ? 'valid' : 'invalid'}`}>
-                      <span className="validator-icon">
-                        {passwordValidation.hasSymbol ? '✓' : '×'}
-                      </span>
-                      <span className="validator-text">1 símbolo (!@#$%^&*)</span>
-                    </div>
+                  <div className={`validator-rule ${passwordValidation.hasUppercase ? 'valid' : 'invalid'}`}>
+                    <span className="validator-icon">
+                      {passwordValidation.hasUppercase ? '✓' : '×'}
+                    </span>
+                    <span className="validator-text">1 letra mayúscula</span>
+                  </div>
+                  <div className={`validator-rule ${passwordValidation.hasNumber ? 'valid' : 'invalid'}`}>
+                    <span className="validator-icon">
+                      {passwordValidation.hasNumber ? '✓' : '×'}
+                    </span>
+                    <span className="validator-text">1 número</span>
+                  </div>
+                  <div className={`validator-rule ${passwordValidation.hasSymbol ? 'valid' : 'invalid'}`}>
+                    <span className="validator-icon">
+                      {passwordValidation.hasSymbol ? '✓' : '×'}
+                    </span>
+                    <span className="validator-text">1 símbolo (!@#$%^&*)</span>
                   </div>
                 </div>
-              )}
+              </div>
+            )}
             </div>
 
             {/* Repetir contraseña */}
@@ -320,14 +345,14 @@ return (
               <span className="uv-icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24" width="20" height="20">
                   <path
-                    d="M17 10h-1V7a4 4 0 10-8 0v3H7a2 2 0 00-2 2v7a2 2 0 002 2h10a2 2 0 002-2v-7a2 2 0 00-2-2zm-6 0V7a3 3 0 016 0v3h-6z"
+                    d="M17 10h-1V7a4 4 0 10-8 0v3H7a2 2 0 00-2 2v7a2 2 0 002 2h10a2 2 0 002-2v-7a2 2 0 00-2-2zm-6 0V7a3 3 0 616 0v3h-6z"
                     fill="currentColor"
                   />
                 </svg>
               </span>
               <input
                 className={`uv-input ${formData.repetirContraseña && !passwordsMatch ? 'input-error' : ''}`}
-                type="password"
+                type={showConfirmPassword ? "text" : "password"}
                 name="repetirContraseña"
                 value={formData.repetirContraseña}
                 onChange={handleInputChange}
@@ -336,6 +361,30 @@ return (
               />
               <label className="uv-label">Repetir contraseña</label>
               <span className="uv-focus-bg" />
+              
+              {/* Botón mostrar/ocultar contraseña de confirmación */}
+              <button
+                type="button"
+                className="pwd-toggle"
+                onClick={() => setShowConfirmPassword(prev => !prev)}
+                aria-label={showConfirmPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                tabIndex="-1"
+              >
+                {showConfirmPassword ? (
+                  // Ícono de ojo tachado (ocultar)
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                    <line x1="1" y1="1" x2="23" y2="23"/>
+                  </svg>
+                ) : (
+                  // Ícono de ojo normal (mostrar)
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                  </svg>
+                )}
+              </button>
+              
               {formData.repetirContraseña && !passwordsMatch && (
                 <div className="password-error">Las contraseñas no coinciden</div>
               )}
