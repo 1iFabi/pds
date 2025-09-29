@@ -1,49 +1,41 @@
 // src/components/Navbar/Navbar.jsx
 import "./Navbar.css";
 import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { HashLink } from "react-router-hash-link";
 
 const base = import.meta.env.BASE_URL;
 
-const Navbar = ({ theme = "dark" }) => {
+const Navbar = ({ theme: forcedTheme }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [autoTheme, setAutoTheme] = useState(forcedTheme || "dark");
+
   const drawerRef = useRef(null);
   const btnRef = useRef(null);
+  const navRef = useRef(null);
+  const location = useLocation();
 
-  const logoSrc =
-    (theme === "light" || theme === "contacto") ? `${base}cNormal.png` : `${base}cSolido.png`;
+  const activeTheme = forcedTheme || autoTheme;
+  const isLight = activeTheme === "light";
+  const logoSrc = isLight ? `${base}cNormal.png` : `${base}cSolido.png`;
 
-  // Función para detectar si es dispositivo móvil
-  const isMobile = () => {
-    return window.innerWidth <= 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-  };
-
-  // Función para manejar navegación con delay en móviles
-  const handleNavigation = (navigationFn, delay = 300) => {
-    if (isMobile()) {
-      setTimeout(() => {
-        navigationFn();
-      }, delay);
-    } else {
-      navigationFn();
-    }
-  };
-
-  // Bloquea scroll cuando el drawer está abierto
+  // Bloquear scroll cuando el drawer está abierto
   useEffect(() => {
-    document.documentElement.style.overflow = isOpen ? "hidden" : "";
-    return () => (document.documentElement.style.overflow = "");
+    const html = document.documentElement;
+    const prev = html.style.overflow;
+    html.style.overflow = isOpen ? "hidden" : prev || "";
+    return () => {
+      html.style.overflow = prev || "";
+    };
   }, [isOpen]);
 
-  // Cerrar con ESC y clic fuera
+  // Cerrar con ESC y clic fuera del drawer
   useEffect(() => {
     if (!isOpen) return;
     const onKey = (e) => e.key === "Escape" && setIsOpen(false);
     const onClickOutside = (e) => {
       if (drawerRef.current && !drawerRef.current.contains(e.target)) {
-        // si el click viene del botón, ignorar
-        if (btnRef.current && btnRef.current.contains(e.target)) return;
+        if (btnRef.current && btnRef.current.contains(e.target)) return; // si el click viene del botón, ignorar
         setIsOpen(false);
       }
     };
@@ -55,58 +47,165 @@ const Navbar = ({ theme = "dark" }) => {
     };
   }, [isOpen]);
 
+  // ===== Autodetección del tema (solo si NO hay forcedTheme) =====
+  useEffect(() => {
+    if (forcedTheme) return;
+
+    // Fuera de "/", deja light por defecto
+    if (location.pathname !== "/") {
+      setAutoTheme("light");
+      return;
+    }
+
+    const parseRGB = (str) => {
+      const m = str?.match(
+        /rgba?\(\s*(\d+)[,\s]+(\d+)[,\s]+(\d+)(?:[,\s]+([\d.]+))?\s*\)/
+      );
+      if (!m) return null;
+      return {
+        r: +m[1],
+        g: +m[2],
+        b: +m[3],
+        a: m[4] ? parseFloat(m[4]) : 1,
+      };
+    };
+
+    const getNonTransparentBG = (el) => {
+      // Sube por el árbol buscando fondo no transparente
+      let node = el;
+      while (node && node !== document.documentElement) {
+        const cs = getComputedStyle(node);
+        const bg = parseRGB(cs.backgroundColor || "rgba(0,0,0,0)");
+        if (bg && bg.a > 0) return bg;
+        if (cs.backgroundImage && cs.backgroundImage !== "none") {
+          // Con imagen asumimos claro (evita falsos oscuros por transparencias)
+          return { r: 255, g: 255, b: 255, a: 1 };
+        }
+        node = node.parentElement;
+      }
+      // fallback oscuro
+      return { r: 0, g: 0, b: 0, a: 1 };
+    };
+
+    const isLightBG = (rgb) => {
+      const L =
+        0.2126 * (rgb.r / 255) +
+        0.7152 * (rgb.g / 255) +
+        0.0722 * (rgb.b / 255);
+      return L > 0.6;
+    };
+
+    const pickTheme = () => {
+      // Y = justo debajo de la navbar (usamos bottom real)
+      const navRect = navRef.current?.getBoundingClientRect();
+      const navBottom = Math.round(navRect?.bottom ?? 0);
+      const Y = Math.min(window.innerHeight - 2, navBottom + 1);
+
+      // 1) Prioriza secciones con data-nav-theme que contengan ese Y
+      let foundTheme = null;
+      const sections = document.querySelectorAll("[data-nav-theme]");
+      sections.forEach((el) => {
+        const r = el.getBoundingClientRect();
+        if (r.top <= Y && r.bottom > Y) {
+          const t = el.getAttribute("data-nav-theme") || "dark";
+          // aceptamos "light", "dark" o "brand" si decides usarlo
+          if (t === "light" || t === "dark" || t === "brand") {
+            foundTheme = t;
+          }
+        }
+      });
+
+      // 2) Fallback por brillo: hacemos hit-test ignorando la navbar
+      if (!foundTheme) {
+        const nav = navRef.current;
+        const prevPE = nav?.style.pointerEvents;
+        if (nav) nav.style.pointerEvents = "none"; // para que elementFromPoint no devuelva la navbar
+
+        const xs = [
+          16,
+          Math.floor(window.innerWidth / 2),
+          Math.max(16, window.innerWidth - 16),
+        ];
+        let lights = 0,
+          darks = 0;
+        xs.forEach((x) => {
+          const target = document.elementFromPoint(x, Y) || document.body;
+          const bg = getNonTransparentBG(target);
+          isLightBG(bg) ? lights++ : darks++;
+        });
+
+        if (nav) nav.style.pointerEvents = prevPE ?? "";
+        foundTheme = lights >= darks ? "light" : "dark";
+      }
+
+      setAutoTheme((prev) =>
+        foundTheme && foundTheme !== prev ? foundTheme : prev
+      );
+    };
+
+    let ticking = false;
+    let rafId = 0;
+    const onScroll = () => {
+      if (!ticking) {
+        rafId = window.requestAnimationFrame(() => {
+          pickTheme();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    pickTheme();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      cancelAnimationFrame(rafId);
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
+  }, [forcedTheme, location.pathname]);
+
   const closeAnd = (fn) => () => {
     setIsOpen(false);
-    if (typeof fn === "function") {
-      handleNavigation(fn, 400); // Usar delay un poco mayor para el drawer
-    }
-  };
-
-  // Función para recargar la página
-  const handleLogoClick = (e) => {
-    e.preventDefault();
-    setIsOpen(false); // Cerrar drawer si está abierto
-    handleNavigation(() => {
-      window.location.href = '/';
-    }, 350);
+    if (typeof fn === "function") fn();
   };
 
   return (
     <>
-      <nav className={`navbar navbar--${theme}`} aria-label="Principal">
+      <nav
+        ref={navRef}
+        className={`navbar navbar--${activeTheme}`}
+        aria-label="Principal"
+      >
         {/* izquierda: links desktop */}
         <div className="nav-left nav-desktop">
-          <HashLink smooth to="/#inicio">Inicio</HashLink>
-          <HashLink smooth to="/#learn-more">Descubre</HashLink>
-          <HashLink smooth to="/#conoce">Conoce</HashLink>
-          <HashLink smooth to="/#obten">Obtén el Tuyo</HashLink>
+          <HashLink smooth to="/#inicio">
+            Inicio
+          </HashLink>
+          <HashLink smooth to="/#learn-more">
+            Descubre
+          </HashLink>
+          <HashLink smooth to="/#conoce">
+            Conoce
+          </HashLink>
+          <HashLink smooth to="/#obten">
+            Obtén el Tuyo
+          </HashLink>
         </div>
 
         {/* centro (logo) */}
         <div className="nav-logo" aria-label="Genomia logo">
-          <a href="/" className="logo-link" onClick={handleLogoClick}>
+          <Link to="/" className="logo-link" onClick={closeAnd()}>
             <img src={logoSrc} alt="Genomia logo" />
-          </a>
+          </Link>
         </div>
 
         {/* derecha: links desktop */}
         <div className="nav-right nav-desktop">
-          <HashLink smooth to="/#faq">Preguntas</HashLink>
-          <Link to="/" onClick={() => handleNavigation(() => {
-            setTimeout(() => {
-              const element = document.getElementById('equipo');
-              if (element) element.scrollIntoView({ behavior: 'smooth' });
-            }, 100);
-          })}>Equipo</Link>
+          <HashLink smooth to="/#preguntas">Preguntas</HashLink>
+          <HashLink smooth to="/#equipo">Equipo</HashLink>
           <HashLink smooth to="/#contacto">Contacto</HashLink>
-          <Link to="/login" className="login-btn" onClick={(e) => {
-            if (isMobile()) {
-              e.preventDefault();
-              handleNavigation(() => {
-                window.location.href = '/login';
-              });
-            }
-          }}>Inicia Sesión</Link>
+          <Link to="/login" className="login-btn">Inicia Sesión</Link>
         </div>
 
         {/* botón burger (solo mobile) */}
@@ -118,7 +217,6 @@ const Navbar = ({ theme = "dark" }) => {
           aria-controls="mobile-drawer"
           onClick={() => setIsOpen((v) => !v)}
         >
-          {/* ícono: cambia entre burger y X */}
           {!isOpen ? (
             // burger
             <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true">
@@ -151,14 +249,14 @@ const Navbar = ({ theme = "dark" }) => {
         <aside
           id="mobile-drawer"
           ref={drawerRef}
-          className={`mobile-drawer navbar--${theme}`}
+          className={`mobile-drawer navbar--${activeTheme}`}
           role="dialog"
           aria-label="Menú"
         >
           <div className="drawer-header">
-            <a href="/" className="logo-link" onClick={handleLogoClick}>
+            <Link to="/" className="logo-link" onClick={closeAnd()}>
               <img src={logoSrc} alt="Genomia logo" />
-            </a>
+            </Link>
             <button
               className="drawer-close"
               aria-label="Cerrar menú"
@@ -176,26 +274,32 @@ const Navbar = ({ theme = "dark" }) => {
           </div>
 
           <nav className="drawer-links">
-            {/* replicamos tus secciones, usando HashLink para el scroll suave */}
-            <HashLink smooth to="/#inicio" onClick={closeAnd()}>Inicio</HashLink>
-            <HashLink smooth to="/#learn-more" onClick={closeAnd()}>Descubre</HashLink>
-            <HashLink smooth to="/#conoce" onClick={closeAnd()}>Conoce</HashLink>
-            <HashLink smooth to="/#obten" onClick={closeAnd()}>Obtén el Tuyo</HashLink>
+            <HashLink smooth to="/#inicio" onClick={closeAnd()}>
+              Inicio
+            </HashLink>
+            <HashLink smooth to="/#learn-more" onClick={closeAnd()}>
+              Descubre
+            </HashLink>
+            <HashLink smooth to="/#conoce" onClick={closeAnd()}>
+              Conoce
+            </HashLink>
+            <HashLink smooth to="/#obten" onClick={closeAnd()}>
+              Obtén el Tuyo
+            </HashLink>
 
             <div className="drawer-sep" />
 
-            <HashLink smooth to="/#faq" onClick={closeAnd()}>Preguntas</HashLink>
-            <Link to="/" onClick={closeAnd(() => {
-              setTimeout(() => {
-                const element = document.getElementById('equipo');
-                if (element) element.scrollIntoView({ behavior: 'smooth' });
-              }, 100);
-            })}>Equipo</Link>
-            <HashLink smooth to="/#contacto" onClick={closeAnd()}>Contacto</HashLink>
+            <HashLink smooth to="/#preguntas" onClick={closeAnd()}>
+              Preguntas
+            </HashLink>
+            <HashLink smooth to="/#equipo" onClick={closeAnd()}>
+              Equipo
+            </HashLink>
+            <HashLink smooth to="/#contacto" onClick={closeAnd()}>
+              Contacto
+            </HashLink>
 
-            <Link to="/login" className="login-btn" onClick={closeAnd(() => {
-              // No necesita función adicional, el delay ya está en closeAnd
-            })}>
+            <Link to="/login" className="login-btn" onClick={closeAnd()}>
               Inicia Sesión
             </Link>
           </nav>

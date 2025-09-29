@@ -1,5 +1,6 @@
 // src/components/Descubre/Descubre.jsx
 import { useEffect, useRef, useState } from "react";
+import TextType from "../TextType/TextType"; // 🔹 Import del título animado
 import "./Descubre.css";
 
 const Descubre = () => {
@@ -9,17 +10,11 @@ const Descubre = () => {
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsVisible(true);
-        }
+        if (entry.isIntersecting) setIsVisible(true);
       },
       { threshold: 0.3 }
     );
-
-    if (sectionRef.current) {
-      observer.observe(sectionRef.current);
-    }
-
+    if (sectionRef.current) observer.observe(sectionRef.current);
     return () => observer.disconnect();
   }, []);
 
@@ -27,48 +22,68 @@ const Descubre = () => {
     {
       number: "1",
       title: "Enfermedades",
-      description: "Tu ADN revela predisposiciones a ciertas condiciones de salud, útil para prevención y cuidado personal.",
+      description:
+        "Tu ADN revela predisposiciones a ciertas condiciones de salud, útil para prevención y cuidado personal.",
       image: "/descubre/Enfermedades.png",
-      delay: "1s"
+      delay: "1s",
     },
     {
-      number: "2", 
+      number: "2",
       title: "Rasgos Genéticos",
-      description: "Descubre características únicas determinadas por tu genética, como sueño, sabores o energía.",
+      description:
+        "Descubre características únicas determinadas por tu genética, como sueño, sabores o energía.",
       image: "/descubre/Geneticos.png",
-      delay: "1s"
+      delay: "1s",
     },
     {
       number: "3",
       title: "Biométricas",
-      description: "Conoce cómo tus genes influyen en tu cuerpo: metabolismo, peso, altura y otros indicadores.",
-      image: "/descubre/Biometricas.png", 
-      delay: "1.4s"
+      description:
+        "Conoce cómo tus genes influyen en tu cuerpo: metabolismo, peso, altura y otros indicadores.",
+      image: "/descubre/Biometricas.png",
+      delay: "1.4s",
     },
     {
       number: "4",
       title: "Ancestría",
-      description: "Explora tus orígenes y la diversidad genética que compone tu historia familiar.",
+      description:
+        "Explora tus orígenes y la diversidad genética que compone tu historia familiar.",
       image: "/descubre/Ancestria.png",
-      delay: "1.4s"
-    }
+      delay: "1.4s",
+    },
   ];
 
   return (
-    <section 
+    <section
       ref={sectionRef}
-      className="descubre" 
-      data-nav-theme="light" 
+      className="descubre"
+      data-nav-theme="light"
       id="learn-more"
     >
       <div className="descubre-container">
         <div className="descubre-content">
-          <div className={`descubre-header ${isVisible ? 'animate' : ''}`}>
+          <div className={`descubre-header ${isVisible ? "animate" : ""}`}>
             <div className="breadcrumb">Descubre</div>
+
+            {/* 🔹 Título animado importado del código 1 */}
             <h2 className="descubre-title">
-              Tu ADN guarda información<br />
-              <span className="title-accent">única sobre ti</span>
+              Descubre tus{" "}
+              <TextType
+                text={[
+                  "Enfermedades",
+                  "Ancestros",
+                  "Biométricas",
+                  "Rasgos Genéticos",
+                  "Biomarcadores",
+                ]}
+                typingSpeed={75}
+                pauseDuration={1500}
+                showCursor={true}
+                cursorCharacter="|"
+                className="text-type-spacing"
+              />
             </h2>
+
             <p className="descubre-subtitle">
               Transformamos tu ADN en reportes claros que revelan tu salud,
               rasgos, biometría y ancestría
@@ -79,8 +94,8 @@ const Descubre = () => {
             {features.map((feature, index) => (
               <div
                 key={index}
-                className={`feature-card ${isVisible ? 'animate' : ''}`}
-                style={{ '--delay': feature.delay }}
+                className={`feature-card ${isVisible ? "animate" : ""}`}
+                style={{ "--delay": feature.delay }}
               >
                 <div className="card-image">
                   <img src={feature.image} alt={feature.title} />
