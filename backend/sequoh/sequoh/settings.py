@@ -217,6 +217,11 @@ DEFAULT_FROM_EMAIL = 'SeqUOH <no-reply@sequoh.com>'
 SERVER_EMAIL = 'SeqUOH Server <server@sequoh.com>'
 EMAIL_SUBJECT_PREFIX = '[SeqUOH] '
 
+# Configuración de verificación de email
+REQUIRE_EMAIL_VERIFICATION = True
+EMAIL_VERIFICATION_EXPIRE_HOURS = 24
+FRONTEND_DOMAIN = os.environ.get('FRONTEND_DOMAIN', 'http://localhost:5173')
+
 # CORS configuration for development and production
 # Permitir todos los orígenes solo en desarrollo
 CORS_ALLOW_ALL_ORIGINS = DEBUG

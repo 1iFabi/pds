@@ -9,6 +9,94 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+def send_verification_email(user_email, user_name, verification_token: str):
+    """
+    Envía email con enlace de verificación de cuenta
+    """
+    try:
+        subject = 'SeqUOH - Verifica tu correo'
+        # Construimos enlace directo al backend para verificación por GET
+        backend_base = getattr(settings, 'BACKEND_DOMAIN', None)
+        if not backend_base:
+            railway_domain = getattr(settings, 'RAILWAY_PUBLIC_DOMAIN', None)
+            if railway_domain:
+                backend_base = f"https://{railway_domain}"
+            else:
+                backend_base = "http://localhost:8000"
+        verification_link = f"{backend_base}/api/auth/verify/{verification_token}/"
+
+        html_content = f"""
+        <html>
+        <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <div style="background: linear-gradient(135deg, #4A90E2 0%, #277EAF 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+                <h1 style="color: white; margin: 0; font-size: 28px;">Verifica tu correo</h1>
+                <p style="color: white; margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">SeqUOH</p>
+            </div>
+            
+            <div style="background: white; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <h2 style="color: #333; margin-bottom: 20px;">Hola {user_name},</h2>
+                
+                <p style="color: #666; line-height: 1.6; font-size: 16px;">
+                    Gracias por registrarte en SeqUOH. Para activar tu cuenta, por favor verifica tu correo haciendo clic en el siguiente botón:
+                </p>
+                
+                <div style="text-align: center; margin: 30px 0;">
+                    <a href="{verification_link}" 
+                       style="background: linear-gradient(135deg, #4A90E2 0%, #277EAF 100%); 
+                              color: white; text-decoration: none; padding: 15px 30px; 
+                              border-radius: 8px; font-weight: bold; display: inline-block;
+                              font-size: 16px;">
+                        Verificar mi cuenta
+                    </a>
+                </div>
+
+                <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; padding: 15px; margin: 20px 0;">
+                    <p style="color: #856404; margin: 0; font-size: 14px;">
+                        <strong>Importante:</strong> Por seguridad, este enlace caduca en {getattr(settings, 'EMAIL_VERIFICATION_EXPIRE_HOURS', 24)} horas.
+                    </p>
+                </div>
+
+                <p style="color: #666; font-size: 14px; line-height: 1.6;">
+                    Si no solicitaste esta cuenta, puedes ignorar este email.
+                </p>
+                
+                <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+                
+                <p style="color: #888; font-size: 14px; text-align: center; margin: 0;">
+                    <strong>Equipo SeqUOH</strong>
+                </p>
+            </div>
+        </body>
+        </html>
+        """
+
+        text_content = f"""
+        Hola {user_name},
+
+        Gracias por registrarte en SeqUOH. Para activar tu cuenta, visita:
+        {verification_link}
+
+        Este enlace caduca en {getattr(settings, 'EMAIL_VERIFICATION_EXPIRE_HOURS', 24)} horas.
+
+        Equipo SeqUOH
+        """
+
+        msg = EmailMultiAlternatives(
+            subject=subject,
+            body=text_content,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[user_email]
+        )
+        msg.attach_alternative(html_content, "text/html")
+
+        msg.send()
+        logger.info(f"Email de verificación enviado a {user_email}")
+        return True
+    except Exception as e:
+        logger.error(f"Error enviando email de verificación a {user_email}: {str(e)}")
+        return False
+
+
 def send_welcome_email(user_email, user_name):
     """
     Envía email de bienvenida al usuario recién registrado
