@@ -9,7 +9,14 @@ from django.utils.decorators import method_decorator
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
-from .email_utils import send_welcome_email, send_password_reset_email
+from django.conf import settings
+from django.http import HttpResponse
+from django.shortcuts import redirect
+from django.utils import timezone
+from urllib.parse import urlencode, quote
+from datetime import timedelta
+from .models import EmailVerification
+from .email_utils import send_welcome_email, send_password_reset_email, send_verification_email
 import json
 import re
 import uuid
@@ -27,11 +34,34 @@ class LoginAPIView(APIView):
             user = authenticate(request, username=username, password=password)
 
             if user is not None:
-                # Si el usuario es válido, inicia la sesión en Django
+                # Bloquear acceso si requiere verificación y el usuario no está activo
+                if getattr(settings, 'REQUIRE_EMAIL_VERIFICATION', False) and not user.is_active:
+                    return Response({
+                        "error": "Tu cuenta aún no ha sido verificada. Revisa tu correo para completar la verificación.",
+                        "requires_verification": True
+                    }, status=400)
+
+                # Si el usuario es válido y está activo, inicia la sesión en Django
                 login(request, user)
                 
                 return Response({"mensaje": "Inicio de sesión exitoso", "success": True})
             else:
+                # Detectar caso de usuario pendiente de verificación (is_active=False)
+                try:
+                    possible_user = None
+                    if username:
+                        # Buscar por username (en tu registro, usas el correo como username)
+                        possible_user = User.objects.filter(username=username).first()
+                        if not possible_user:
+                            # Intentar por email en caso de que envíen username distinto
+                            possible_user = User.objects.filter(email=username).first()
+                    if possible_user and getattr(settings, 'REQUIRE_EMAIL_VERIFICATION', False) and not possible_user.is_active:
+                        return Response({
+                            "error": "Tu cuenta está pendiente de verificación. Revisa tu correo para activar tu cuenta.",
+                            "requires_verification": True
+                        }, status=400)
+                except Exception:
+                    pass
                 # Si las credenciales son incorrectas, devuelve un error
                 return Response({"error": "Credenciales inválidas"}, status=400)
         except json.JSONDecodeError:
@@ -97,22 +127,50 @@ class RegisterAPIView(APIView):
             # Guardamos el teléfono en el perfil del usuario (podrías crear un modelo Profile si necesitas más campos)
             # Por ahora lo guardamos en last_name como campo temporal
             user.last_name = telefono
+
+            # Si se requiere verificación de email, desactivar hasta verificar
+            if getattr(settings, 'REQUIRE_EMAIL_VERIFICATION', False):
+                user.is_active = False
             user.save()
+
+            # Enviar correo correspondiente
+            if getattr(settings, 'REQUIRE_EMAIL_VERIFICATION', False):
+                try:
+                    # Crear registro de verificación con expiración
+                    expires_at = timezone.now() + timedelta(hours=getattr(settings, 'EMAIL_VERIFICATION_EXPIRE_HOURS', 24))
+                    verification = EmailVerification.objects.create(
+                        user=user,
+                        email=user.email,
+                        expires_at=expires_at,
+                    )
+                    send_verification_email(
+                        user_email=user.email,
+                        user_name=user.first_name or user.username,
+                        verification_token=str(verification.token),
+                    )
+                except Exception as e:
+                    print(f"Error generando o enviando email de verificación: {e}")
+            else:
+                # Enviar email de bienvenida si no se requiere verificación
+                try:
+                    send_welcome_email(
+                        user_email=user.email,
+                        user_name=user.first_name
+                    )
+                except Exception as e:
+                    # No fallar el registro si hay error con el email
+                    print(f"Error enviando email de bienvenida: {e}")
             
-            # Enviar email de bienvenida
-            try:
-                send_welcome_email(
-                    user_email=user.email,
-                    user_name=user.first_name
-                )
-            except Exception as e:
-                # No fallar el registro si hay error con el email
-                print(f"Error enviando email de bienvenida: {e}")
-            
+            requires_verif = bool(getattr(settings, 'REQUIRE_EMAIL_VERIFICATION', False))
+            mensaje = "Usuario registrado exitosamente"
+            if requires_verif:
+                mensaje = "Usuario registrado exitosamente. Debes verificar tu cuenta desde tu correo para poder continuar."
+
             return Response({
-                "mensaje": "Usuario registrado exitosamente", 
+                "mensaje": mensaje, 
                 "success": True,
-                "user_id": user.id
+                "user_id": user.id,
+                "requires_verification": requires_verif
             }, status=status.HTTP_201_CREATED)
             
         except json.JSONDecodeError:
@@ -208,6 +266,136 @@ class PasswordResetRequestView(APIView):
                 {"error": f"Error interno del servidor: {str(e)}"}, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class VerifyEmailView(APIView):
+    """
+    API para confirmar verificación de correo electrónico
+    """
+    def get(self, request, token):
+        try:
+            # token llega como UUID por la ruta
+            token_uuid = token
+            try:
+                verification = EmailVerification.objects.select_related('user').get(token=token_uuid)
+            except EmailVerification.DoesNotExist:
+                return HttpResponse("Token de verificación no encontrado", status=400)
+
+            frontend_base = getattr(settings, 'FRONTEND_DOMAIN', 'http://localhost:5173')
+
+            if verification.is_verified:
+                resp = redirect(f"{frontend_base}/login")
+                resp.set_cookie(
+                    key='verification_status', value='1', max_age=300, path='/',
+                    secure=not settings.DEBUG, samesite='Lax'
+                )
+                resp.set_cookie(
+                    key='verification_message', value=quote('Tu cuenta ya estaba verificada.'), max_age=300, path='/',
+                    secure=not settings.DEBUG, samesite='Lax'
+                )
+                return resp
+
+            if verification.is_expired:
+                resp = redirect(f"{frontend_base}/login")
+                resp.set_cookie(
+                    key='verification_status', value='0', max_age=300, path='/',
+                    secure=not settings.DEBUG, samesite='Lax'
+                )
+                resp.set_cookie(
+                    key='verification_message', value=quote('El token de verificación ha expirado.'), max_age=300, path='/',
+                    secure=not settings.DEBUG, samesite='Lax'
+                )
+                return resp
+
+            verification.is_verified = True
+            verification.verified_at = timezone.now()
+            verification.save()
+
+            user = verification.user
+            if not user.is_active and getattr(settings, 'REQUIRE_EMAIL_VERIFICATION', False):
+                user.is_active = True
+                user.save()
+                try:
+                    send_welcome_email(
+                        user_email=user.email,
+                        user_name=user.first_name or user.username
+                    )
+                except Exception:
+                    pass
+
+            resp = redirect(f"{frontend_base}/login")
+            resp.set_cookie(
+                key='verification_status', value='1', max_age=300, path='/',
+                secure=not settings.DEBUG, samesite='Lax'
+            )
+            resp.set_cookie(
+                key='verification_message', value=quote('Tu cuenta fue verificada correctamente.'), max_age=300, path='/',
+                secure=not settings.DEBUG, samesite='Lax'
+            )
+            return resp
+        except Exception as e:
+            frontend_base = getattr(settings, 'FRONTEND_DOMAIN', 'http://localhost:5173')
+            resp = redirect(f"{frontend_base}/login")
+            resp.set_cookie(
+                key='verification_status', value='0', max_age=300, path='/',
+                secure=not settings.DEBUG, samesite='Lax'
+            )
+            resp.set_cookie(
+                key='verification_message', value=quote('Ocurrió un error al verificar la cuenta.'), max_age=300, path='/',
+                secure=not settings.DEBUG, samesite='Lax'
+            )
+            return resp
+
+    def post(self, request):
+        try:
+            data = json.loads(request.body)
+            token = data.get('token', '').strip()
+
+            if not token:
+                return Response({"error": "El token es obligatorio"}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Validar que token sea UUID
+            try:
+                token_uuid = uuid.UUID(token)
+            except ValueError:
+                return Response({"error": "Token inválido"}, status=status.HTTP_400_BAD_REQUEST)
+
+            try:
+                verification = EmailVerification.objects.select_related('user').get(token=token_uuid)
+            except EmailVerification.DoesNotExist:
+                return Response({"error": "Token de verificación no encontrado"}, status=status.HTTP_400_BAD_REQUEST)
+
+            if verification.is_verified:
+                return Response({"message": "El correo ya fue verificado", "success": True}, status=status.HTTP_200_OK)
+
+            if verification.is_expired:
+                return Response({"error": "El token ha expirado"}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Marcar como verificado y activar usuario si corresponde
+            verification.is_verified = True
+            verification.verified_at = timezone.now()
+            verification.save()
+
+            user = verification.user
+            if not user.is_active and getattr(settings, 'REQUIRE_EMAIL_VERIFICATION', False):
+                user.is_active = True
+                user.save()
+                # enviar email de bienvenida al activar la cuenta
+                try:
+                    send_welcome_email(
+                        user_email=user.email,
+                        user_name=user.first_name or user.username
+                    )
+                except Exception:
+                    pass
+
+            return Response({"message": "Correo verificado exitosamente", "success": True}, status=status.HTTP_200_OK)
+
+        except json.JSONDecodeError:
+            return Response({"error": "Formato de solicitud inválido"}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({"error": f"Error interno del servidor: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @method_decorator(csrf_exempt, name='dispatch')
