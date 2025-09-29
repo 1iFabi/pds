@@ -57,7 +57,9 @@ const DashboardHome = ({ menuItems, setActiveSection }) => {
         onMouseLeave={() => setChatOpen(false)}
         >
         <div className="chatbot-pill" aria-hidden={!chatOpen}>
-            ¡Hola! Soy tu asistente genético. Escríbeme si tienes preguntas sobre tu genoma
+            <span className="chatbot-message-full">¡Hola! Soy tu asistente genético. Escríbeme si tienes preguntas sobre tu genoma</span>
+            <span className="chatbot-message-short">¡Hola! Pregúntame sobre tu genoma</span>
+            <span className="chatbot-message-mini">Asistente genético</span>
         </div>
 
         <button
