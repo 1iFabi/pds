@@ -4,6 +4,7 @@ import { API_ENDPOINTS, apiRequest } from "../../config/api.js";
 import "./Login.css";
 import ForgotPasswordModal from "./ForgotPasswordModal.jsx";
 import ResetPasswordModal from "./ResetPasswordModal.jsx";
+import VerificationModal from "./VerificationModal.jsx";
 import logo from "/cNormal.png";
 import cromo from "/login.png";
 
@@ -29,12 +30,46 @@ export default function Login() {
     }
   }, [searchParams]);
 
+  // Leer cookies de verificación establecidas por el backend en /api/auth/verify/<token>/
+  useEffect(() => {
+    const getCookie = (name) => {
+      return document.cookie
+        .split('; ')
+        .find(row => row.startsWith(name + '='))
+        ?.split('=')[1];
+    };
+
+    const status = getCookie('verification_status');
+    let message = getCookie('verification_message');
+
+    if (status && message) {
+      try {
+        const decoded = decodeURIComponent(message);
+        message = decoded;
+      } catch (e) {}
+      // Quitar comillas envolventes si las hay
+      if ((message.startsWith('"') && message.endsWith('"')) || (message.startsWith("'") && message.endsWith("'"))) {
+        message = message.slice(1, -1);
+      }
+      setVerificationMessage(message);
+      setShowVerificationModal(true);
+
+      // limpiar cookies para que no reaparezca en futuros loads
+      document.cookie = 'verification_status=; Max-Age=0; Path=/';
+      document.cookie = 'verification_message=; Max-Age=0; Path=/';
+    }
+  }, []);
+
   const [loginError, setLoginError] = useState('');
   const [loginSuccess, setLoginSuccess] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [showResetPassword, setShowResetPassword] = useState(false);
   const [resetToken, setResetToken] = useState('');
+
+  // Modal de verificación de cuenta (via cookies)
+  const [showVerificationModal, setShowVerificationModal] = useState(false);
+  const [verificationMessage, setVerificationMessage] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -275,6 +310,13 @@ export default function Login() {
           setResetToken('');
         }}
         token={resetToken}
+      />
+
+      {/* Modal de verificación de cuenta reutilizando estilos del modal de recuperación */}
+      <VerificationModal 
+        isOpen={showVerificationModal}
+        onClose={() => setShowVerificationModal(false)}
+        message={verificationMessage || 'Tu cuenta fue verificada correctamente.'}
       />
     </div>
   );

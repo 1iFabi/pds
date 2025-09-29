@@ -5,6 +5,7 @@ import { API_ENDPOINTS, apiRequest } from "../../config/api.js";
 import "./Register.css";
 // Reutilizamos los estilos del Login para el layout 50/50 y los inputs
 import "../Login/Login.css";
+import VerificationModal from "../Login/VerificationModal.jsx";
 
 import logo from "/cNormal.png";
 import cromo from "/login.png";
@@ -62,6 +63,9 @@ const Register = () => {
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
+  // Modal de verificación tras registro
+  const [showVerificationModal, setShowVerificationModal] = useState(false);
+  const [verificationMessage, setVerificationMessage] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -98,12 +102,18 @@ const Register = () => {
       });
       
       if (result.ok && result.data.success) {
-        setRegistrationSuccess(true);
-        setShowSuccessModal(true);
-        // Redirigir al login después de mostrar el modal
-        setTimeout(() => {
-          navigate('/login');
-        }, 2000);
+        const requiresVerification = !!result.data.requires_verification;
+        const mensaje = result.data.mensaje || 'Usuario registrado exitosamente.';
+        if (requiresVerification) {
+          setVerificationMessage(mensaje);
+          setShowVerificationModal(true);
+        } else {
+          setRegistrationSuccess(true);
+          setShowSuccessModal(true);
+          setTimeout(() => {
+            navigate('/login');
+          }, 2000);
+        }
       } else {
         setRegistrationError(result.data.error || 'Error en el registro');
       }
@@ -478,6 +488,17 @@ return (
       <section className="auth-right register-right">
         <img src={cromo} alt="imagen de cromosomas" />
       </section>
+
+      {/* Modal de Verificación tras registro */}
+      <VerificationModal 
+        isOpen={showVerificationModal}
+        onClose={() => {
+          setShowVerificationModal(false);
+          navigate('/login');
+        }}
+        message={verificationMessage || 'Usuario registrado exitosamente. Debes verificar tu cuenta desde tu correo para poder continuar.'}
+        title="Verificación requerida"
+      />
 
       {/* Modal de Términos y Condiciones */}
       {showTermsModal && (
