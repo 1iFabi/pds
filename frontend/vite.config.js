@@ -12,7 +12,7 @@ export default defineConfig({
   base: '/',
   publicDir: 'public',
   build: {
-    outDir: 'dist',
+    outDir: 'frontend/dist',
     assetsDir: 'assets',
     copyPublicDir: true,
     // Asegurar que los assets mantengan nombres consistentes
