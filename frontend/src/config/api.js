@@ -4,6 +4,8 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://pds-kappa.ver
 export const API_ENDPOINTS = {
   LOGIN: `${API_BASE_URL}/login/`,
   REGISTER: `${API_BASE_URL}/register/`,
+  PASSWORD_RESET: `${API_BASE_URL}/password-reset/`,
+  PASSWORD_RESET_CONFIRM: `${API_BASE_URL}/password-reset-confirm/`,
 };
 
 // Función helper para hacer peticiones a la API

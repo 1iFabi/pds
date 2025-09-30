@@ -2,13 +2,14 @@
 import React from 'react';
 import './SobreNosotros.css';
 
-const SobreNosotros = () => {
+const SobreNosotros = ({ showHeader = true, showEquipoTitle = true }) => {
   const equipoMiembros = [
     {
       id: 'alex',
       nombre: 'Dr. Alex Di Genova',
       cargo: 'Director de SeqUOH',
       imagen: 'alex',
+      imagenNum: '2',
       linkedin: 'https://www.linkedin.com/in/alex-di-genova-522b99246'
     },
     {
@@ -16,6 +17,7 @@ const SobreNosotros = () => {
       nombre: 'Dra. Carol Moraga',
       cargo: 'Subdirectora SeqUOH',
       imagen: 'carol',
+      imagenNum: '1',
       linkedin: 'https://www.linkedin.com/in/camoragaq'
     },
     {
@@ -23,6 +25,7 @@ const SobreNosotros = () => {
       nombre: 'Mag. Susan Calfunao',
       cargo: 'Encargada de Laboratorio SeqUOH',
       imagen: 'susan',
+      imagenNum: '3',
       linkedin: 'https://www.linkedin.com/in/susan-calfunao-caro-367a3173'
     },
     {
@@ -30,6 +33,7 @@ const SobreNosotros = () => {
       nombre: 'Gabriel Cabas',
       cargo: 'Investigador asociado SeqUOH',
       imagen: 'gabriel',
+      imagenNum: '5',
       linkedin: 'https://www.linkedin.com/in/gabriel-cabas-1834601b4'
     },
     {
@@ -37,41 +41,54 @@ const SobreNosotros = () => {
       nombre: 'Jonathan Canan',
       cargo: 'Encargado HPC-UOH',
       imagen: 'jonathan',
+      imagenNum: '4',
       linkedin: 'https://www.linkedin.com/in/jonathan-canan-469896238'
     }
   ];
 
   return (
     <div id="equipo" className="sobre-nosotros-container" data-nav-theme="light">
-      {/* Sección Sobre Nosotros */}
-      <div className="sobre-nosotros-header">
-        <h1 className="sobre-nosotros-title">
-          Sobre
-          <span className="nosotros">Nosotros</span>
-        </h1>
-        
-        <div className="sobre-nosotros-content">
-          <p className="sobre-nosotros-description">
-            <span className="highlight">SeqUOH</span> es el laboratorio de secuenciación de la{' '}
-            <span className="highlight">Universidad de O'Higgins</span> perteneciente al{' '}
-            <span className="highlight">Centro UOH de Bioingeniería (CUBI)</span>, especializado en genética 
-            molecular y análisis genético de vanguardia. Ofrecemos{' '}
-            <span className="highlight">servicios de secuenciación genética, análisis de ADN</span> y{' '}
-            <span className="highlight">coaching genómico</span> para investigadores, universidades, hospitales y personas naturales.
-          </p>
+      {/* Sección Sobre Nosotros - condicional */}
+      {showHeader && (
+        <div className="sobre-nosotros-header">
+          <h1 className="sobre-nosotros-title">
+            Sobre
+            <span className="nosotros">Nosotros</span>
+          </h1>
+          
+          <div className="sobre-nosotros-content">
+            <p className="sobre-nosotros-description">
+              <span className="highlight">SeqUOH</span> es el laboratorio de secuenciación de la{' '}
+              <span className="highlight">Universidad de O'Higgins</span> perteneciente al{' '}
+              <span className="highlight">Centro UOH de Bioingeniería (CUBI)</span>, especializado en genética 
+              molecular y análisis genético de vanguardia. Ofrecemos{' '}
+              <span className="highlight">servicios de secuenciación genética, análisis de ADN</span> y{' '}
+              <span className="highlight">coaching genómico</span> para investigadores, universidades, hospitales y personas naturales.
+            </p>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Sección Equipo */}
       <div className="equipo-section">
-        <h2 className="equipo-title">
-          <span>Equipo</span>
-        </h2>
+        {showEquipoTitle && (
+          <h2 className="equipo-title">
+            <span>Equipo</span>
+          </h2>
+        )}
         
         <div className="equipo-grid">
           {equipoMiembros.map((miembro) => (
             <div key={miembro.id} className="miembro-card">
-              <div className={`miembro-imagen ${miembro.imagen}`}></div>
+              <div 
+                className={`miembro-imagen ${miembro.imagen}`}
+                style={{
+                  backgroundImage: `url('/SobreNosotros/${miembro.imagenNum}.png')`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  backgroundRepeat: 'no-repeat'
+                }}
+              ></div>
               <div className="miembro-info">
                 <h3 className="miembro-nombre">{miembro.nombre}</h3>
                 <p className="miembro-cargo">{miembro.cargo}</p>
