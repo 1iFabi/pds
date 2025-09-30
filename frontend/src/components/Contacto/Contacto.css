@@ -1,0 +1,442 @@
+/* --- ESTILOS GENERALES Y CONTENEDOR PRINCIPAL --- */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: sans-serif;
+  background-color: #f8fafc;
+}
+
+html {
+  margin: 0;
+  padding: 0;
+}
+
+/* Contenedor principal de la página de contacto */
+.contacto-page-container {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background-color: #277EAF; /* Mismo color que el footer */
+}
+
+/* Estilos para cuando Contacto está en la página principal */
+.contacto-in-main {
+  min-height: auto; /* No ocupar toda la altura de viewport */
+  padding: 2rem 0; /* Padding vertical para separación */
+}
+
+/* Sección específica de contacto (footer) */
+.contacto-section {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: #277EAF; /* Mismo color que el footer */
+  margin: 0;
+  padding: 0;
+}
+
+/* Spacer eliminado - sin espacio entre navbar y cards */
+.spacer {
+  min-height: 80px; /* Solo la altura del navbar, sin espacio extra */
+}
+
+/* Ajuste especial para cuando SobreNosotros no tiene header */
+.contacto-page-container .sobre-nosotros-container {
+  padding: 0; /* Eliminar todo el padding */
+  margin: 0; /* Sin margin */
+  height: auto; /* Altura automática */
+}
+
+/* Sección del equipo específica para Contacto */
+.contacto-equipo-section {
+  background-color: #f8fafc;
+  padding: 1rem;
+  margin: 0;
+  margin-bottom: 1rem;
+  border-radius: 0 0 20px 20px; /* Bordes redondeados abajo para transición suave */
+}
+
+/* Estilos para cards que llenen el espacio disponible */
+.contacto-page-container .equipo-section {
+  padding: 0; /* Sin padding */
+  margin: 0; /* Sin margin */
+  height: auto; /* Altura automática */
+}
+
+.contacto-page-container .equipo-grid {
+  display: flex;
+  justify-content: space-between; /* Distribuir en todo el ancho */
+  align-items: center;
+  gap: 0.5rem; /* Gap mínimo entre cards */
+  flex-wrap: nowrap; /* No permitir wrap para llenar el ancho */
+  width: 100%; /* Ancho completo */
+  padding: 0 0.5rem; /* Mínimo padding lateral */
+  margin: 0;
+}
+
+.contacto-page-container .miembro-card {
+  max-height: 280px;
+  min-height: 260px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  flex: 1; /* Cada card toma el mismo espacio disponible */
+  max-width: none; /* Sin límite de ancho */
+  margin: 0; /* Sin margin */
+}
+
+.contacto-page-container .miembro-imagen {
+  height: 70%; /* Aumentar altura de la imagen para mejor visibilidad */
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  border-radius: 10px 10px 0 0; /* Solo esquinas superiores redondeadas */
+}
+
+/* Override global para todas las imágenes en contacto */
+.contacto-page-container .miembro-imagen {
+  background-color: #f0f0f0; /* Color de fondo por si no carga la imagen */
+  min-height: 150px;
+}
+
+/* CSS con mayor prioridad - aplicar después de cargar */
+body .contacto-page-container .miembro-imagen.alex {
+  background-image: url('/SobreNosotros/1.png') !important;
+}
+body .contacto-page-container .miembro-imagen.carol {
+  background-image: url('/SobreNosotros/2.png') !important;
+}
+body .contacto-page-container .miembro-imagen.susan {
+  background-image: url('/SobreNosotros/3.png') !important;
+}
+body .contacto-page-container .miembro-imagen.gabriel {
+  background-image: url('/SobreNosotros/4.png') !important;
+}
+body .contacto-page-container .miembro-imagen.jonathan {
+  background-image: url('/SobreNosotros/5.png') !important;
+}
+
+/* FORZAR que las imágenes del equipo se carguen correctamente - 1.png a 5.png */
+.contacto-page-container .sobre-nosotros-container .equipo-section .equipo-grid .miembro-card .miembro-imagen.alex,
+.contacto-page-container .miembro-imagen.alex { 
+  background-image: url('/SobreNosotros/2.png') !important;
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+}
+
+.contacto-page-container .sobre-nosotros-container .equipo-section .equipo-grid .miembro-card .miembro-imagen.carol,
+.contacto-page-container .miembro-imagen.carol { 
+  background-image: url('/SobreNosotros/1.png') !important;
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+}
+
+.contacto-page-container .sobre-nosotros-container .equipo-section .equipo-grid .miembro-card .miembro-imagen.susan,
+.contacto-page-container .miembro-imagen.susan { 
+  background-image: url('/SobreNosotros/3.png') !important;
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+}
+
+.contacto-page-container .sobre-nosotros-container .equipo-section .equipo-grid .miembro-card .miembro-imagen.gabriel,
+.contacto-page-container .miembro-imagen.gabriel { 
+  background-image: url('/SobreNosotros/5.png') !important;
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+}
+
+.contacto-page-container .sobre-nosotros-container .equipo-section .equipo-grid .miembro-card .miembro-imagen.jonathan,
+.contacto-page-container .miembro-imagen.jonathan { 
+  background-image: url('/SobreNosotros/4.png') !important;
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+}
+
+.contacto-page-container .miembro-info {
+  padding: 8px; /* Padding más pequeño */
+}
+
+.contacto-page-container .miembro-nombre {
+  font-size: 0.9rem; /* Nombre más pequeño */
+  margin: 0;
+}
+
+.contacto-page-container .miembro-cargo {
+  font-size: 0.75rem; /* Cargo más pequeño */
+  margin: 0.25rem 0;
+}
+
+.contacto-page-container .linkedin-btn {
+  padding: 4px 8px; /* Botón más pequeño */
+  font-size: 0.7rem;
+}
+
+/* --- FOOTER --- */
+.footer {
+  /* Sin margin-top para conectar directamente con SobreNosotros */
+  background-color: #277EAF;
+  color: white;
+  padding: 0.5rem 1rem 2rem 1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  position: relative;
+  margin: 0; /* Sin margin */
+  width: 100vw; /* Ancho completo */
+  margin-left: calc(-50vw + 50%); /* Centrar y extender */
+}
+
+/* Línea blanca debajo del footer */
+.footer::after {
+  content: '';
+  position: absolute;
+  bottom: 15px; /* Separar del borde inferior */
+  left: 50px; /* Margen lateral */
+  right: 50px; /* Margen lateral */
+  height: 3px;
+  background-color: white;
+}
+
+.footer-content {
+  max-width: 1400px;
+  width: 100%;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr 2fr 1fr;
+  gap: 1.5rem; /* Reducido de 3rem a 1.5rem */
+  align-items: start;
+}
+
+.footer-section {
+  font-size: 0.9rem;
+}
+
+.footer-logo {
+  display: flex;
+  justify-content: center;
+  align-items: center; /* Centrar verticalmente */
+  height: 100%; /* Tomar toda la altura del footer */
+}
+
+.footer-menu {
+  text-align: left;
+}
+
+.footer-contact {
+  text-align: left;
+}
+
+.footer-social {
+  text-align: left;
+}
+
+.footer-section h4 {
+  font-size: 1rem; /* Reducido de 1.2rem */
+  font-weight: 800;
+  margin-bottom: 0.5rem; /* Reducido de 0.8rem */
+}
+
+.footer-menu ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.footer-menu ul li {
+  margin-bottom: 0.25rem;
+}
+
+.footer-menu ul li a,
+.footer-menu ul li .hash-link {
+  color: white;
+  text-decoration: none;
+  transition: text-decoration 0.2s;
+}
+
+.footer-menu ul li a:hover,
+.footer-menu ul li .hash-link:hover {
+  text-decoration: underline;
+}
+
+/* Contenido de contacto */
+.contact-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.contact-item .contact-icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+}
+
+.contact-item .contact-icon svg {
+  fill: white;
+  width: 100%;
+  height: 100%;
+}
+
+.schedule-title {
+  font-weight: 600;
+  margin-bottom: 0.1rem;
+}
+
+/* Redes sociales */
+.social-links {
+  display: flex;
+  justify-content: flex-start;
+  gap: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+.social-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.2);
+  transition: background-color 0.2s;
+}
+
+.social-link:hover {
+  background-color: white;
+}
+
+.social-link svg {
+  fill: white;
+  width: 20px;
+  height: 20px;
+}
+
+.social-link:hover svg {
+  fill: #277EAF;
+}
+
+/* Logo en footer */
+.logo-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 0;
+  height: 100%; /* Tomar toda la altura disponible */
+}
+
+.footer-logo-image {
+  width: 50px; /* Reducido de 80px */
+  height: 50px; /* Reducido de 80px */
+  object-fit: contain;
+  filter: brightness(0) invert(1); /* Hace la imagen blanca */
+}
+
+.logo-text {
+  font-size: 1.5rem; /* Reducido de 2.2rem */
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  color: white;
+  text-align: center;
+}
+
+/* --- MEDIA QUERIES PARA RESPONSIVIDAD --- */
+
+@media (max-width: 1024px) {
+  .footer-content {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem; /* Reducido de 2rem */
+  }
+  
+  .footer-logo {
+    grid-column: 1 / -1;
+    margin-bottom: 0.5rem; /* Reducido */
+  }
+  
+  .contacto-page-container .miembro-card {
+    max-height: 240px; /* Ajustar para tablets */
+    min-height: 220px;
+  }
+  
+  .spacer {
+    min-height: 80px; /* Solo altura del navbar en tablets */
+  }
+}
+
+@media (max-width: 768px) {
+  .footer {
+    padding: 1rem 0.75rem 0.75rem 0.75rem; /* Más compacto */
+  }
+
+  .footer-content {
+    grid-template-columns: 1fr;
+    gap: 1rem; /* Reducido de 1.5rem */
+    max-width: 100%;
+  }
+  
+  .footer-logo {
+    grid-column: 1;
+    margin-bottom: 0.5rem; /* Reducido */
+  }
+
+  .footer-section {
+    text-align: left;
+  }
+
+  .contact-item {
+    font-size: 0.75rem; /* Reducido */
+    gap: 0.4rem;
+    margin-bottom: 0.4rem; /* Reducido */
+  }
+
+  .social-links {
+    justify-content: flex-start;
+  }
+
+  .logo-text {
+    font-size: 1.4rem; /* Reducido de 1.8rem */
+  }
+  
+  .footer-logo-image {
+    width: 45px; /* Reducido de 60px */
+    height: 45px;
+  }
+  
+  .contacto-page-container .miembro-card {
+    max-height: 200px; /* Cards ajustadas para móvil */
+    min-height: 180px;
+  }
+  
+  .spacer {
+    min-height: 80px; /* Solo altura del navbar en móviles */
+  }
+  
+  .contacto-page-container .equipo-grid {
+    flex-wrap: wrap; /* Permitir wrap en móviles */
+    gap: 0.25rem; /* Gap aún menor en móviles */
+  }
+}
+
+/* Media query específica para pantallas de altura limitada */
+@media (max-height: 700px) {
+  .footer {
+    padding: 2rem 1rem 1rem 1rem;
+  }
+}

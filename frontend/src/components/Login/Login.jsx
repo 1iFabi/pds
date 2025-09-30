@@ -1,7 +1,10 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { API_ENDPOINTS, apiRequest } from "../../config/api.js";
 import "./Login.css";
+import ForgotPasswordModal from "./ForgotPasswordModal.jsx";
+import ResetPasswordModal from "./ResetPasswordModal.jsx";
+import VerificationModal from "./VerificationModal.jsx";
 import logo from "/cNormal.png";
 import cromo from "/login.png";
 
@@ -10,14 +13,63 @@ export default function Login() {
   const [showPwd, setShowPwd] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
   const onChange = (e) =>
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
 
+  // Detectar si hay un token de reset en la URL
+  useEffect(() => {
+    const token = searchParams.get('token');
+    if (token) {
+      setResetToken(token);
+      setShowResetPassword(true);
+      // Limpiar la URL después de obtener el token
+      window.history.replaceState({}, document.title, '/login');
+    }
+  }, [searchParams]);
+
+  // Leer cookies de verificación establecidas por el backend en /api/auth/verify/<token>/
+  useEffect(() => {
+    const getCookie = (name) => {
+      return document.cookie
+        .split('; ')
+        .find(row => row.startsWith(name + '='))
+        ?.split('=')[1];
+    };
+
+    const status = getCookie('verification_status');
+    let message = getCookie('verification_message');
+
+    if (status && message) {
+      try {
+        const decoded = decodeURIComponent(message);
+        message = decoded;
+      } catch (e) {}
+      // Quitar comillas envolventes si las hay
+      if ((message.startsWith('"') && message.endsWith('"')) || (message.startsWith("'") && message.endsWith("'"))) {
+        message = message.slice(1, -1);
+      }
+      setVerificationMessage(message);
+      setShowVerificationModal(true);
+
+      // limpiar cookies para que no reaparezca en futuros loads
+      document.cookie = 'verification_status=; Max-Age=0; Path=/';
+      document.cookie = 'verification_message=; Max-Age=0; Path=/';
+    }
+  }, []);
+
   const [loginError, setLoginError] = useState('');
   const [loginSuccess, setLoginSuccess] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [showResetPassword, setShowResetPassword] = useState(false);
+  const [resetToken, setResetToken] = useState('');
+
+  // Modal de verificación de cuenta (via cookies)
+  const [showVerificationModal, setShowVerificationModal] = useState(false);
+  const [verificationMessage, setVerificationMessage] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -62,7 +114,7 @@ export default function Login() {
   };
 
   return (
-    <div className={`auth ${isTransitioning ? 'page-exit' : 'page-enter'}`}>
+    <div className={`auth login-page ${isTransitioning ? 'page-exit' : 'page-enter'}`}>
       {/* Columna izquierda */}
       <section className="auth-left">
         <div className="left-inner">
@@ -79,7 +131,7 @@ export default function Login() {
           <p className="subtitle">Ingresa tu correo y contraseña para acceder a tu cuenta.</p>
           <div className="title-underline" />
 
-          <form onSubmit={handleSubmit} className="login-form login-card">
+          <form onSubmit={handleSubmit} className="login-form login-card form-container">
             {/* Email */}
             <div className="uv-field">
               <span className="uv-icon" aria-hidden="true">
@@ -131,21 +183,19 @@ export default function Login() {
                 className="pwd-toggle"
                 onClick={() => setShowPwd((s) => !s)}
                 aria-label={showPwd ? "Ocultar contraseña" : "Mostrar contraseña"}
+                tabIndex="-1"
               >
                 {showPwd ? (
-                  <svg viewBox="0 0 24 24" width="18" height="18">
-                    <path
-                      d="M12 5c-5 0-9 4.5-10 7 1 2.5 5 7 10 7s9-4.5 10-7c-1-2.5-5-7-10-7zm0 11a4 4 0 110-8 4 4 0 010 8z"
-                      fill="currentColor"
-                    />
-                    <path d="M4 4l16 16" stroke="currentColor" strokeWidth="2" />
+                  // Ícono de ojo tachado (ocultar)
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                    <line x1="1" y1="1" x2="23" y2="23"/>
                   </svg>
                 ) : (
-                  <svg viewBox="0 0 24 24" width="18" height="18">
-                    <path
-                      d="M12 5c-5 0-9 4.5-10 7 1 2.5 5 7 10 7s9-4.5 10-7c-1-2.5-5-7-10-7zm0 11a4 4 0 110-8 4 4 0 010 8z"
-                      fill="currentColor"
-                    />
+                  // Ícono de ojo normal (mostrar)
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                    <circle cx="12" cy="12" r="3"/>
                   </svg>
                 )}
               </button>
@@ -196,9 +246,13 @@ export default function Login() {
               </a>
             </p>
 
-            <a href="#" className="login-link subtle">
+            <button 
+              type="button" 
+              className="login-link subtle"
+              onClick={() => setShowForgotPassword(true)}
+            >
               ¿Olvidaste tu contraseña?
-            </a>
+            </button>
           </form>
         </div>
       </section>
@@ -241,6 +295,29 @@ export default function Login() {
           </div>
         </div>
       )}
+
+      {/* Modal de recuperación de contraseña */}
+      <ForgotPasswordModal 
+        isOpen={showForgotPassword}
+        onClose={() => setShowForgotPassword(false)}
+      />
+
+      {/* Modal de restablecimiento de contraseña */}
+      <ResetPasswordModal 
+        isOpen={showResetPassword}
+        onClose={() => {
+          setShowResetPassword(false);
+          setResetToken('');
+        }}
+        token={resetToken}
+      />
+
+      {/* Modal de verificación de cuenta reutilizando estilos del modal de recuperación */}
+      <VerificationModal 
+        isOpen={showVerificationModal}
+        onClose={() => setShowVerificationModal(false)}
+        message={verificationMessage || 'Tu cuenta fue verificada correctamente.'}
+      />
     </div>
   );
 }

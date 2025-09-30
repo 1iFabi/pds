@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Menu, X } from 'lucide-react';
 import './Postlogin.css';
-import DashboardHome from './DashboardHome'; 
+import DashboardHome from './DashboardHome';
 
 const Postlogin = () => {
   const [activeSection, setActiveSection] = useState(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();
 
   const menuItems = [
@@ -83,10 +84,27 @@ const Postlogin = () => {
 
   return (
     <div className="postlogin-container">
-      <div className="sidebar">
+      {/* Botón hamburguesa para móviles */}
+      <button 
+        className="mobile-menu-btn"
+        onClick={() => setSidebarOpen(!sidebarOpen)}
+        aria-label="Toggle menu"
+      >
+        {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
+      </button>
+
+      {/* Overlay para cerrar sidebar en móviles */}
+      {sidebarOpen && (
+        <div 
+          className="sidebar-overlay"
+          onClick={() => setSidebarOpen(false)}
+        ></div>
+      )}
+
+      <div className={`sidebar ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <div className="logo-section">
         {/* Añadimos un onClick que sirve para volver al inicio del Postlogin cuando se toca el logo */}
-        <div className="logo-clickable" onClick={() => setActiveSection(null)}>
+        <div className="logo-clickable" onClick={() => {setActiveSection(null); setSidebarOpen(false);}}>
           <div className="logo">
             <img src="/cSolido.png" alt="SeqUOH Logo" className="logo-icon" />
             <h1 className="logo-text">SeqUOH</h1>
@@ -100,7 +118,7 @@ const Postlogin = () => {
             <button
               key={item.id}
               className={`menu-item ${activeSection === item.id ? 'active' : ''}`}
-              onClick={() => setActiveSection(item.id)}
+              onClick={() => {setActiveSection(item.id); setSidebarOpen(false);}}
             >
               <img src={item.icon} alt={item.label} className="menu-icon" />
               <span className="menu-label">{item.label}</span>
@@ -108,7 +126,7 @@ const Postlogin = () => {
           ))}
           <button
               className={`menu-item ${activeSection === 'pregunta' ? 'active' : ''}`}
-              onClick={() => setActiveSection('pregunta')}
+              onClick={() => {setActiveSection('pregunta'); setSidebarOpen(false);}}
           >
               <img src="/postlogin/robotia.png" alt="Pregunta a la IA" className="menu-icon" />
               <span className="menu-label">Pregunta a la IA</span>

@@ -1,130 +1,172 @@
-/* Register.css - Cleaned and Optimized */
+/* Register.css - Responsive Polished */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-/* ========================================= */
-/* BASE LAYOUT */
-/* ========================================= */
+/* ============ BASE LAYOUT ============ */
+
+* { box-sizing: border-box; }
 
 .register-layout {
-  min-height: 100vh;
-  height: 100vh;
+  min-height: 100vh;                 /* antes max-height: 100vh */
   display: flex;
   align-items: stretch;
-  background: #f8fafc !important;
-  overflow: hidden;
+  background: #f8fafc;
+  overflow: hidden;                   /* la sección izquierda manejará su propio scroll */
+  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
 }
 
-.auth.register-layout {
-  background: #f8fafc !important;
-}
+.auth.register-layout { background: #f8fafc; }
+.auth.register-layout .auth-left { background: #f8fafc; }
+.auth.register-layout .auth-right { background: #ffffff; }
 
-.auth.register-layout .auth-left {
-  background: #f8fafc !important;
-}
+.auth.mirror { flex-direction: row-reverse; }
 
-.auth.register-layout .auth-right {
-  background: #ffffff !important;
-}
-
+/* Lado izquierdo (formulario) */
 .register-left {
-  padding: 2rem;
+  width: 50%;
+  min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex: 1;
-  background: #f8fafc !important;
-  overflow-y: auto;
+  background: #f8fafc;
+  overflow-y: auto;                  /* scroll en el panel izquierdo */
+  -ms-overflow-style: none;          /* IE/Edge */
+  scrollbar-width: none;             /* Firefox */
 }
+.register-left::-webkit-scrollbar { width: 0; height: 0; } /* WebKit */
 
+/* Contenedor interno del card */
 .register-inner {
-  max-width: 380px;
-  margin: 0 auto;
   width: 100%;
+  max-width: 320px;                  /* compacto pero usable (puedes bajar a 300/280 si lo quieres aún más chico) */
+  margin: 0 auto;
+  padding: 0.5rem 0;
 }
 
+/* Lado derecho (imagen / ilustración) */
 .register-right {
-  flex: 1;
-  background: #ffffff !important;
+  width: 50%;
+  background: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
 }
 
-/* Invierte el orden solo en Register (espejo) en desktop */
-.auth.mirror {
-  flex-direction: row-reverse;
+.register-right img {
+  width: 100%;
+  height: 100%;                      /* antes 0% (no se veía) */
+  object-fit: cover;
 }
 
-/* ========================================= */
-/* FORM STYLES */
-/* ========================================= */
+/* ============ TITULOS ============ */
 
 .register-title {
-  margin-bottom: 0.5rem;
-  font-size: 1.8rem;
+  margin: 0 0 0.35rem 0;
+  font-weight: 700;
+  text-align: center;
+  color: #0f172a;
+  font-size: clamp(1.25rem, 3.6vw, 1.5rem);  /* legible en mobile y compacto en desktop */
 }
 
 .register-subtitle {
-  margin-bottom: 1.8rem;
-  font-size: 0.9rem;
+  margin: 0 0 1rem 0;
+  font-size: clamp(0.9rem, 2.8vw, 0.95rem);
   color: #64748b;
+  text-align: center;
+  line-height: 1.45;
   white-space: normal;
-  margin: 0 0 32px 0;
+}
+
+/* ============ CARD & FORM ============ */
+
+.login-card {
+  padding: 1rem 1.1rem;              /* compacto */
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 10px 25px -8px rgba(0, 0, 0, 0.10), 0 6px 16px -10px rgba(0,0,0,0.06);
+  max-width: 100%;
+  margin: 0 auto;
 }
 
 .register-form {
-  gap: 1rem;
+  display: grid;
+  gap: 10px;                          /* compacto */
 }
 
-.login-card {
-  padding: 1.8rem;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+/* Inputs genéricos */
+.uv-label {
+  display: block;
+  font-size: 0.9rem;
+  color: #334155;
+  margin-bottom: 0.25rem;
 }
 
-/* ========================================= */
-/* PASSWORD FIELD FIXES */
-/* ========================================= */
-
-.password-field-container {
-  position: relative;
-}
-
-/* Ensure password input has consistent sizing with other fields */
-.password-field-container .uv-input {
+.uv-input {
   width: 100%;
-  padding: 16px 16px 16px 48px;
+  padding: 12px 12px 12px 44px;
   border: 1.5px solid #e5e7eb;
   border-radius: 8px;
   font-size: 15px;
   background: #ffffff;
-  box-sizing: border-box;
-  transition: all 0.2s ease;
+  transition: all 0.18s ease;
 }
-
-.password-field-container .uv-input:focus {
+.uv-input:focus {
   outline: none;
   border-color: #4A90E2;
-  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+  box-shadow: 0 0 0 3px rgba(74,144,226,0.12);
 }
 
-/* ========================================= */
-/* PASSWORD VALIDATOR */
-/* ========================================= */
+/* ============ PASSWORD FIELD & VALIDATOR ============ */
 
+.password-wrapper {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.password-field-container {
+  position: relative;
+  flex: 1;
+}
+.password-field-container .uv-input { padding-right: 46px; }
+
+.pwd-toggle {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  display: grid;
+  place-items: center;
+  color: #6b7280;
+  border-radius: 6px;
+  transition: all 0.18s ease;
+  appearance: none;
+  user-select: none;
+}
+.pwd-toggle:hover { color: #374151; background-color: #f3f4f6; }
+.pwd-toggle:focus { outline: 2px solid #4A90E2; outline-offset: 2px; }
+.pwd-toggle:active { transform: translateY(-50%) scale(0.96); }
+.pwd-toggle svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
+
+/* Validador flotante (desktop) */
 .password-validator {
   position: absolute;
   top: 0;
-  left: calc(100% + 15px);
-  background: white;
+  left: calc(100% + 12px);
+  background: #fff;
   border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  padding: 0.5rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  padding: 0.55rem;
+  min-width: 220px;
+  max-width: 260px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+  animation: slideInRight 0.25s ease;
   z-index: 10;
-  min-width: 200px;
-  max-width: 220px;
-  animation: slideInRight 0.3s ease;
 }
 
 .validator-header {
@@ -132,102 +174,66 @@
   border-bottom: 1px solid #f3f4f6;
   padding-bottom: 0.3rem;
 }
-
 .validator-title {
   font-weight: 600;
   color: #374151;
-  font-size: 0.8rem;
+  font-size: 0.88rem;
 }
 
-.validator-rules {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-}
-
+.validator-rules { display: flex; flex-direction: column; gap: 0.35rem; }
 .validator-rule {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.75rem;
-  transition: all 0.2s ease;
+  display: flex; align-items: center; gap: 0.4rem;
+  font-size: 0.8rem; transition: all 0.18s ease;
 }
-
-.validator-rule.valid {
-  color: #10b981;
-}
-
-.validator-rule.invalid {
-  color: #ef4444;
-}
+.validator-rule.valid { color: #10b981; }
+.validator-rule.invalid { color: #ef4444; }
 
 .validator-icon {
-  width: 14px;
-  height: 14px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  width: 14px; height: 14px;
+  display: inline-flex; align-items: center; justify-content: center;
   border-radius: 50%;
-  font-size: 10px;
-  font-weight: bold;
+  font-size: 10px; font-weight: 700; flex-shrink: 0;
+}
+.validator-rule.valid .validator-icon { background: #dcfce7; color: #16a34a; }
+.validator-rule.invalid .validator-icon { background: #fecaca; color: #dc2626; }
+
+.validator-text { line-height: 1.2; }
+
+/* Variante responsiva (se muestra debajo en pantallas pequeñas) */
+.password-validator-responsive {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 0.55rem;
+  min-width: 220px;
+  max-width: 100%;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+  animation: slideInRight 0.25s ease;
   flex-shrink: 0;
 }
 
-.validator-rule.valid .validator-icon {
-  background: #dcfce7;
-  color: #16a34a;
-}
-
-.validator-rule.invalid .validator-icon {
-  background: #fecaca;
-  color: #dc2626;
-}
-
-.validator-text {
-  line-height: 1.2;
-}
-
 @keyframes slideInRight {
-  0% {
-    opacity: 0;
-    transform: translateX(-10px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateX(0);
-  }
+  0% { opacity: 0; transform: translateX(-10px); }
+  100% { opacity: 1; transform: translateX(0); }
 }
 
-/* ========================================= */
-/* INPUT VALIDATION STYLES */
-/* ========================================= */
+/* ============ VALIDATION & STATES ============ */
 
 .input-error {
   border-color: #ef4444 !important;
   background-color: #fef2f2 !important;
 }
-
-.password-error {
-  position: absolute;
-  bottom: -22px;
-  left: 0;
-  font-size: 0.8rem;
-  color: #ef4444;
-  font-weight: 500;
-}
-
+.password-error,
 .validation-error {
   position: absolute;
-  bottom: -22px;
+  bottom: -18px;
   left: 0;
   font-size: 0.8rem;
   color: #ef4444;
   font-weight: 500;
 }
 
-/* ========================================= */
-/* CHECKBOX STYLES */
-/* ========================================= */
+/* ============ CHECKBOX ============ */
 
 .checkbox-line {
   display: flex;
@@ -237,15 +243,25 @@
   font-size: 0.9rem;
   user-select: none;
 }
+.checkbox-line input[type="checkbox"] { width: 16px; height: 16px; }
 
-.checkbox-line input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
+/* ============ BUTTONS ============ */
+
+.login-button {
+  width: 100%;
+  padding: 0.9rem 1rem;
+  border-radius: 10px;
+  border: none;
+  background: #4A90E2;
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: transform .12s ease, box-shadow .2s ease, background .2s ease;
 }
-
-/* ========================================= */
-/* BUTTON STYLES */
-/* ========================================= */
+.login-button:hover { background: #357abd; transform: translateY(-1px); box-shadow: 0 6px 16px rgba(53,122,189,.35); }
+.login-button:active { transform: translateY(0); }
+.login-button:focus { outline: 2px solid #4A90E2; outline-offset: 2px; }
 
 .button-disabled {
   opacity: 0.6;
@@ -253,666 +269,200 @@
   background: #9ca3af !important;
   box-shadow: none !important;
 }
+.button-disabled:hover { transform: none !important; box-shadow: none !important; }
 
-.button-disabled:hover {
-  transform: none !important;
-  box-shadow: none !important;
+/* ============ PAGE TRANSITIONS ============ */
+
+.auth { will-change: transform, opacity; backface-visibility: hidden; }
+.auth.page-enter { animation: pageEnter 0.2s cubic-bezier(0.25,0.46,0.45,0.94) forwards; }
+.auth.page-exit  { animation: pageExit  0.15s cubic-bezier(0.55,0.085,0.68,0.53) forwards; }
+
+@keyframes pageEnter { 0% { opacity: 0; transform: translateX(-24px) scale(0.985); } 100% { opacity: 1; transform: translateX(0) scale(1); } }
+@keyframes pageExit  { 0% { opacity: 1; transform: translateX(0)     scale(1); }   100% { opacity: 0; transform: translateX(24px)  scale(0.985); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .auth.page-enter, .auth.page-exit { animation-duration: .2s; }
+  @keyframes pageEnter { 0%{opacity:0} 100%{opacity:1} }
+  @keyframes pageExit  { 0%{opacity:1} 100%{opacity:0} }
+  .password-validator { animation: none; }
 }
 
-/* ========================================= */
-/* PAGE TRANSITIONS */
-/* ========================================= */
+/* ============ TERMS MODAL ============ */
 
-.auth.page-enter {
-  animation: pageEnter 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+.terms-modal-overlay {
+  position: fixed; inset: 0;
+  background-color: rgba(0,0,0,.75);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000; padding: 1rem; overflow-y: auto;
 }
-
-.auth.page-exit {
-  animation: pageExit 0.15s cubic-bezier(0.55, 0.085, 0.68, 0.53) forwards;
+.terms-modal {
+  background: #fff; border-radius: 12px;
+  max-width: 800px; width: 100%;
+  max-height: 90vh; overflow-y: auto;
+  box-shadow: 0 25px 50px -12px rgba(0,0,0,.25);
+  animation: modalSlideIn .3s cubic-bezier(.25,.46,.45,.94);
 }
-
-@keyframes pageEnter {
-  0% {
-    opacity: 0;
-    transform: translateX(-30px) scale(0.98);
-  }
-  100% {
-    opacity: 1;
-    transform: translateX(0) scale(1);
-  }
+@keyframes modalSlideIn {
+  0% { opacity: 0; transform: translateY(-30px) scale(.95); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
 }
-
-@keyframes pageExit {
-  0% {
-    opacity: 1;
-    transform: translateX(0) scale(1);
-  }
-  100% {
-    opacity: 0;
-    transform: translateX(30px) scale(0.98);
-  }
+.terms-modal-header {
+  position: sticky; top: 0;
+  background: #fff; border-bottom: 1px solid #e5e7eb;
+  padding: 1.25rem 1.75rem; display: flex; justify-content: space-between; align-items: center;
+  border-radius: 12px 12px 0 0; z-index: 10;
 }
+.terms-modal-header h2 {
+  color: #277EAF; font-size: 1.35rem; font-weight: 700; margin: 0; line-height: 1.2;
+}
+.terms-modal-close {
+  background: none; border: none; font-size: 1.5rem; color: #6b7280; cursor: pointer;
+  width: 2rem; height: 2rem; display: grid; place-items: center; border-radius: 50%;
+  transition: all .2s ease; flex-shrink: 0;
+}
+.terms-modal-close:hover { background: #f3f4f6; color: #374151; }
+.terms-modal-close:focus { outline: 2px solid #4A90E2; outline-offset: 2px; }
+.terms-modal-content { padding: 1.75rem; line-height: 1.6; color: #374151; }
+.terms-modal-content h3 { color: #277EAF; font-size: 1.15rem; font-weight: 700; margin: 1.25rem 0 0.6rem 0; }
+.terms-modal-content h4 { color: #277EAF; font-size: 1rem;  font-weight: 600; margin: .85rem 0 .45rem 0; }
+.terms-modal-content p  { margin: 0 0 1rem 0; font-size: .95rem; }
+.terms-modal-content ul { margin: .5rem 0 1rem 1rem; padding-left: 1rem; }
+.terms-modal-content li { margin: .25rem 0; font-size: .95rem; }
+.terms-modal-footer {
+  position: sticky; bottom: 0; background: #fff; border-top: 1px solid #e5e7eb;
+  padding: 1.25rem 1.75rem; display: flex; justify-content: flex-end; border-radius: 0 0 12px 12px;
+}
+.terms-modal-accept {
+  background: #4A90E2; color: #fff; border: none;
+  padding: .75rem 1.5rem; border-radius: 10px; font-size: .95rem; font-weight: 600; cursor: pointer;
+  transition: all .2s ease; outline: none;
+}
+.terms-modal-accept:hover { background: #357abd; transform: translateY(-1px); box-shadow: 0 6px 16px rgba(74,144,226,.35); }
+.terms-modal-accept:focus { outline: 2px solid #4A90E2; outline-offset: 2px; }
+.terms-modal-accept:active { transform: translateY(0); }
+.terms-link { transition: all .2s ease; }
+.terms-link:hover { color: #357abd !important; text-decoration-thickness: 2px !important; }
+.terms-link:focus { outline: 2px solid #4A90E2; outline-offset: 2px; border-radius: 2px; }
 
-/* ========================================= */
-/* RESPONSIVE DESIGN */
-/* ========================================= */
+/* ============ RESPONSIVE ============ */
 
-/* Container adjustments for all screen sizes */
+/* Desktop base */
 @media (min-width: 1024px) {
-  .register-layout {
-    height: 100vh;
-    overflow: hidden;
-  }
-  
-  .register-left,
-  .register-right {
-    height: 100vh;
-  }
-  
-  .register-left {
-    width: 50%;
-    flex: none;
-    padding: 2rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  .register-right {
-    width: 50%;
-    flex: none;
-  }
-  
-  .register-right img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
+  .register-left, .register-right { min-height: 100vh; }
 }
 
-/* Medium-large screens */
+/* ≥1200 */
 @media (min-width: 1200px) {
-  .register-left {
-    padding: 2rem 3rem;
-  }
-  
-  .register-inner {
-    max-width: 400px;
-    width: 100%;
-  }
-  
-  .login-card {
-    padding: 2rem;
-  }
-  
-  .password-validator {
-    left: calc(100% + 15px);
-    min-width: 240px;
-    max-width: 280px;
-    padding: 0.8rem;
-  }
-  
-  .register-title {
-    font-size: 1.9rem;
-  }
-  
-  .register-subtitle {
-    font-size: 0.95rem;
-  }
+  .register-inner { max-width: 340px; }     /* sigue compacto */
+  .login-card    { padding: 1.1rem 1.25rem; }
+  .validator-title { font-size: 0.92rem; }
+  .password-validator { min-width: 240px; max-width: 280px; }
 }
 
-/* Large screens */
+/* ≥1400 */
 @media (min-width: 1400px) {
-  .register-left {
-    padding: 2rem 4rem;
-  }
-  
-  .register-inner {
-    max-width: 440px;
-  }
-  
-  .login-card {
-    padding: 2.5rem;
-  }
-  
-  .password-validator {
-    left: calc(100% + 18px);
-    min-width: 260px;
-    max-width: 300px;
-    padding: 1rem;
-  }
-  
-  .validator-rule {
-    font-size: 0.85rem;
-    gap: 0.5rem;
-  }
-  
-  .validator-icon {
-    width: 16px;
-    height: 16px;
-    font-size: 12px;
-  }
-  
-  .validator-title {
-    font-size: 0.9rem;
-  }
-  
-  .register-title {
-    font-size: 2.1rem;
-  }
-  
-  .register-subtitle {
-    font-size: 1rem;
-  }
-  
-  .register-form {
-    gap: 1.2rem;
-  }
+  .register-inner { max-width: 360px; }
+  .login-card { padding: 1.25rem; }
+  .validator-rule { font-size: 0.82rem; }
 }
 
-/* Extra large screens */
+/* ≥1600 */
 @media (min-width: 1600px) {
-  .register-left {
-    padding: 3rem 5rem;
-  }
-  
-  .register-inner {
-    max-width: 480px;
-  }
-  
-  .login-card {
-    padding: 3rem;
-  }
-  
-  .password-validator {
-    left: calc(100% + 20px);
-    min-width: 280px;
-    max-width: 320px;
-    padding: 1.2rem;
-  }
-  
-  .register-title {
-    font-size: 2.3rem;
-  }
-  
-  .register-subtitle {
-    font-size: 1.1rem;
-  }
-  
-  .register-form {
-    gap: 1.4rem;
-  }
+  .register-inner { max-width: 380px; }
+  .password-validator { left: calc(100% + 16px); }
 }
 
-/* Full HD and beyond */
+/* ≥1920 */
 @media (min-width: 1920px) {
-  .register-left {
-    padding: 4rem 6rem;
-  }
-  
-  .register-inner {
-    max-width: 520px;
-  }
-  
-  .login-card {
-    padding: 3.5rem;
-  }
-  
-  .password-validator {
-    left: calc(100% + 25px);
-    min-width: 300px;
-    max-width: 340px;
-    padding: 1.4rem;
-  }
-  
-  .validator-rule {
-    font-size: 0.9rem;
-    gap: 0.6rem;
-  }
-  
-  .validator-icon {
-    width: 18px;
-    height: 18px;
-    font-size: 13px;
-  }
-  
-  .validator-title {
-    font-size: 1rem;
-    margin-bottom: 0.8rem;
-  }
-  
-  .register-title {
-    font-size: 2.5rem;
-  }
-  
-  .register-subtitle {
-    font-size: 1.2rem;
-  }
-  
-  .register-form {
-    gap: 1.6rem;
-  }
-  
-  .uv-input {
-    font-size: 1.1rem;
-    padding: 18px 18px 18px 52px;
-  }
-  
-  .uv-label {
-    font-size: 1rem;
-  }
-  
-  .login-button {
-    padding: 1.2rem 2.5rem;
-    font-size: 1.1rem;
-  }
+  .register-inner { max-width: 400px; }
+  .login-card { padding: 1.35rem; }
 }
 
-/* Ultra wide screens (2K, 4K monitors) */
+/* ≥2560 */
 @media (min-width: 2560px) {
-  .register-left {
-    padding: 6rem 10rem;
-  }
-  
-  .register-inner {
-    max-width: 700px;
-  }
-  
-  .login-card {
-    padding: 5rem;
-  }
-  
-  .password-validator {
-    left: calc(100% + 35px);
-    min-width: 400px;
-    max-width: 450px;
-    padding: 2rem;
-  }
-  
-  .validator-rule {
-    font-size: 1.1rem;
-    gap: 0.8rem;
-  }
-  
-  .validator-icon {
-    width: 22px;
-    height: 22px;
-    font-size: 16px;
-  }
-  
-  .validator-title {
-    font-size: 1.2rem;
-    margin-bottom: 1rem;
-  }
-  
-  .register-title {
-    font-size: 3rem;
-  }
-  
-  .register-subtitle {
-    font-size: 1.4rem;
-  }
-  
-  .register-form {
-    gap: 2rem;
-  }
-  
-  .uv-input {
-    font-size: 1.3rem;
-    padding: 22px 22px 22px 60px;
-  }
-  
-  .uv-label {
-    font-size: 1.2rem;
-  }
-  
-  .login-button {
-    padding: 1.5rem 3rem;
-    font-size: 1.3rem;
-  }
-  
-  .checkbox-line {
-    font-size: 1.1rem;
-  }
-  
-  .checkbox-line input[type="checkbox"] {
-    width: 22px;
-    height: 22px;
-  }
+  .register-inner { max-width: 440px; }
+  .login-card { padding: 1.5rem; }
+  .validator-title { font-size: 1rem; }
+  .validator-rule { font-size: 0.95rem; }
 }
 
-/* Tablets and below */
+/* Tablets y abajo */
 @media (max-width: 1024px) {
   .auth.mirror {
     flex-direction: column;
+    min-height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
   }
-  
-  .auth.mirror .register-right {
-    display: none;
-  }
-  
+  .auth.mirror .register-right { display: none; }     /* ocultar imagen para priorizar form */
   .auth.mirror .register-left {
     width: 100%;
-    height: 100vh;
+    min-height: 100vh;
     padding: 2rem 1rem;
+    -webkit-overflow-scrolling: touch;
   }
-  
-  .password-validator {
-    position: static;
-    margin-top: 0.5rem;
-    margin-left: 0;
-    min-width: auto;
-    width: 100%;
-  }
-}
 
-/* Mobile large */
-@media (max-width: 768px) {
-  .register-left {
-    padding: 1.5rem 1rem;
-  }
-  
-  .register-inner {
-    max-width: none;
-  }
-  
-  .register-title {
-    font-size: 1.75rem;
-  }
-  
-  .register-subtitle {
-    font-size: 0.9rem;
-    margin-bottom: 1.5rem;
-  }
-  
-  .register-form {
-    gap: 1rem;
-  }
-  
-  .validator-title {
-    font-size: 0.85rem;
-  }
-  
-  .validator-rule {
-    font-size: 0.8rem;
-  }
-  
-  .validator-text {
-    line-height: 1.3;
-  }
-}
-
-/* Mobile small */
-@media (max-width: 480px) {
-  .register-layout {
-    min-height: 100vh;
-  }
-  
-  .register-left {
-    padding: 1rem 0.75rem;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-  }
-  
-  .register-inner {
-    max-width: 380px;
-    margin: 0 auto;
-    width: 100%;
-  }
-  
-  .login-card {
-    max-width: 100%;
-    margin: 0;
-    padding: 1.5rem;
-    border-radius: 16px;
-  }
-  
-  .register-title {
-    font-size: 1.5rem;
-    margin-bottom: 0.25rem;
-  }
-  
-  .register-subtitle {
-    font-size: 0.85rem;
-    margin-bottom: 1.25rem;
-  }
-  
-  .password-field-container .uv-input {
-    padding: 16px 16px 16px 48px !important;
-    font-size: 15px !important;
+  /* El validador pasa a bloque debajo del input */
+  .password-validator,
+  .password-validator-responsive {
+    position: static !important;
     width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin-top: 0.5rem !important;
+    animation: slideInRight .2s ease;
   }
-  
-  .password-validator {
-    padding: 0.5rem;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    min-width: 200px;
-    max-width: 220px;
-  }
-  
-  .validator-rules {
-    gap: 0.4rem;
-  }
-  
-  .validator-rule {
-    font-size: 0.75rem;
-  }
-  
-  .validator-icon {
-    width: 14px;
-    height: 14px;
-    font-size: 10px;
-  }
-  
-  .checkbox-line {
-    font-size: 0.85rem;
-    gap: 0.5rem;
-  }
-  
-  .checkbox-line input[type="checkbox"] {
-    width: 16px;
-    height: 16px;
-  }
+
+  .password-wrapper { flex-direction: column; gap: 0.5rem; width: 100%; }
+  .password-field-container { width: 100%; }
+  .password-field-container .uv-input { width: 100%; }
 }
 
-/* Mobile extra small */
+/* Mobile grande */
+@media (max-width: 768px) {
+  .register-left { padding: 1.25rem 1rem; }
+  .register-inner { max-width: 100%; padding: 0.25rem 0; }
+  .login-card { border-radius: 14px; padding: 1rem; }
+  .register-title   { font-size: clamp(1.2rem, 5.5vw, 1.4rem); }
+  .register-subtitle{ font-size: clamp(0.86rem, 3.5vw, 0.95rem); padding: 0 0.5rem; }
+  .validator-title  { font-size: 0.85rem; }
+  .validator-rule   { font-size: 0.8rem; }
+}
+
+/* Mobile chico */
+@media (max-width: 480px) {
+  .register-left { padding: 1rem 0.75rem !important; }
+  .login-card { padding: 0.9rem; }
+  .password-wrapper { gap: 0.5rem !important; }
+  .password-field-container .uv-input {
+    padding: 12px 12px 12px 44px !important;
+    font-size: 15px !important;
+  }
+  .password-validator { padding: 0.5rem; }
+  .checkbox-line { font-size: 0.85rem; gap: 0.5rem; }
+  .checkbox-line input[type="checkbox"] { width: 16px; height: 16px; }
+}
+
+/* Mobile XS */
 @media (max-width: 360px) {
-  .register-left {
-    padding: 0.75rem 0.5rem;
-  }
-  
-  .register-title {
-    font-size: 1.25rem;
-  }
-  
-  .register-subtitle {
-    font-size: 0.8rem;
-  }
-  
-  .login-card {
-    padding: 1.25rem 1rem;
-  }
-  
-  .password-field-container .uv-input {
-    padding: 16px 16px 16px 48px !important;
-    font-size: 15px !important;
-    width: 100% !important;
-  }
-  
-  .password-validator {
-    padding: 0.4rem;
-    min-width: 180px;
-    max-width: 200px;
-  }
-  
-  .validator-header {
-    margin-bottom: 0.5rem;
-    padding-bottom: 0.4rem;
-  }
-  
-  .validator-title {
-    font-size: 0.8rem;
-  }
-  
-  .validator-rules {
-    gap: 0.3rem;
-  }
-  
-  .validator-rule {
-    font-size: 0.7rem;
-    gap: 0.4rem;
-  }
-  
-  .validator-icon {
-    width: 12px;
-    height: 12px;
-    font-size: 9px;
-  }
+  .register-left { padding: 0.75rem 0.5rem; }
+  .register-title { font-size: 1.15rem; }
+  .register-subtitle { font-size: 0.82rem; }
+  .login-card { padding: 0.85rem; }
+  .password-validator { min-width: 180px; max-width: 200px; }
 }
 
-/* Landscape mobile */
+/* Landscape bajo */
 @media (max-height: 500px) and (orientation: landscape) {
-  .register-layout {
-    flex-direction: row;
-  }
-  
-  .register-right {
-    order: 2;
-    min-height: 100vh;
-    flex: 0.4;
-  }
-  
-  .register-left {
-    order: 1;
-    flex: 0.6;
-    padding: 1rem;
-  }
-  
-  .register-inner {
-    max-width: none;
-  }
-  
-  .register-title {
-    font-size: 1.25rem;
-    margin-bottom: 0.25rem;
-  }
-  
-  .register-subtitle {
-    font-size: 0.8rem;
-    margin-bottom: 1rem;
-  }
-  
-  .register-form {
-    gap: 0.75rem;
-  }
-  
-  .login-card {
-    padding: 1rem;
-  }
-  
+  .register-layout { flex-direction: row; }
+  .register-right { order: 2; min-height: 100vh; flex: 0.4; }
+  .register-left  { order: 1; flex: 0.6; padding: 1rem; }
+  .register-title { margin-bottom: 0.25rem; }
+  .register-subtitle { margin-bottom: 0.6rem; }
+  .register-form { gap: 0.6rem; }
+  .login-card { padding: 0.9rem; }
   .password-validator {
-    position: fixed;
-    top: 50%;
-    right: 10px;
-    transform: translateY(-50%);
-    min-width: 200px;
-    z-index: 100;
-  }
-}
-
-/* ========================================= */
-/* PERFORMANCE OPTIMIZATIONS */
-/* ========================================= */
-
-.auth {
-  will-change: transform, opacity;
-  backface-visibility: hidden;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .auth.page-enter,
-  .auth.page-exit {
-    animation-duration: 0.2s;
-  }
-  
-  @keyframes pageEnter {
-    0% { opacity: 0; }
-    100% { opacity: 1; }
-  }
-  
-  @keyframes pageExit {
-    0% { opacity: 1; }
-    100% { opacity: 0; }
-  }
-  
-  .password-validator {
-    animation: none;
-  }
-}
-
-/* ========================================= */
-/* MEJORAS DE CENTRADO Y ESPACIADO */
-/* ========================================= */
-
-/* Asegurar que el contenido del register se centre correctamente */
-.register-inner {
-  min-height: auto !important;
-  padding: 1rem 0;
-}
-
-/* Mejorar espaciado del logo */
-.register-inner .logo-container {
-  margin-bottom: 1.5rem;
-}
-
-/* Ajustar título y subtítulo para mejor espaciado */
-.register-title {
-  margin-bottom: 0.5rem;
-  text-align: center;
-}
-
-.register-subtitle {
-  margin-bottom: 1.5rem;
-  text-align: center;
-  white-space: normal;
-  line-height: 1.4;
-}
-
-/* Responsividad específica para Register */
-@media (max-width: 768px) {
-  .register-inner {
-    padding: 0.5rem 0;
-  }
-  
-  .register-inner .logo-container {
-    margin-bottom: 1rem;
-  }
-  
-  .register-title {
-    font-size: clamp(1.5rem, 6vw, 1.8rem);
-    margin-bottom: 0.25rem;
-  }
-  
-  .register-subtitle {
-    font-size: clamp(0.85rem, 3.5vw, 0.9rem);
-    margin-bottom: 1.25rem;
-    padding: 0 1rem;
-  }
-  
-  .welcome-logo {
-    width: clamp(60px, 15vw, 80px);
-    height: auto;
-  }
-}
-
-@media (max-width: 480px) {
-  .register-left {
-    padding: 1rem 0.75rem !important;
-  }
-  
-  .register-inner {
-    padding: 0.25rem 0 !important;
+    position: fixed; top: 50%; right: 10px; transform: translateY(-50%);
+    min-width: 200px; z-index: 100;
   }
 }
