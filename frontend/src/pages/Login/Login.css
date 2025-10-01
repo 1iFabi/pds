@@ -1,0 +1,672 @@
+
+/* ===== Layout general ===== */
+.auth {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* ===== LADO IZQUIERDO (corregido según mock) ===== */
+.auth-left {
+  position: relative;
+  width: 50vw;
+  min-height: 100vh;
+  background: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* Logo fijo arriba-izquierda */
+.brand {
+  position: absolute;
+  top: 10px;
+  left: 150px;
+  width: 250px;
+  height: auto;
+  user-select: none;
+  z-index: 10;
+}
+
+/* Ajustar tamaño del logo y centrar */
+.logo-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.welcome-logo {
+  width: 80px;
+  height: auto;
+}
+
+/* Contenedor principal centrado */
+.left-inner {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  max-width: 480px;
+  width: 100%;
+}
+
+.title-section {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.auth .title {
+  font-weight: 700;
+  font-size: 40px;
+  line-height: 1.1;
+  color: #0D5E8C;                   /* azul más intenso */
+  margin: 0 0 12px 0;
+}
+
+.auth .subtitle {
+  color: #64748b;
+  font-size: 17px;
+  font-weight: 400;
+  margin: 0 0 10px 0;
+  line-height: 1.4;
+  white-space: normal;
+  text-align: center;
+}
+
+.auth .title-underline {
+  width: 180px;
+  height: 3px;
+  background: #0D5E8C;
+  border-radius: 999px;
+  margin: 0 auto;
+}
+
+/* Tarjeta de login centrada */
+.login-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 32px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 
+    0 20px 25px -5px rgba(0, 0, 0, 0.06),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  width: 100%;
+  max-width: 400px;
+}
+
+/* Formulario */
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Campo personalizado con label flotante */
+.uv-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.uv-icon {
+  position: absolute;
+  left: 14px;
+  z-index: 2;
+  color: #9ca3af;
+  transition: color 0.2s ease;
+  pointer-events: none;
+}
+
+.uv-input {
+  width: 100%;
+  padding: 16px 16px 16px 48px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 15px;
+  background: #ffffff;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+  outline: none;
+}
+
+.uv-input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.uv-input:focus + .uv-label,
+.uv-input:not(:placeholder-shown) + .uv-label {
+  transform: translateY(-30px) scale(0.85);
+  color: #3b82f6;
+  background: #ffffff;
+  padding: 0 6px;
+}
+
+.uv-input:focus ~ .uv-icon {
+  color: #3b82f6;
+}
+
+.uv-label {
+  position: absolute;
+  left: 48px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9ca3af;
+  font-size: 15px;
+  font-weight: 400;
+  transition: all 0.2s ease;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.uv-focus-bg {
+  display: none; /* No necesario en este diseño */
+}
+
+/* Botón de toggle para password - Mejorado para compatibilidad cross-browser */
+.pwd-toggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #6b7280;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  z-index: 2;
+  outline: none;
+  /* Mejor compatibilidad con navegadores */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+.pwd-toggle:hover {
+  color: #374151;
+  background-color: #f9fafb;
+}
+
+.pwd-toggle:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+.pwd-toggle:active {
+  transform: translateY(-50%) scale(0.95);
+}
+
+/* SVG dentro del botón de contraseña */
+.pwd-toggle svg {
+  display: block;
+  width: 18px;
+  height: 18px;
+  stroke-width: 2;
+  /* Mejor compatibilidad cross-browser */
+  fill: none;
+  stroke: currentColor;
+  pointer-events: none;
+  transition: all 0.2s ease;
+}
+
+/* Específicamente para IE y navegadores más antiguos */
+.pwd-toggle svg path,
+.pwd-toggle svg line,
+.pwd-toggle svg circle {
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Asegurar que el input de contraseña tenga espacio para el botón */
+.uv-field:has(.pwd-toggle) .uv-input {
+  padding-right: 48px;
+}
+
+/* Botón principal */
+.login-button {
+  width: 100%;
+  padding: 14px 24px;
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+  background: #0D5E8C;
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 15px;
+  margin-top: 8px;
+  transition: all 0.2s ease;
+}
+
+.login-button:hover:not(:disabled) {
+  background: #294a91;
+  transform: translateY(-1px);
+}
+
+.login-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Enlaces de ayuda */
+.login-help {
+  text-align: center;
+  margin: 16px 0 0 0;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.login-link {
+  color: #3b82f6;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.login-link:hover {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
+.login-link.subtle {
+  display: block;
+  text-align: center;
+  margin-top: 12px;
+  font-size: 13px;
+  color: #9ca3af;
+  font-weight: 400;
+}
+
+.login-link.subtle:hover {
+  color: #6b7280;
+}
+
+/* ===== Lado derecho ===== */
+.auth-right {
+  width: 50%;
+  height: 100%;
+}
+
+.auth-right img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* ===== Responsivo ===== */
+
+/* Para pantallas grandes (desktop) */
+@media (min-width: 1025px) {
+  .auth-left {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .left-inner {
+    max-width: 480px;
+    padding: 0 48px;
+  }
+}
+
+/* Para pantallas medianas y pequeñas */
+@media (max-width: 1024px) {
+  body { overflow: auto; }
+  .auth { 
+    flex-direction: column; 
+    height: auto;
+    min-height: 100vh;
+  }
+  .auth-left, .auth-right { width: 100%; }
+  .auth-right { display: none; }
+  
+  .auth-left {
+    min-height: 100vh;
+    height: auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px 24px;
+  }
+  
+  .brand {
+    left: 24px;
+    top: 24px;
+  }
+  
+  .left-inner {
+    padding: 0 24px;
+    width: 100%;
+    max-width: 400px;
+  }
+  
+  /* 🔒 Scope en responsive también */
+  .auth .title {
+    font-size: clamp(28px, 8vw, 36px);
+    text-align: center;
+  }
+  
+  .auth .subtitle {
+    font-size: clamp(14px, 4vw, 16px);
+    margin: 0 0 24px 0;
+    white-space: normal;
+    text-align: center;
+    padding: 0 1rem;
+  }
+  
+  .welcome-logo {
+    width: clamp(60px, 15vw, 80px);
+  }
+}
+
+/* Animación de entrada */
+.auth.page-enter {
+  animation: pageEnter 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+/* Animación de salida */
+.auth.page-exit {
+  animation: pageExit 0.3s cubic-bezier(0.55, 0.085, 0.68, 0.53) forwards;
+}
+
+@keyframes pageEnter {
+  0% {
+    opacity: 0;
+    transform: translateX(-30px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes pageExit {
+  0% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(30px) scale(0.98);
+  }
+}
+
+/* Animaciones más suaves para dispositivos móviles */
+@media (prefers-reduced-motion: reduce) {
+  .auth.page-enter,
+  .auth.page-exit {
+    animation-duration: 0.2s;
+  }
+  
+  @keyframes pageEnter {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+  }
+  
+  @keyframes pageExit {
+    0% { opacity: 1; }
+    100% { opacity: 0; }
+  }
+}
+
+/* Optimización de rendimiento */
+.auth {
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}
+
+/* Transición específica para el link de registro */
+.login-link {
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.login-link:hover {
+  transform: translateY(-1px);
+}
+
+.login-link:active {
+  transform: translateY(0);
+}
+
+/* Efecto de loading durante la transición */
+.auth.page-exit .login-form {
+  pointer-events: none;
+}
+
+.auth.page-exit .login-button {
+  opacity: 0.7;
+}
+
+/* Staggered animation para elementos del formulario */
+.auth.page-enter .uv-field {
+  animation: slideInUp 0.5s ease forwards;
+}
+
+.auth.page-enter .uv-field:nth-child(1) { animation-delay: 0.1s; }
+.auth.page-enter .uv-field:nth-child(2) { animation-delay: 0.15s; }
+.auth.page-enter .login-button { animation-delay: 0.2s; }
+.auth.page-enter .login-help { animation-delay: 0.25s; }
+
+@keyframes slideInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ========================================= */
+/* MODAL DE ÉXITO */
+/* ========================================= */
+
+.success-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: fadeIn 0.3s ease;
+}
+
+.success-modal {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 2.5rem 2rem;
+  text-align: center;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  max-width: 400px;
+  width: 90%;
+  animation: slideInScale 0.4s ease;
+}
+
+.success-icon {
+  margin: 0 auto 1.5rem auto;
+  width: 64px;
+  height: 64px;
+}
+
+.success-circle {
+  animation: drawCircle 0.6s ease forwards;
+}
+
+.success-check {
+  animation: drawCheck 0.3s ease 0.4s forwards;
+}
+
+.success-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #0D5E8C;
+  margin: 0 0 0.5rem 0;
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+
+.success-message {
+  color: #64748b;
+  font-size: 1rem;
+  margin: 0;
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideInScale {
+  0% {
+    opacity: 0;
+    transform: scale(0.8) translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes drawCircle {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes drawCheck {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* ========================================= */
+/* VALIDADORES DE CONTRASEÑA */
+/* ========================================= */
+
+.password-validator {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 12px;
+  margin: 8px 0;
+  font-size: 14px;
+}
+
+.validator-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 6px;
+  transition: all 0.3s ease;
+}
+
+.validator-item:last-child {
+  margin-bottom: 0;
+}
+
+.validator-icon {
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 8px;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+.validator-item.valid .validator-icon {
+  background: #10b981;
+  color: white;
+}
+
+.validator-item.invalid .validator-icon {
+  background: #ef4444;
+  color: white;
+}
+
+.validator-item.valid {
+  color: #065f46;
+}
+
+.validator-item.invalid {
+  color: #991b1b;
+}
+
+/* Password match indicator */
+.password-match {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  margin: 8px 0;
+  padding: 8px 12px;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+}
+
+.password-match.valid {
+  background: #dcfce7;
+  border: 1px solid #bbf7d0;
+  color: #065f46;
+}
+
+.password-match.invalid {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+}
+
+.password-match .validator-icon {
+  width: 16px;
+  height: 16px;
+  margin-right: 8px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: bold;
+}
+
+.password-match.valid .validator-icon {
+  background: #10b981;
+  color: white;
+}
+
+.password-match.invalid .validator-icon {
+  background: #ef4444;
+  color: white;
+}
+
