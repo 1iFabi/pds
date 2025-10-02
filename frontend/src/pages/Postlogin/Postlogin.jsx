@@ -82,6 +82,7 @@ const Postlogin = () => {
     }
   };
 
+
   return (
     <div className="postlogin-container">
       {/* Botón hamburguesa para móviles */}
