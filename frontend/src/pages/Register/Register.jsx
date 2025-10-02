@@ -3,7 +3,6 @@ import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { API_ENDPOINTS, apiRequest } from "../../config/api.js";
 import "./Register.css";
-// Reutilizamos los estilos del Login para el layout 50/50 y los inputs
 import "../Login/Login.css";
 import VerificationModal from "../Login/VerificationModal.jsx";
 
@@ -13,6 +12,7 @@ import cromo from "/login.png";
 const Register = () => {
   const [formData, setFormData] = useState({
     nombre: "",
+    apellido: "",
     contraseña: "",
     repetirContraseña: "",
     correo: "",
@@ -25,7 +25,6 @@ const Register = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigate = useNavigate();
 
-  // Validación de contraseña en tiempo real
   const passwordValidation = useMemo(() => {
     const password = formData.contraseña;
     return {
@@ -39,16 +38,14 @@ const Register = () => {
   const isPasswordValid = Object.values(passwordValidation).every(Boolean);
   const passwordsMatch = formData.contraseña === formData.repetirContraseña && formData.repetirContraseña !== '';
 
-  // Validación de teléfono
   const phoneValidation = useMemo(() => {
-    const phone = formData.telefono;
+    const phone = (formData.telefono || "").trim();
     return {
-      isNumeric: /^\d*$/.test(phone),
-      maxLength: phone.length <= 11,
+      format: /^\+569\d{8}$/.test(phone),
     };
   }, [formData.telefono]);
 
-  const isPhoneValid = Object.values(phoneValidation).every(Boolean);
+  const isPhoneValid = phoneValidation.format || formData.telefono.length === 0;
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -63,7 +60,6 @@ const Register = () => {
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
-  // Modal de verificación tras registro
   const [showVerificationModal, setShowVerificationModal] = useState(false);
   const [verificationMessage, setVerificationMessage] = useState('');
 
@@ -72,6 +68,11 @@ const Register = () => {
     
     if (!isPasswordValid) {
       alert('La contraseña no cumple con todos los requisitos');
+      return;
+    }
+
+    if (!/^\+569\d{8}$/.test((formData.telefono || '').trim())) {
+      alert('El teléfono debe tener formato +569XXXXXXXX');
       return;
     }
     
@@ -93,6 +94,7 @@ const Register = () => {
         method: 'POST',
         body: JSON.stringify({
           nombre: formData.nombre,
+          apellido: formData.apellido,
           correo: formData.correo,
           telefono: formData.telefono,
           contraseña: formData.contraseña,
@@ -121,7 +123,7 @@ const Register = () => {
       console.error('Error de conexión:', error);
       setRegistrationError('Error de conexión con el servidor. Verifica que el backend esté ejecutándose.');
     }
-      setIsLoading(false);
+    setIsLoading(false);
   };
 
   const handleLoginClick = (e) => {
@@ -146,16 +148,13 @@ const Register = () => {
   };
 
   const handlePasswordBlur = () => {
-    // Solo ocultar si no estamos interactuando con el validador
     setTimeout(() => {
-      // Si no hay contenido o ya está válida, ocultar
       if (formData.contraseña.length === 0 || isPasswordValid) {
         setShowPasswordValidation(false);
       }
     }, 150);
   };
 
-  // Función para ocultar validador cuando se hace click fuera
   React.useEffect(() => {
     const handleClickOutside = (event) => {
       if (showPasswordValidation && 
@@ -171,12 +170,10 @@ const Register = () => {
     }
   }, [showPasswordValidation]);
 
-return (
+  return (
     <div className={`auth register-page register-layout mirror ${isTransitioning ? "page-exit" : "page-enter"}`}>
-      {/* Lado izquierdo (idéntico layout al login) */}
       <section className="auth-left register-left">
         <div className="left-inner register-inner">
-          {/* Solo la imagen del logo, sin texto "SeqUOH" */}
           <div className="logo-container">
             <button
               type="button"
@@ -196,32 +193,51 @@ return (
           <p className="subtitle register-subtitle">Regístrate para acceder a tu perfil genético.</p>
           <div className="title-underline" />
 
-          {/* Reutilizo la tarjeta/inputs del login para consistencia visual */}
           <form onSubmit={handleSubmit} className="login-form login-card register-form form-container">
-            {/* Nombre */}
-            <div className="uv-field">
-              <span className="uv-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" width="20" height="20">
-                  <path
-                    d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z"
-                    fill="currentColor"
-                  />
-                </svg>
-              </span>
-              <input
-                className="uv-input"
-                type="text"
-                name="nombre"
-                value={formData.nombre}
-                onChange={handleInputChange}
-                placeholder=" "
-                required
-              />
-              <label className="uv-label">Nombre</label>
-              <span className="uv-focus-bg" />
+            {/* Fila 1: Nombre y Apellido */}
+            <div className="form-row">
+              <div className="uv-field">
+                <span className="uv-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="20" height="20">
+                    <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z" fill="currentColor" />
+                  </svg>
+                </span>
+                <input
+                  className="uv-input"
+                  type="text"
+                  name="nombre"
+                  value={formData.nombre}
+                  onChange={handleInputChange}
+                  placeholder="Ej: María"
+                  required
+                  autoComplete="given-name"
+                />
+<label className="uv-label">Nombre *</label>
+                <span className="uv-focus-bg" />
+              </div>
+
+              <div className="uv-field">
+                <span className="uv-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="20" height="20">
+                    <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z" fill="currentColor" />
+                  </svg>
+                </span>
+                <input
+                  className="uv-input"
+                  type="text"
+                  name="apellido"
+                  value={formData.apellido}
+                  onChange={handleInputChange}
+                  placeholder="Ej: González"
+                  required
+                  autoComplete="family-name"
+                />
+<label className="uv-label">Apellido *</label>
+                <span className="uv-focus-bg" />
+              </div>
             </div>
 
-            {/* Correo */}
+            {/* Fila 2: Correo (span completo) */}
             <div className="uv-field">
               <span className="uv-icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24" width="20" height="20">
@@ -234,21 +250,18 @@ return (
                 name="correo"
                 value={formData.correo}
                 onChange={handleInputChange}
-                placeholder=" "
+                placeholder="ejemplo@correo.com"
                 required
               />
-              <label className="uv-label">Correo</label>
+<label className="uv-label">Correo *</label>
               <span className="uv-focus-bg" />
             </div>
 
-            {/* Teléfono */}
+            {/* Fila 3: Teléfono (span completo) */}
             <div className="uv-field">
               <span className="uv-icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24" width="20" height="20">
-                  <path
-                    d="M22 16.92v3a2 2 0 01-2.18 2 19.8 19.8 0 01-8.63-3.07 19.5 19.5 0 01-6-6A19.8 19.8 0 012.1 4.1 2 2 0 014.1 2h3a2 2 0 012 1.72c.07.96.27 1.9.7 2.81a2 2 0 01-.45 2.11L8.1 9.9a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.91.43 1.85.63 2.81.7A2 2 0 0122 16.92z"
-                    fill="currentColor"
-                  />
+                  <path d="M22 16.92v3a2 2 0 01-2.18 2 19.8 19.8 0 01-8.63-3.07 19.5 19.5 0 01-6-6A19.8 19.8 0 012.1 4.1 2 2 0 014.1 2h3a2 2 0 012 1.72c.07.96.27 1.9.7 2.81a2 2 0 01-.45 2.11L8.1 9.9a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.91.43 1.85.63 2.81.7A2 2 0 0122 16.92z" fill="currentColor" />
                 </svg>
               </span>
               <input
@@ -256,118 +269,100 @@ return (
                 type="tel"
                 name="telefono"
                 value={formData.telefono}
+                inputMode="tel"
+                pattern="^\+569\d{8}$"
                 onChange={(e) => {
                   const value = e.target.value;
-                  if (/^\d*$/.test(value) && value.length <= 11) {
+                  if (/^[+\d]*$/.test(value) && value.length <= 12) {
                     handleInputChange(e);
                   }
                 }}
-                placeholder=" "
+                placeholder="+569XXXXXXXX"
                 required
+                aria-describedby="phone-hint"
               />
-              <label className="uv-label">Teléfono</label>
+<label className="uv-label">Teléfono *</label>
               <span className="uv-focus-bg" />
-              {!isPhoneValid && (
-                <div className="validation-error">
-                  {phoneValidation.isNumeric ? "" : "Solo se permiten números."}
-                  {phoneValidation.maxLength ? "" : "Máximo 11 dígitos."}
+              {formData.telefono && !phoneValidation.format && (
+                <div className="validation-error">El teléfono debe tener formato +569XXXXXXXX</div>
+              )}
+            </div>
+
+            {/* Fila 4: Contraseña con validador */}
+            <div className="password-wrapper">
+              <div className="uv-field password-field-container">
+                <span className="uv-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="20" height="20">
+                    <path d="M17 10h-1V7a4 4 0 10-8 0v3H7a2 2 0 00-2 2v7a2 2 0 002 2h10a2 2 0 002-2v-7a2 2 0 00-2-2zm-6 0V7a3 3 0 616 0v3h-6z" fill="currentColor" />
+                  </svg>
+                </span>
+                <input
+                  className="uv-input"
+                  type={showPassword ? "text" : "password"}
+                  name="contraseña"
+                  value={formData.contraseña}
+                  onChange={handleInputChange}
+                  onFocus={handlePasswordFocus}
+                  onBlur={handlePasswordBlur}
+                  placeholder=" "
+                  required
+                />
+<label className="uv-label">Contraseña *</label>
+                <span className="uv-focus-bg" />
+                
+                <button
+                  type="button"
+                  className="pwd-toggle"
+                  onClick={() => setShowPassword(prev => !prev)}
+                  aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                  tabIndex="-1"
+                >
+                  {showPassword ? (
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                      <line x1="1" y1="1" x2="23" y2="23"/>
+                    </svg>
+                  ) : (
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                      <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                  )}
+                </button>
+              </div>
+              
+              {(showPasswordValidation || formData.contraseña.length > 0) && (
+                <div className="password-validator password-validator-responsive">
+                  <div className="validator-header">
+                    <span className="validator-title">Requisitos:</span>
+                  </div>
+                  <div className="validator-rules">
+                    <div className={`validator-rule ${passwordValidation.minLength ? 'valid' : 'invalid'}`}>
+                      <span className="validator-icon">{passwordValidation.minLength ? '✓' : '×'}</span>
+                      <span className="validator-text">Mínimo 10 caracteres</span>
+                    </div>
+                    <div className={`validator-rule ${passwordValidation.hasUppercase ? 'valid' : 'invalid'}`}>
+                      <span className="validator-icon">{passwordValidation.hasUppercase ? '✓' : '×'}</span>
+                      <span className="validator-text">1 letra mayúscula</span>
+                    </div>
+                    <div className={`validator-rule ${passwordValidation.hasNumber ? 'valid' : 'invalid'}`}>
+                      <span className="validator-icon">{passwordValidation.hasNumber ? '✓' : '×'}</span>
+                      <span className="validator-text">1 número</span>
+                    </div>
+                    <div className={`validator-rule ${passwordValidation.hasSymbol ? 'valid' : 'invalid'}`}>
+                      <span className="validator-icon">{passwordValidation.hasSymbol ? '✓' : '×'}</span>
+                      <span className="validator-text">1 símbolo (!@#$%^&*)</span>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
 
-            {/* Contraseña con validación */}
-            <div className="password-wrapper">
-              <div className="uv-field password-field-container">
-              <span className="uv-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" width="20" height="20">
-                  <path
-                    d="M17 10h-1V7a4 4 0 10-8 0v3H7a2 2 0 00-2 2v7a2 2 0 002 2h10a2 2 0 002-2v-7a2 2 0 00-2-2zm-6 0V7a3 3 0 616 0v3h-6z"
-                    fill="currentColor"
-                  />
-                </svg>
-              </span>
-              <input
-                className="uv-input"
-                type={showPassword ? "text" : "password"}
-                name="contraseña"
-                value={formData.contraseña}
-                onChange={handleInputChange}
-                onFocus={handlePasswordFocus}
-                onBlur={handlePasswordBlur}
-                placeholder=" "
-                required
-              />
-              <label className="uv-label">Contraseña</label>
-              <span className="uv-focus-bg" />
-              
-              {/* Botón mostrar/ocultar contraseña */}
-              <button
-                type="button"
-                className="pwd-toggle"
-                onClick={() => setShowPassword(prev => !prev)}
-                aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
-                tabIndex="-1"
-              >
-                {showPassword ? (
-                  // Ícono de ojo tachado (ocultar)
-                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
-                    <line x1="1" y1="1" x2="23" y2="23"/>
-                  </svg>
-                ) : (
-                  // Ícono de ojo normal (mostrar)
-                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                    <circle cx="12" cy="12" r="3"/>
-                  </svg>
-                )}
-              </button>
-            </div>
-            
-            {/* Validador de contraseña - responsivo: derecha en desktop, abajo en móvil */}
-            {(showPasswordValidation || formData.contraseña.length > 0) && (
-              <div className="password-validator password-validator-responsive">
-                <div className="validator-header">
-                  <span className="validator-title">Requisitos:</span>
-                </div>
-                <div className="validator-rules">
-                  <div className={`validator-rule ${passwordValidation.minLength ? 'valid' : 'invalid'}`}>
-                    <span className="validator-icon">
-                      {passwordValidation.minLength ? '✓' : '×'}
-                    </span>
-                    <span className="validator-text">Mínimo 10 caracteres</span>
-                  </div>
-                  <div className={`validator-rule ${passwordValidation.hasUppercase ? 'valid' : 'invalid'}`}>
-                    <span className="validator-icon">
-                      {passwordValidation.hasUppercase ? '✓' : '×'}
-                    </span>
-                    <span className="validator-text">1 letra mayúscula</span>
-                  </div>
-                  <div className={`validator-rule ${passwordValidation.hasNumber ? 'valid' : 'invalid'}`}>
-                    <span className="validator-icon">
-                      {passwordValidation.hasNumber ? '✓' : '×'}
-                    </span>
-                    <span className="validator-text">1 número</span>
-                  </div>
-                  <div className={`validator-rule ${passwordValidation.hasSymbol ? 'valid' : 'invalid'}`}>
-                    <span className="validator-icon">
-                      {passwordValidation.hasSymbol ? '✓' : '×'}
-                    </span>
-                    <span className="validator-text">1 símbolo (!@#$%^&*)</span>
-                  </div>
-                </div>
-              </div>
-            )}
-            </div>
-
-            {/* Repetir contraseña */}
+            {/* Fila 5: Repetir contraseña */}
             <div className="uv-field">
               <span className="uv-icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24" width="20" height="20">
-                  <path
-                    d="M17 10h-1V7a4 4 0 10-8 0v3H7a2 2 0 00-2 2v7a2 2 0 002 2h10a2 2 0 002-2v-7a2 2 0 00-2-2zm-6 0V7a3 3 0 616 0v3h-6z"
-                    fill="currentColor"
-                  />
+                  <path d="M17 10h-1V7a4 4 0 10-8 0v3H7a2 2 0 00-2 2v7a2 2 0 002 2h10a2 2 0 002-2v-7a2 2 0 00-2-2zm-6 0V7a3 3 0 616 0v3h-6z" fill="currentColor" />
                 </svg>
               </span>
               <input
@@ -379,10 +374,9 @@ return (
                 placeholder=" "
                 required
               />
-              <label className="uv-label">Repetir contraseña</label>
+<label className="uv-label">Repetir contraseña *</label>
               <span className="uv-focus-bg" />
               
-              {/* Botón mostrar/ocultar contraseña de confirmación */}
               <button
                 type="button"
                 className="pwd-toggle"
@@ -391,13 +385,11 @@ return (
                 tabIndex="-1"
               >
                 {showConfirmPassword ? (
-                  // Ícono de ojo tachado (ocultar)
                   <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
                     <line x1="1" y1="1" x2="23" y2="23"/>
                   </svg>
                 ) : (
-                  // Ícono de ojo normal (mostrar)
                   <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
                     <circle cx="12" cy="12" r="3"/>
@@ -432,11 +424,10 @@ return (
                   }}
                 >
                   términos y condiciones
-                </a>
+                </a> *
               </span>
             </label>
 
-            {/* Mostrar errores de registro */}
             {registrationError && (
               <div className="registration-error" style={{
                 color: '#dc3545',
@@ -451,7 +442,6 @@ return (
               </div>
             )}
             
-            {/* Mostrar mensaje de éxito */}
             {registrationSuccess && (
               <div className="registration-success" style={{
                 color: '#155724',
@@ -468,8 +458,8 @@ return (
 
             <button 
               type="submit" 
-              className={`login-button ${(!isPasswordValid || !passwordsMatch || isLoading) ? 'button-disabled' : ''}`}
-              disabled={!isPasswordValid || !passwordsMatch || isLoading}
+              className={`login-button ${(!isPasswordValid || !passwordsMatch || !phoneValidation.format || isLoading) ? 'button-disabled' : ''}`}
+              disabled={!isPasswordValid || !passwordsMatch || !phoneValidation.format || isLoading}
             >
               {isLoading ? 'Registrando...' : 'Registrarse'}
             </button>
@@ -484,12 +474,10 @@ return (
         </div>
       </section>
 
-      {/* Lado derecho: misma imagen del login */}
       <section className="auth-right register-right">
         <img src={cromo} alt="imagen de cromosomas" />
       </section>
 
-      {/* Modal de Verificación tras registro */}
       <VerificationModal 
         isOpen={showVerificationModal}
         onClose={() => {
@@ -500,7 +488,6 @@ return (
         title="Verificación requerida"
       />
 
-      {/* Modal de Términos y Condiciones */}
       {showTermsModal && (
         <div className="terms-modal-overlay" onClick={handleCloseTermsModal}>
           <div className="terms-modal" onClick={(e) => e.stopPropagation()}>
@@ -601,7 +588,6 @@ return (
         </div>
       )}
       
-      {/* Modal de éxito */}
       {showSuccessModal && (
         <div className="success-modal-overlay">
           <div className="success-modal">

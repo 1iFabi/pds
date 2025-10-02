@@ -19,10 +19,14 @@ export default function Login() {
   const onChange = (e) =>
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
 
-  // Detectar si hay un token de reset en la URL
+// Detectar si hay un token de reset en la URL
   useEffect(() => {
     const token = searchParams.get('token');
     if (token) {
+      // Mostrar un mensaje de confirmación al llegar desde el enlace del correo
+      setVerificationMessage('Verificación exitosa. Puedes restablecer tu contraseña ahora.');
+      setShowVerificationModal(true);
+
       setResetToken(token);
       setShowResetPassword(true);
       // Limpiar la URL después de obtener el token
@@ -30,7 +34,7 @@ export default function Login() {
     }
   }, [searchParams]);
 
-  // Leer cookies de verificación establecidas por el backend en /api/auth/verify/<token>/
+// Leer cookies de verificación establecidas por el backend en /api/auth/verify/<token>/
   useEffect(() => {
     const getCookie = (name) => {
       return document.cookie

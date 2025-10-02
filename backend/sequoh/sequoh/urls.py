@@ -28,4 +28,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     # Esta línea incluye las URLs de tu aplicación de autenticación
     path('api/auth/', include('autenticacion.urls')),
+    path('accounts/', include('allauth.urls')),
 ]
