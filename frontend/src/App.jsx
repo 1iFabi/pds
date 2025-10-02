@@ -7,6 +7,7 @@ import Conoce from "./pages/Conoce/Conoce";
 import Login from "./pages/Login/Login";
 import Register from "./pages/Register/Register";
 import Postlogin from "./pages/Postlogin/Postlogin";
+import ProtectedRoute from "./components/ProtectedRoute";
 import GenomaPricing from "./pages/GenomaPricing/GenomaPricing";
 import SobreNosotros from "./pages/SobreNosotros/SobreNosotros";
 import Contacto from "./pages/Contacto/Contacto";
@@ -39,7 +40,7 @@ export default function App() {
         />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/dashboard" element={<Postlogin />} />
+        <Route path="/dashboard" element={<ProtectedRoute><Postlogin /></ProtectedRoute>} />
       </Routes>
     </>
   );

@@ -226,6 +226,8 @@ ACCOUNT_AUTHENTICATION_METHOD = 'email'
 # CORS configuration for development and production
 # Permitir todos los orígenes solo en desarrollo
 CORS_ALLOW_ALL_ORIGINS = DEBUG
+# Habilitar envío de cookies/sesiones desde el frontend (React)
+CORS_ALLOW_CREDENTIALS = True
 
 # CORS headers
 CORS_ALLOW_HEADERS = [
@@ -239,6 +241,11 @@ CORS_ALLOW_HEADERS = [
     'x-csrftoken',
     'x-requested-with',
 ]
+
+# Cookies de sesión/CSRF. En producción con dominios distintos (Vercel/Railway)
+# puede requerirse SameSite=None + Secure=True para que el navegador acepte cookies cross-site.
+SESSION_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SAMESITE = 'Lax'
 
 LOGIN_URL = '/login'
 LOGIN_REDIRECT_URL = '/dashboard'
