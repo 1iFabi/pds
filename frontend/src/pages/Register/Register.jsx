@@ -21,8 +21,10 @@ const Register = () => {
   });
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [showPasswordValidation, setShowPasswordValidation] = useState(false);
+  const [showPhoneValidation, setShowPhoneValidation] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [focusedField, setFocusedField] = useState(null);
   const navigate = useNavigate();
 
   const passwordValidation = useMemo(() => {
@@ -208,12 +210,17 @@ const Register = () => {
                   name="nombre"
                   value={formData.nombre}
                   onChange={handleInputChange}
-                  placeholder="Ej: María"
+                  onFocus={() => setFocusedField('nombre')}
+                  onBlur={() => setFocusedField(null)}
+                  placeholder=" "
                   required
                   autoComplete="given-name"
                 />
-<label className="uv-label">Nombre *</label>
+                <label className="uv-label">Nombre *</label>
                 <span className="uv-focus-bg" />
+                {focusedField === 'nombre' && !formData.nombre && (
+                  <div className="input-hint">Ej: María</div>
+                )}
               </div>
 
               <div className="uv-field">
@@ -228,12 +235,17 @@ const Register = () => {
                   name="apellido"
                   value={formData.apellido}
                   onChange={handleInputChange}
-                  placeholder="Ej: González"
+                  onFocus={() => setFocusedField('apellido')}
+                  onBlur={() => setFocusedField(null)}
+                  placeholder=" "
                   required
                   autoComplete="family-name"
                 />
-<label className="uv-label">Apellido *</label>
+                <label className="uv-label">Apellido *</label>
                 <span className="uv-focus-bg" />
+                {focusedField === 'apellido' && !formData.apellido && (
+                  <div className="input-hint">Ej: González</div>
+                )}
               </div>
             </div>
 
@@ -250,41 +262,70 @@ const Register = () => {
                 name="correo"
                 value={formData.correo}
                 onChange={handleInputChange}
-                placeholder="ejemplo@correo.com"
+                onFocus={() => setFocusedField('correo')}
+                onBlur={() => setFocusedField(null)}
+                placeholder=" "
                 required
               />
-<label className="uv-label">Correo *</label>
+              <label className="uv-label">Correo *</label>
               <span className="uv-focus-bg" />
+              {focusedField === 'correo' && !formData.correo && (
+                <div className="input-hint">ejemplo@correo.com</div>
+              )}
             </div>
 
-            {/* Fila 3: Teléfono (span completo) */}
-            <div className="uv-field">
-              <span className="uv-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" width="20" height="20">
-                  <path d="M22 16.92v3a2 2 0 01-2.18 2 19.8 19.8 0 01-8.63-3.07 19.5 19.5 0 01-6-6A19.8 19.8 0 012.1 4.1 2 2 0 014.1 2h3a2 2 0 012 1.72c.07.96.27 1.9.7 2.81a2 2 0 01-.45 2.11L8.1 9.9a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.91.43 1.85.63 2.81.7A2 2 0 0122 16.92z" fill="currentColor" />
-                </svg>
-              </span>
-              <input
-                className="uv-input"
-                type="tel"
-                name="telefono"
-                value={formData.telefono}
-                inputMode="tel"
-                pattern="^\+569\d{8}$"
-                onChange={(e) => {
-                  const value = e.target.value;
-                  if (/^[+\d]*$/.test(value) && value.length <= 12) {
-                    handleInputChange(e);
-                  }
-                }}
-                placeholder="+569XXXXXXXX"
-                required
-                aria-describedby="phone-hint"
-              />
-<label className="uv-label">Teléfono *</label>
-              <span className="uv-focus-bg" />
-              {formData.telefono && !phoneValidation.format && (
-                <div className="validation-error">El teléfono debe tener formato +569XXXXXXXX</div>
+            {/* Fila 3: Teléfono con validador */}
+            <div className="phone-wrapper">
+              <div className="uv-field">
+                <span className="uv-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="20" height="20">
+                    <path d="M22 16.92v3a2 2 0 01-2.18 2 19.8 19.8 0 01-8.63-3.07 19.5 19.5 0 01-6-6A19.8 19.8 0 012.1 4.1A2 2 0 014.1 2h3a2 2 0 012 1.72c.07.96.27 1.9.7 2.81a2 2 0 01-.45 2.11L8.1 9.9a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.91.43 1.85.63 2.81.7A2 2 0 0122 16.92z" fill="currentColor" />
+                  </svg>
+                </span>
+                <input
+                  className="uv-input"
+                  type="tel"
+                  name="telefono"
+                  value={formData.telefono}
+                  inputMode="tel"
+                  pattern="^\+569\d{8}$"
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (/^[+\d]*$/.test(value) && value.length <= 12) {
+                      handleInputChange(e);
+                    }
+                  }}
+                  onFocus={() => {
+                    setFocusedField('telefono');
+                    setShowPhoneValidation(true);
+                  }}
+                  onBlur={() => {
+                    setFocusedField(null);
+                    setTimeout(() => setShowPhoneValidation(false), 150);
+                  }}
+                  placeholder=" "
+                  required
+                  aria-describedby="phone-hint"
+                />
+                <label className="uv-label">Teléfono *</label>
+                <span className="uv-focus-bg" />
+                {focusedField === 'telefono' && !formData.telefono && (
+                  <div className="input-hint">+569XXXXXXXX</div>
+                )}
+              </div>
+              
+              {showPhoneValidation && (
+                <div className="phone-validator">
+                  <div className="validator-header">
+                    <span className="validator-title">Formato:</span>
+                  </div>
+                  <div className="validator-rules">
+                    <div className={`validator-rule ${/^\+569\d{8}$/.test(formData.telefono) ? 'valid' : 'invalid'}`}>
+                      <span className="validator-icon">{/^\+569\d{8}$/.test(formData.telefono) ? '✓' : '×'}</span>
+                      <span className="validator-text">Debe comenzar con +569</span>
+                    </div>
+                  </div>
+                </div>
               )}
             </div>
 
@@ -307,7 +348,7 @@ const Register = () => {
                   placeholder=" "
                   required
                 />
-<label className="uv-label">Contraseña *</label>
+                <label className="uv-label">Contraseña *</label>
                 <span className="uv-focus-bg" />
                 
                 <button
@@ -359,7 +400,7 @@ const Register = () => {
             </div>
 
             {/* Fila 5: Repetir contraseña */}
-            <div className="uv-field">
+            <div className="uv-field password-field-container">
               <span className="uv-icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24" width="20" height="20">
                   <path d="M17 10h-1V7a4 4 0 10-8 0v3H7a2 2 0 00-2 2v7a2 2 0 002 2h10a2 2 0 002-2v-7a2 2 0 00-2-2zm-6 0V7a3 3 0 616 0v3h-6z" fill="currentColor" />
@@ -374,7 +415,7 @@ const Register = () => {
                 placeholder=" "
                 required
               />
-<label className="uv-label">Repetir contraseña *</label>
+              <label className="uv-label">Repetir contraseña *</label>
               <span className="uv-focus-bg" />
               
               <button
