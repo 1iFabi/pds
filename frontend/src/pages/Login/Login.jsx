@@ -135,7 +135,14 @@ export default function Login() {
         setLoginSuccess(true);
         setShowSuccessModal(true);
         setTimeout(() => {
-          navigate('/dashboard');
+          // Generar session ID único y legible
+          const generateSessionId = () => {
+            const timestamp = Date.now().toString(36);
+            const randomPart = Math.random().toString(36).substring(2, 9);
+            return `${timestamp}${randomPart}`.toUpperCase();
+          };
+          const sessionId = generateSessionId();
+          navigate(`/dashboard?session=${sessionId}`);
         }, 600);
       } else {
         setLoginError(result.data.error || 'Error al iniciar sesión');
