@@ -195,9 +195,9 @@ const Navbar = ({ theme: forcedTheme }) => {
 
         {/* centro (logo) */}
         <div className="nav-logo" aria-label="Genomia logo">
-          <Link to="/" className="logo-link" onClick={closeAnd()}>
+          <a href="/" className="logo-link">
             <img src={logoSrc} alt="Genomia logo" />
-          </Link>
+          </a>
         </div>
 
         {/* derecha: links desktop */}
@@ -254,9 +254,9 @@ const Navbar = ({ theme: forcedTheme }) => {
           aria-label="Menú"
         >
           <div className="drawer-header">
-            <Link to="/" className="logo-link" onClick={closeAnd()}>
+            <a href="/" className="logo-link">
               <img src={logoSrc} alt="Genomia logo" />
-            </Link>
+            </a>
             <button
               className="drawer-close"
               aria-label="Cerrar menú"

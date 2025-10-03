@@ -1,16 +1,17 @@
 // src/App.jsx
 import { Routes, Route, useLocation } from "react-router-dom";
 import Navbar from "./components/Navbar/Navbar";
-import Hero from "./components/Hero/Hero";
-import Descubre from "./components/Descubre/Descubre";
-import Conoce from "./components/Conoce/Conoce";
-import Login from "./components/Login/Login";
-import Register from "./components/Register/Register";
-import Postlogin from "./components/Postlogin/Postlogin";
-import GenomaPricing from "./components/GenomaPricing/GenomaPricing";
-import SobreNosotros from "./components/SobreNosotros/SobreNosotros";
-import Contacto from "./components/Contacto/Contacto";
-import Preguntas from "./components/Preguntas/Preguntas";
+import Hero from "./pages/Hero/Hero";
+import Descubre from "./pages/Descubre/Descubre";
+import Conoce from "./pages/Conoce/Conoce";
+import Login from "./pages/Login/Login";
+import Register from "./pages/Register/Register";
+import Postlogin from "./pages/Postlogin/Postlogin";
+import ProtectedRoute from "./components/ProtectedRoute";
+import GenomaPricing from "./pages/GenomaPricing/GenomaPricing";
+import SobreNosotros from "./pages/SobreNosotros/SobreNosotros";
+import Contacto from "./pages/Contacto/Contacto";
+import Preguntas from "./pages/Preguntas/Preguntas";
 
 export default function App() {
   const { pathname } = useLocation();
@@ -39,7 +40,7 @@ export default function App() {
         />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/dashboard" element={<Postlogin />} />
+        <Route path="/dashboard" element={<ProtectedRoute><Postlogin /></ProtectedRoute>} />
       </Routes>
     </>
   );

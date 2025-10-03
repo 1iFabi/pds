@@ -21,7 +21,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-isazy3kl)20lf!i%30g4xj1$s8mjz+an9pq6smoa=$!1-eqzty'
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-isazy3kl)20lf!i%30g4xj1$s8mjz+an9pq6smoa=$!1-eqzty')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('RAILWAY_ENVIRONMENT') != 'production'
@@ -80,7 +80,17 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',
+    'allauth',
+    'allauth.account',
 ]
+
+SITE_ID = 1
+
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
+)
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
@@ -90,8 +100,10 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'allauth.account.middleware.AccountMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'sequoh.security.NoCacheMiddleware',
 ]
 
 ROOT_URLCONF = 'sequoh.urls'
@@ -99,7 +111,7 @@ ROOT_URLCONF = 'sequoh.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates',],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -117,26 +129,20 @@ WSGI_APPLICATION = 'sequoh.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-# Database configuration for Docker and production
-if 'DATABASE_URL' in os.environ:
-    if 'postgresql://' in os.environ['DATABASE_URL']:
-        import dj_database_url
-        DATABASES = {
-            'default': dj_database_url.config(
-                default=os.environ.get('DATABASE_URL'),
-                conn_max_age=600,
-                conn_health_checks=True,
-            )
-        }
-    else:
-        # For SQLite in Docker development
-        DATABASES = {
-            'default': {
-                'ENGINE': 'django.db.backends.sqlite3',
-                'NAME': BASE_DIR / 'db.sqlite3',
-            }
-        }
+# Database - PostgreSQL en producción (Railway), SQLite en local
+import dj_database_url
+
+if os.environ.get('DATABASE_URL'):
+    # Producción: PostgreSQL desde Railway
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=os.environ.get('DATABASE_URL'),
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
+    }
 else:
+    # Desarrollo: SQLite
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
@@ -193,38 +199,48 @@ SESSION_COOKIE_SECURE = not DEBUG
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# EMAIL CONFIGURATION
-# Configuración para desarrollo con Mailpit
-if DEBUG:
-    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-    EMAIL_HOST = '127.0.0.1'  # localhost
-    EMAIL_PORT = 1025         # Puerto SMTP de Mailpit
-    EMAIL_USE_TLS = False
-    EMAIL_USE_SSL = False
-    EMAIL_HOST_USER = ''
-    EMAIL_HOST_PASSWORD = ''
-else:
-    # Configuración para producción (puedes cambiar según tu proveedor)
-    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-    EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
-    EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
-    EMAIL_USE_TLS = True
-    EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
-    EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+# Seguridad de sesión y cookies
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+# (Opcional) Forzar expiración más corta si lo deseas: SESSION_COOKIE_AGE = 60 * 60  # 1 hora
 
-# Configuración adicional de email
-DEFAULT_FROM_EMAIL = 'SeqUOH <no-reply@sequoh.com>'
-SERVER_EMAIL = 'SeqUOH Server <server@sequoh.com>'
+
+# EMAIL CONFIGURATION - Usar API de Gmail mediante adapter de allauth
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'SeqUOH <fourfuturesa@gmail.com>')
+SERVER_EMAIL = os.environ.get('SERVER_EMAIL', 'fourfuturesa@gmail.com')
 EMAIL_SUBJECT_PREFIX = '[SeqUOH] '
 
-# Configuración de verificación de email
+# Rutas para credenciales/token de Gmail API (puedes ajustarlas por env)
+GMAIL_CREDENTIALS_FILE = os.environ.get('GMAIL_CREDENTIALS_FILE', str((BASE_DIR / 'config' / 'credentials.json').resolve()))
+GMAIL_TOKEN_FILE = os.environ.get('GMAIL_TOKEN_FILE', str((BASE_DIR / 'config' / 'token.json').resolve()))
+
+# Adapter que envía con Gmail API (usa autenticacion/adapters.py)
+ACCOUNT_ADAPTER = 'autenticacion.adapters.GmailAPIAccountAdapter'
+
+# Verificación obligatoria y URLs de redirección tras confirmar
 REQUIRE_EMAIL_VERIFICATION = True
 EMAIL_VERIFICATION_EXPIRE_HOURS = 24
 FRONTEND_DOMAIN = os.environ.get('FRONTEND_DOMAIN', 'http://localhost:5173')
+# URL absoluta de redirección al login del FRONTEND (Vercel)
+FRONTEND_LOGIN_REDIRECT = os.environ.get(
+    'FRONTEND_LOGIN_URL', f"{FRONTEND_DOMAIN.rstrip('/')}/login?verified=1"
+)
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_UNIQUE_EMAIL = True
+ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
+# Redirecciones absolutas hacia el frontend, tras confirmar el email
+ACCOUNT_EMAIL_CONFIRMATION_ANONYMOUS_REDIRECT_URL = FRONTEND_LOGIN_REDIRECT
+ACCOUNT_EMAIL_CONFIRMATION_AUTHENTICATED_REDIRECT_URL = FRONTEND_LOGIN_REDIRECT
+ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = False
+# Confirmar email con GET (evita la página intermedia "Confirm Email Address")
+ACCOUNT_CONFIRM_EMAIL_ON_GET = True
+ACCOUNT_AUTHENTICATION_METHOD = 'email'
+
 
 # CORS configuration for development and production
 # Permitir todos los orígenes solo en desarrollo
 CORS_ALLOW_ALL_ORIGINS = DEBUG
+# Habilitar envío de cookies/sesiones desde el frontend (React)
+CORS_ALLOW_CREDENTIALS = True
 
 # CORS headers
 CORS_ALLOW_HEADERS = [
@@ -238,3 +254,12 @@ CORS_ALLOW_HEADERS = [
     'x-csrftoken',
     'x-requested-with',
 ]
+
+# Cookies de sesión/CSRF. En producción con dominios distintos (Vercel/Railway)
+# puede requerirse SameSite=None + Secure=True para que el navegador acepte cookies cross-site.
+SESSION_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SAMESITE = 'Lax'
+
+LOGIN_URL = '/login'
+LOGIN_REDIRECT_URL = '/dashboard'
+LOGOUT_REDIRECT_URL = '/login'

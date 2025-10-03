@@ -17,6 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.http import JsonResponse
+from autenticacion.allauth_views import CustomConfirmEmailView
 
 
 def index(request):
@@ -28,4 +29,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     # Esta línea incluye las URLs de tu aplicación de autenticación
     path('api/auth/', include('autenticacion.urls')),
+    # Sobreescribir la URL de confirmación de allauth para usar nuestro view personalizado
+    path('accounts/confirm-email/<str:key>/', CustomConfirmEmailView.as_view(), name='account_confirm_email'),
+    path('accounts/', include('allauth.urls')),
 ]

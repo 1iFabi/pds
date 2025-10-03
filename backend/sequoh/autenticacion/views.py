@@ -1,7 +1,8 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from django.contrib.auth import authenticate, login
+from rest_framework.permissions import IsAuthenticated
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.db import IntegrityError
 from django.views.decorators.csrf import csrf_exempt
@@ -15,11 +16,36 @@ from django.shortcuts import redirect
 from django.utils import timezone
 from urllib.parse import urlencode, quote
 from datetime import timedelta
-from .models import EmailVerification
-from .email_utils import send_welcome_email, send_password_reset_email, send_verification_email
+from allauth.account.models import EmailAddress
+from .email_utils import send_welcome_email, send_password_reset_email
+from .jwt_utils import encode_jwt
+from .authentication import JWTAuthentication
 import json
 import re
-import uuid
+
+
+def normalize_cl_phone(raw: str):
+    """Normaliza teléfonos móviles de Chile a formato +569XXXXXXXX.
+    Acepta variantes comunes: +569XXXXXXXX, 569XXXXXXXX, 09XXXXXXXX, 9XXXXXXXX.
+    Retorna el número normalizado o None si no es válido.
+    """
+    if not raw:
+        return None
+    s = raw.strip().replace(" ", "").replace("-", "")
+    # +569XXXXXXXX
+    if re.fullmatch(r"\+569\d{8}", s):
+        return s
+    # 569XXXXXXXX
+    if re.fullmatch(r"569\d{8}", s):
+        return "+" + s
+    # 09XXXXXXXX
+    if re.fullmatch(r"09\d{8}", s):
+        return "+569" + s[2:]
+    # 9XXXXXXXX
+    if re.fullmatch(r"9\d{8}", s):
+        return "+569" + s
+    return None
+
 
 @method_decorator(csrf_exempt, name='dispatch')
 class LoginAPIView(APIView):
@@ -34,17 +60,21 @@ class LoginAPIView(APIView):
             user = authenticate(request, username=username, password=password)
 
             if user is not None:
-                # Bloquear acceso si requiere verificación y el usuario no está activo
-                if getattr(settings, 'REQUIRE_EMAIL_VERIFICATION', False) and not user.is_active:
-                    return Response({
-                        "error": "Tu cuenta aún no ha sido verificada. Revisa tu correo para completar la verificación.",
-                        "requires_verification": True
-                    }, status=400)
+                # Verificar email confirmado con allauth
+                if getattr(settings, 'REQUIRE_EMAIL_VERIFICATION', False):
+                    is_verified = EmailAddress.objects.filter(user=user, email=user.email, verified=True).exists()
+                    if not is_verified:
+                        return Response({
+                            "error": "Tu cuenta aún no ha sido verificada. Revisa tu correo para completar la verificación.",
+                            "requires_verification": True
+                        }, status=400)
 
-                # Si el usuario es válido y está activo, inicia la sesión en Django
-                login(request, user)
-                
-                return Response({"mensaje": "Inicio de sesión exitoso", "success": True})
+                # Generar JWT (stateless) para Vercel/Railway
+                token = encode_jwt({
+                    "sub": str(user.id),
+                    "email": user.email,
+                })
+                return Response({"mensaje": "Inicio de sesión exitoso", "success": True, "token": token})
             else:
                 # Detectar caso de usuario pendiente de verificación (is_active=False)
                 try:
@@ -55,11 +85,12 @@ class LoginAPIView(APIView):
                         if not possible_user:
                             # Intentar por email en caso de que envíen username distinto
                             possible_user = User.objects.filter(email=username).first()
-                    if possible_user and getattr(settings, 'REQUIRE_EMAIL_VERIFICATION', False) and not possible_user.is_active:
-                        return Response({
-                            "error": "Tu cuenta está pendiente de verificación. Revisa tu correo para activar tu cuenta.",
-                            "requires_verification": True
-                        }, status=400)
+                    if possible_user and getattr(settings, 'REQUIRE_EMAIL_VERIFICATION', False):
+                        if not EmailAddress.objects.filter(user=possible_user, email=possible_user.email, verified=True).exists():
+                            return Response({
+                                "error": "Tu cuenta está pendiente de verificación. Revisa tu correo para activar tu cuenta.",
+                                "requires_verification": True
+                            }, status=400)
                 except Exception:
                     pass
                 # Si las credenciales son incorrectas, devuelve un error
@@ -72,22 +103,77 @@ class LoginAPIView(APIView):
             return Response({"error": str(e)}, status=500)
 
 
+class MeAPIView(APIView):
+    """Retorna datos básicos del usuario autenticado (JWT)."""
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        u = request.user
+        data = {
+            "id": u.id,
+            "email": u.email,
+            "first_name": u.first_name,
+            "last_name": u.last_name,
+        }
+        # Evitar cacheo del perfil actual
+        resp = Response({"user": data})
+        resp["Cache-Control"] = "no-store"
+        return resp
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class LogoutAPIView(APIView):
+    """Logout stateless: el cliente elimina su token."""
+    authentication_classes = []
+    permission_classes = []
+
+    def post(self, request):
+        resp = Response({"success": True})
+        resp["Cache-Control"] = "no-store"
+        return resp
+
+
+class DashboardAPIView(APIView):
+    """Ejemplo de endpoint de dashboard por usuario (JWT)."""
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        from .models import Profile
+        u = request.user
+        profile = getattr(u, 'profile', None)
+        payload = {
+            "user": {
+                "id": u.id,
+                "email": u.email,
+                "first_name": u.first_name,
+                "last_name": u.last_name,
+            },
+            "profile": {
+                "phone": getattr(profile, 'phone', None),
+            }
+        }
+        resp = Response(payload)
+        resp["Cache-Control"] = "no-store"
+        return resp
+
+
 @method_decorator(csrf_exempt, name='dispatch')
 class RegisterAPIView(APIView):
     def post(self, request):
         try:
-            # Obtiene el cuerpo de la petición y lo decodifica de JSON
             data = json.loads(request.body)
-            
             nombre = data.get('nombre', '').strip()
-            correo = data.get('correo', '').strip()
+            apellido = data.get('apellido', '').strip()
+            correo = data.get('correo', '').strip().lower()
             telefono = data.get('telefono', '').strip()
             contraseña = data.get('contraseña', '')
             repetir_contraseña = data.get('repetirContraseña', '')
             terminos = data.get('terminos', False)
             
             # Validaciones básicas
-            if not all([nombre, correo, telefono, contraseña, repetir_contraseña]):
+            if not all([nombre, apellido, correo, telefono, contraseña, repetir_contraseña]):
                 return Response({"error": "Todos los campos son obligatorios"}, status=status.HTTP_400_BAD_REQUEST)
             
             if not terminos:
@@ -101,9 +187,10 @@ class RegisterAPIView(APIView):
             if password_errors:
                 return Response({"error": password_errors}, status=status.HTTP_400_BAD_REQUEST)
             
-            # Validación de teléfono
-            if not re.match(r'^\d{1,11}$', telefono):
-                return Response({"error": "El teléfono debe contener solo números y máximo 11 dígitos"}, status=status.HTTP_400_BAD_REQUEST)
+            # Validación/normalización de teléfono (Chile: +569XXXXXXXX)
+            telefono_norm = normalize_cl_phone(telefono)
+            if not telefono_norm:
+                return Response({"error": "El teléfono debe tener formato +569XXXXXXXX"}, status=status.HTTP_400_BAD_REQUEST)
             
             # Validación de email
             if not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', correo):
@@ -113,54 +200,37 @@ class RegisterAPIView(APIView):
             if User.objects.filter(username=correo).exists():
                 return Response({"error": "Ya existe un usuario con este correo electrónico"}, status=status.HTTP_400_BAD_REQUEST)
             
-            if User.objects.filter(email=correo).exists():
-                return Response({"error": "Ya existe un usuario con este correo electrónico"}, status=status.HTTP_400_BAD_REQUEST)
-            
             # Crear el usuario
             user = User.objects.create_user(
                 username=correo,  # Usamos el correo como username
                 email=correo,
                 password=contraseña,
-                first_name=nombre
+                first_name=nombre,
+                last_name=apellido,
             )
             
-            # Guardamos el teléfono en el perfil del usuario (podrías crear un modelo Profile si necesitas más campos)
-            # Por ahora lo guardamos en last_name como campo temporal
-            user.last_name = telefono
+            # Guardamos el teléfono en Profile
+            from .models import Profile
+            profile, _ = Profile.objects.get_or_create(user=user)
+            profile.phone = telefono_norm
+            profile.save()
 
-            # Si se requiere verificación de email, desactivar hasta verificar
+            # Enviar confirmación de email via allauth (usa nuestro adapter Gmail API)
             if getattr(settings, 'REQUIRE_EMAIL_VERIFICATION', False):
-                user.is_active = False
-            user.save()
-
-            # Enviar correo correspondiente
-            if getattr(settings, 'REQUIRE_EMAIL_VERIFICATION', False):
-                try:
-                    # Crear registro de verificación con expiración
-                    expires_at = timezone.now() + timedelta(hours=getattr(settings, 'EMAIL_VERIFICATION_EXPIRE_HOURS', 24))
-                    verification = EmailVerification.objects.create(
-                        user=user,
-                        email=user.email,
-                        expires_at=expires_at,
-                    )
-                    send_verification_email(
-                        user_email=user.email,
-                        user_name=user.first_name or user.username,
-                        verification_token=str(verification.token),
-                    )
-                except Exception as e:
-                    print(f"Error generando o enviando email de verificación: {e}")
+                # Crea EmailAddress (si no existe) y envía email de confirmación
+                EmailAddress.objects.add_email(
+                    request,
+                    user,
+                    user.email,
+                    confirm=True,
+                    signup=True,
+                )
             else:
-                # Enviar email de bienvenida si no se requiere verificación
                 try:
-                    send_welcome_email(
-                        user_email=user.email,
-                        user_name=user.first_name
-                    )
+                    send_welcome_email(user_email=user.email, user_name=user.first_name)
                 except Exception as e:
-                    # No fallar el registro si hay error con el email
                     print(f"Error enviando email de bienvenida: {e}")
-            
+
             requires_verif = bool(getattr(settings, 'REQUIRE_EMAIL_VERIFICATION', False))
             mensaje = "Usuario registrado exitosamente"
             if requires_verif:
@@ -179,7 +249,7 @@ class RegisterAPIView(APIView):
             return Response({"error": "Error al crear el usuario, el correo ya existe"}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response({"error": f"Error interno del servidor: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    
+
     def validate_password(self, password):
         """Valida que la contraseña cumpla con los requisitos"""
         errors = []
@@ -200,72 +270,111 @@ class RegisterAPIView(APIView):
 
 
 @method_decorator(csrf_exempt, name='dispatch')
-class PasswordResetRequestView(APIView):
-    """
-    API para solicitar el reset de contraseña
-    """
+class ResendVerificationAPIView(APIView):
+    """Reenvía el correo de verificación usando allauth. Responde éxito sin filtrar información."""
     def post(self, request):
         try:
-            data = json.loads(request.body)
-            email = data.get('email', '').strip().lower()
-            
-            if not email:
-                return Response(
-                    {"error": "El correo electrónico es obligatorio"}, 
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            
-            # Validar formato de email
-            if not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email):
-                return Response(
-                    {"error": "El formato del correo electrónico no es válido"}, 
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            
             try:
-                user = User.objects.get(email=email)
-                
-                # Generar token de reset
-                token = default_token_generator.make_token(user)
-                uid = urlsafe_base64_encode(force_bytes(user.pk))
-                
-                # Crear el token completo que incluye tanto uid como token
-                reset_token = f"{uid}-{token}"
-                
-                # Enviar email de recuperación
-                email_sent = send_password_reset_email(
-                    user_email=user.email,
-                    user_name=user.first_name or user.username,
-                    reset_token=reset_token
-                )
-                
-                if email_sent:
-                    return Response({
-                        "message": "Si el correo existe, recibirás un enlace para restablecer tu contraseña",
-                        "success": True
-                    }, status=status.HTTP_200_OK)
-                else:
-                    return Response({
-                        "error": "Error enviando el correo de recuperación"
-                    }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-                    
-            except User.DoesNotExist:
-                # Por seguridad, no revelamos si el email existe o no
-                return Response({
-                    "message": "Si el correo existe, recibirás un enlace para restablecer tu contraseña",
-                    "success": True
-                }, status=status.HTTP_200_OK)
-                
-        except json.JSONDecodeError:
-            return Response(
-                {"error": "Formato de solicitud inválido"}, 
-                status=status.HTTP_400_BAD_REQUEST
+                data = json.loads(request.body or '{}')
+            except Exception:
+                data = getattr(request, 'data', {}) or {}
+            email = (data.get('email') or '').strip().lower()
+            if not email:
+                return Response({"error": "Email es obligatorio"}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Buscar usuario
+            user = User.objects.filter(email=email).first()
+            if not user:
+                # No revelar si existe o no
+                return Response({"success": True})
+
+            # Si ya está verificado, responder éxito
+            if EmailAddress.objects.filter(user=user, email=email, verified=True).exists():
+                return Response({"success": True})
+
+            # Reenviar confirmación
+            EmailAddress.objects.add_email(
+                request,
+                user,
+                email,
+                confirm=True,
+                signup=False,
             )
+            return Response({"success": True})
+        except Exception:
+            # Por seguridad, responder éxito igualmente
+            return Response({"success": True})
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class PasswordResetRequestAPIView(APIView):
+    def post(self, request):
+        try:
+            data = json.loads(request.body or '{}')
+            email = (data.get('email') or '').strip().lower()
+            if not email:
+                return Response({"error": "Email es obligatorio"}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Mensaje genérico para no revelar existencia del correo
+            generic_ok = {"message": "Si el correo está registrado, te enviaremos un enlace para restablecer tu contraseña."}
+
+            user = User.objects.filter(email=email).first()
+            if not user:
+                return Response(generic_ok)
+
+            # Crear token de restablecimiento
+            from .models import PasswordResetToken
+            expire_hours = int(getattr(settings, 'PASSWORD_RESET_EXPIRE_HOURS', getattr(settings, 'EMAIL_VERIFICATION_EXPIRE_HOURS', 24)))
+            expires_at = timezone.now() + timedelta(hours=expire_hours)
+            prt = PasswordResetToken.objects.create(user=user, expires_at=expires_at)
+
+            # Link al frontend que abre el modal de reset
+            frontend_base = getattr(settings, 'FRONTEND_DOMAIN', 'http://localhost:5173').rstrip('/')
+            reset_url = f"{frontend_base}/login?token={prt.token}"
+
+            # Enviar email
+            send_password_reset_email(user_email=user.email, user_name=user.first_name or user.username, reset_url=reset_url)
+
+            return Response(generic_ok)
         except Exception as e:
-            return Response(
-                {"error": f"Error interno del servidor: {str(e)}"}, 
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            return Response({"error": f"Error interno del servidor: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class PasswordResetConfirmAPIView(APIView):
+    def post(self, request):
+        try:
+            data = json.loads(request.body or '{}')
+            token = (data.get('token') or '').strip()
+            password = data.get('password') or ''
+            confirm = data.get('confirmPassword') or ''
+
+            if not token or not password or not confirm:
+                return Response({"error": "Datos incompletos"}, status=status.HTTP_400_BAD_REQUEST)
+            if password != confirm:
+                return Response({"error": "Las contraseñas no coinciden"}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Validar políticas de password similares al registro
+            errors = RegisterAPIView().validate_password(password)
+            if errors:
+                return Response({"error": errors}, status=status.HTTP_400_BAD_REQUEST)
+
+            from .models import PasswordResetToken
+            prt = PasswordResetToken.objects.select_related('user').filter(token=token).first()
+            if not prt:
+                return Response({"error": "Token inválido"}, status=status.HTTP_400_BAD_REQUEST)
+            if prt.is_expired:
+                return Response({"error": "El enlace ha expirado"}, status=status.HTTP_400_BAD_REQUEST)
+
+            user = prt.user
+            user.set_password(password)
+            user.save()
+            prt.used = True
+            prt.save(update_fields=['used'])
+
+            return Response({"success": True})
+        except Exception as e:
+            return Response({"error": f"Error interno del servidor: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -283,9 +392,10 @@ class VerifyEmailView(APIView):
                 return HttpResponse("Token de verificación no encontrado", status=400)
 
             frontend_base = getattr(settings, 'FRONTEND_DOMAIN', 'http://localhost:5173')
+            frontend_login_redirect = getattr(settings, 'FRONTEND_LOGIN_REDIRECT', f"{frontend_base.rstrip('/')}/login?verified=1")
 
             if verification.is_verified:
-                resp = redirect(f"{frontend_base}/login")
+                resp = redirect(frontend_login_redirect)
                 resp.set_cookie(
                     key='verification_status', value='1', max_age=300, path='/',
                     secure=not settings.DEBUG, samesite='Lax'
@@ -297,7 +407,7 @@ class VerifyEmailView(APIView):
                 return resp
 
             if verification.is_expired:
-                resp = redirect(f"{frontend_base}/login")
+                resp = redirect(f"{frontend_base.rstrip('/')}/login")
                 resp.set_cookie(
                     key='verification_status', value='0', max_age=300, path='/',
                     secure=not settings.DEBUG, samesite='Lax'
@@ -324,7 +434,8 @@ class VerifyEmailView(APIView):
                 except Exception:
                     pass
 
-            resp = redirect(f"{frontend_base}/login")
+            frontend_login_redirect = getattr(settings, 'FRONTEND_LOGIN_REDIRECT', f"{frontend_base.rstrip('/')}/login?verified=1")
+            resp = redirect(frontend_login_redirect)
             resp.set_cookie(
                 key='verification_status', value='1', max_age=300, path='/',
                 secure=not settings.DEBUG, samesite='Lax'
@@ -346,142 +457,3 @@ class VerifyEmailView(APIView):
                 secure=not settings.DEBUG, samesite='Lax'
             )
             return resp
-
-    def post(self, request):
-        try:
-            data = json.loads(request.body)
-            token = data.get('token', '').strip()
-
-            if not token:
-                return Response({"error": "El token es obligatorio"}, status=status.HTTP_400_BAD_REQUEST)
-
-            # Validar que token sea UUID
-            try:
-                token_uuid = uuid.UUID(token)
-            except ValueError:
-                return Response({"error": "Token inválido"}, status=status.HTTP_400_BAD_REQUEST)
-
-            try:
-                verification = EmailVerification.objects.select_related('user').get(token=token_uuid)
-            except EmailVerification.DoesNotExist:
-                return Response({"error": "Token de verificación no encontrado"}, status=status.HTTP_400_BAD_REQUEST)
-
-            if verification.is_verified:
-                return Response({"message": "El correo ya fue verificado", "success": True}, status=status.HTTP_200_OK)
-
-            if verification.is_expired:
-                return Response({"error": "El token ha expirado"}, status=status.HTTP_400_BAD_REQUEST)
-
-            # Marcar como verificado y activar usuario si corresponde
-            verification.is_verified = True
-            verification.verified_at = timezone.now()
-            verification.save()
-
-            user = verification.user
-            if not user.is_active and getattr(settings, 'REQUIRE_EMAIL_VERIFICATION', False):
-                user.is_active = True
-                user.save()
-                # enviar email de bienvenida al activar la cuenta
-                try:
-                    send_welcome_email(
-                        user_email=user.email,
-                        user_name=user.first_name or user.username
-                    )
-                except Exception:
-                    pass
-
-            return Response({"message": "Correo verificado exitosamente", "success": True}, status=status.HTTP_200_OK)
-
-        except json.JSONDecodeError:
-            return Response({"error": "Formato de solicitud inválido"}, status=status.HTTP_400_BAD_REQUEST)
-        except Exception as e:
-            return Response({"error": f"Error interno del servidor: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-@method_decorator(csrf_exempt, name='dispatch')
-class PasswordResetConfirmView(APIView):
-    """
-    API para confirmar el reset de contraseña con el token
-    """
-    def post(self, request):
-        try:
-            data = json.loads(request.body)
-            token = data.get('token', '').strip()
-            new_password = data.get('password', '')
-            confirm_password = data.get('confirmPassword', '')
-            
-            if not all([token, new_password, confirm_password]):
-                return Response(
-                    {"error": "Todos los campos son obligatorios"}, 
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            
-            if new_password != confirm_password:
-                return Response(
-                    {"error": "Las contraseñas no coinciden"}, 
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            
-            # Validar contraseña
-            password_errors = self.validate_password(new_password)
-            if password_errors:
-                return Response(
-                    {"error": password_errors}, 
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            
-            # Decodificar el token
-            try:
-                uid_b64, token_str = token.split('-', 1)
-                uid = force_str(urlsafe_base64_decode(uid_b64))
-                user = User.objects.get(pk=uid)
-            except (ValueError, TypeError, OverflowError, User.DoesNotExist):
-                return Response(
-                    {"error": "Token de recuperación inválido"}, 
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            
-            # Verificar que el token sea válido
-            if not default_token_generator.check_token(user, token_str):
-                return Response(
-                    {"error": "Token de recuperación expirado o inválido"}, 
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            
-            # Cambiar la contraseña
-            user.set_password(new_password)
-            user.save()
-            
-            return Response({
-                "message": "Contraseña restablecida exitosamente",
-                "success": True
-            }, status=status.HTTP_200_OK)
-            
-        except json.JSONDecodeError:
-            return Response(
-                {"error": "Formato de solicitud inválido"}, 
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        except Exception as e:
-            return Response(
-                {"error": f"Error interno del servidor: {str(e)}"}, 
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-    
-    def validate_password(self, password):
-        """Valida que la contraseña cumpla con los requisitos"""
-        errors = []
-        
-        if len(password) < 10:
-            errors.append("La contraseña debe tener al menos 10 caracteres")
-        
-        if not re.search(r'[A-Z]', password):
-            errors.append("La contraseña debe contener al menos una letra mayúscula")
-        
-        if not re.search(r'[0-9]', password):
-            errors.append("La contraseña debe contener al menos un número")
-        
-        if not re.search(r'[!@#$%^&*(),.?":{}|<>]', password):
-            errors.append("La contraseña debe contener al menos un símbolo especial")
-        
-        return ". ".join(errors) if errors else None
