@@ -1,7 +1,8 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from django.contrib.auth import authenticate, login
+from rest_framework.permissions import IsAuthenticated
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.db import IntegrityError
 from django.views.decorators.csrf import csrf_exempt
@@ -17,6 +18,8 @@ from urllib.parse import urlencode, quote
 from datetime import timedelta
 from allauth.account.models import EmailAddress
 from .email_utils import send_welcome_email, send_password_reset_email
+from .jwt_utils import encode_jwt
+from .authentication import JWTAuthentication
 import json
 import re
 
@@ -66,10 +69,12 @@ class LoginAPIView(APIView):
                             "requires_verification": True
                         }, status=400)
 
-                # Si el usuario es válido y verificado, inicia la sesión en Django
-                login(request, user)
-                
-                return Response({"mensaje": "Inicio de sesión exitoso", "success": True})
+                # Generar JWT (stateless) para Vercel/Railway
+                token = encode_jwt({
+                    "sub": str(user.id),
+                    "email": user.email,
+                })
+                return Response({"mensaje": "Inicio de sesión exitoso", "success": True, "token": token})
             else:
                 # Detectar caso de usuario pendiente de verificación (is_active=False)
                 try:
@@ -96,6 +101,62 @@ class LoginAPIView(APIView):
         except Exception as e:
             # Captura cualquier otro error inesperado
             return Response({"error": str(e)}, status=500)
+
+
+class MeAPIView(APIView):
+    """Retorna datos básicos del usuario autenticado (JWT)."""
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        u = request.user
+        data = {
+            "id": u.id,
+            "email": u.email,
+            "first_name": u.first_name,
+            "last_name": u.last_name,
+        }
+        # Evitar cacheo del perfil actual
+        resp = Response({"user": data})
+        resp["Cache-Control"] = "no-store"
+        return resp
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class LogoutAPIView(APIView):
+    """Logout stateless: el cliente elimina su token."""
+    authentication_classes = []
+    permission_classes = []
+
+    def post(self, request):
+        resp = Response({"success": True})
+        resp["Cache-Control"] = "no-store"
+        return resp
+
+
+class DashboardAPIView(APIView):
+    """Ejemplo de endpoint de dashboard por usuario (JWT)."""
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        from .models import Profile
+        u = request.user
+        profile = getattr(u, 'profile', None)
+        payload = {
+            "user": {
+                "id": u.id,
+                "email": u.email,
+                "first_name": u.first_name,
+                "last_name": u.last_name,
+            },
+            "profile": {
+                "phone": getattr(profile, 'phone', None),
+            }
+        }
+        resp = Response(payload)
+        resp["Cache-Control"] = "no-store"
+        return resp
 
 
 @method_decorator(csrf_exempt, name='dispatch')

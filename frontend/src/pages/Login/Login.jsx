@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { API_ENDPOINTS, apiRequest } from "../../config/api.js";
+import { API_ENDPOINTS, apiRequest, setToken, getToken, clearToken } from "../../config/api.js";
 import "./Login.css";
 import ForgotPasswordModal from "./ForgotPasswordModal.jsx";
 import ResetPasswordModal from "./ResetPasswordModal.jsx";
@@ -19,14 +19,19 @@ export default function Login() {
   const onChange = (e) =>
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
 
+  // Si el usuario llega a /login con una sesión activa, cerrarla
+  useEffect(() => {
+    const token = getToken();
+    if (token) {
+      clearToken();
+    }
+  }, []);
+
 // Detectar si hay un token de reset en la URL
   useEffect(() => {
     const token = searchParams.get('token');
     if (token) {
-      // Mostrar un mensaje de confirmación al llegar desde el enlace del correo
-      setVerificationMessage('Verificación exitosa. Puedes restablecer tu contraseña ahora.');
-      setShowVerificationModal(true);
-
+      // Mostrar SOLO el modal de restablecer contraseña, sin modales intermedios
       setResetToken(token);
       setShowResetPassword(true);
       // Limpiar la URL después de obtener el token
@@ -34,35 +39,70 @@ export default function Login() {
     }
   }, [searchParams]);
 
-// Leer cookies de verificación establecidas por el backend en /api/auth/verify/<token>/
+// Leer cookies de verificación Y parámetro verified en URL
   useEffect(() => {
     const getCookie = (name) => {
-      return document.cookie
-        .split('; ')
-        .find(row => row.startsWith(name + '='))
-        ?.split('=')[1];
+      const cookies = document.cookie.split('; ');
+      const found = cookies.find(row => row.startsWith(name + '='));
+      return found ? found.split('=')[1] : null;
     };
 
+    // Primero verificar si hay parámetro verified en URL
+    const verifiedParam = searchParams.get('verified');
+    
+    // Leer cookies
     const status = getCookie('verification_status');
     let message = getCookie('verification_message');
 
-    if (status && message) {
-      try {
-        const decoded = decodeURIComponent(message);
-        message = decoded;
-      } catch (e) {}
-      // Quitar comillas envolventes si las hay
-      if ((message.startsWith('"') && message.endsWith('"')) || (message.startsWith("'") && message.endsWith("'"))) {
-        message = message.slice(1, -1);
+    // Debug: ver qué recibimos
+    console.log('[Verification Check]', { verifiedParam, status, message, allCookies: document.cookie });
+
+    // Si hay verified=1 en URL o cookie de status
+    if (verifiedParam === '1' || status === '1') {
+      let finalMessage = 'Tu cuenta fue verificada correctamente. Ya puedes iniciar sesión.';
+      
+      if (message) {
+        try {
+          finalMessage = decodeURIComponent(message);
+          // Quitar comillas envolventes si las hay
+          if ((finalMessage.startsWith('"') && finalMessage.endsWith('"')) || 
+              (finalMessage.startsWith("'") && finalMessage.endsWith("'"))) {
+            finalMessage = finalMessage.slice(1, -1);
+          }
+        } catch (e) {
+          console.error('Error decoding message:', e);
+        }
       }
-      setVerificationMessage(message);
+      
+      setVerificationMessage(finalMessage);
       setShowVerificationModal(true);
 
-      // limpiar cookies para que no reaparezca en futuros loads
-      document.cookie = 'verification_status=; Max-Age=0; Path=/';
-      document.cookie = 'verification_message=; Max-Age=0; Path=/';
+      // Limpiar cookies y URL
+      document.cookie = 'verification_status=; Max-Age=0; Path=/; SameSite=Lax';
+      document.cookie = 'verification_message=; Max-Age=0; Path=/; SameSite=Lax';
+      if (verifiedParam) {
+        window.history.replaceState({}, document.title, '/login');
+      }
+    } else if (status === '0') {
+      // Error en verificación
+      let errorMsg = 'Ocurrió un error al verificar la cuenta.';
+      if (message) {
+        try {
+          errorMsg = decodeURIComponent(message);
+          if ((errorMsg.startsWith('"') && errorMsg.endsWith('"')) || 
+              (errorMsg.startsWith("'") && errorMsg.endsWith("'"))) {
+            errorMsg = errorMsg.slice(1, -1);
+          }
+        } catch (e) {}
+      }
+      setVerificationMessage(errorMsg);
+      setShowVerificationModal(true);
+      
+      // Limpiar cookies
+      document.cookie = 'verification_status=; Max-Age=0; Path=/; SameSite=Lax';
+      document.cookie = 'verification_message=; Max-Age=0; Path=/; SameSite=Lax';
     }
-  }, []);
+  }, [searchParams]);
 
   const [loginError, setLoginError] = useState('');
   const [loginSuccess, setLoginSuccess] = useState(false);
@@ -84,18 +124,26 @@ export default function Login() {
       const result = await apiRequest(API_ENDPOINTS.LOGIN, {
         method: 'POST',
         body: JSON.stringify({
-          username: form.email,  // El backend espera username
+          username: form.email,
           password: form.password
         }),
       });
       
-      if (result.ok && result.data.success) {
+      if (result.ok && result.data.success && result.data.token) {
+        // Guardar JWT para siguientes requests
+        setToken(result.data.token);
         setLoginSuccess(true);
         setShowSuccessModal(true);
-        // Redirigir después de mostrar el modal
         setTimeout(() => {
-          navigate('/dashboard'); // Redirige al dashboard
-        }, 2000);
+          // Generar session ID único y legible
+          const generateSessionId = () => {
+            const timestamp = Date.now().toString(36);
+            const randomPart = Math.random().toString(36).substring(2, 9);
+            return `${timestamp}${randomPart}`.toUpperCase();
+          };
+          const sessionId = generateSessionId();
+          navigate(`/dashboard?session=${sessionId}`);
+        }, 600);
       } else {
         setLoginError(result.data.error || 'Error al iniciar sesión');
       }

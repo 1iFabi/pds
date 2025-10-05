@@ -15,13 +15,21 @@ class GmailAPIAccountAdapter(DefaultAccountAdapter):
         subject = message.subject
         text_body = message.body or ""
 
-        # Busca versión HTML si existe
+        # Busca versión HTML si existe y aplica el branding
         html_body = None
         if hasattr(message, "alternatives") and message.alternatives:
             for content, content_type in message.alternatives:
                 if content_type == "text/html":
                     html_body = content
                     break
+        
+        from .email_utils import build_branded_html
+        if html_body:
+            # Envolver el HTML que genera allauth dentro del layout de Genomia
+            html_body = build_branded_html(html_body, title_text=None)
+        else:
+            # Si no hay HTML, generamos uno mínimo basado en el texto
+            html_body = build_branded_html(f"<pre style=\"white-space:pre-wrap\">{text_body}</pre>")
 
         # Envía con Gmail API (nuestra utilidad)
         send_email(to_email=email, subject=subject, html_body=html_body, text_body=text_body)

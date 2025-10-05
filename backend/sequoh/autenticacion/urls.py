@@ -5,6 +5,9 @@ from .views import (
     ResendVerificationAPIView,
     PasswordResetRequestAPIView,
     PasswordResetConfirmAPIView,
+    MeAPIView,
+    LogoutAPIView,
+    DashboardAPIView,
 )
 
 urlpatterns = [
@@ -13,4 +16,8 @@ urlpatterns = [
     path('resend-verification/', ResendVerificationAPIView.as_view(), name='api_resend_verification'),
     path('password-reset/', PasswordResetRequestAPIView.as_view(), name='api_password_reset'),
     path('password-reset-confirm/', PasswordResetConfirmAPIView.as_view(), name='api_password_reset_confirm'),
+    # Endpoints protegidos por sesión
+    path('me/', MeAPIView.as_view(), name='api_me'),
+    path('logout/', LogoutAPIView.as_view(), name='api_logout'),
+    path('dashboard/', DashboardAPIView.as_view(), name='api_dashboard'),
 ]

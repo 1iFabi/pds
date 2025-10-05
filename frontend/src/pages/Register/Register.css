@@ -37,9 +37,9 @@
 /* Contenedor interno del card - MÁS ANGOSTO Y MENOS ALTO */
 .register-inner {
   width: 100%;
-  max-width: 300px;
+  max-width: 260px;
   margin: 0 auto;
-  padding: 0.25rem 0;
+  padding: 0.3rem 0;
 }
 
 /* Lado derecho (imagen) */
@@ -61,25 +61,25 @@
 /* ============ TÍTULOS ============ */
 
 .register-title {
-  margin: 0 0 0.25rem 0; /* menos alto */
+  margin: 0.5rem 0 0.2rem 0; /* más espacio arriba para el logo */
   font-weight: 700;
   text-align: center;
   color: #0f172a;
-  font-size: clamp(1.2rem, 3vw, 1.45rem);
+  font-size: clamp(1.1rem, 3vw, 1.3rem);
 }
 
 .register-subtitle {
-  margin: 0 0 0.65rem 0; /* menos alto */
-  font-size: clamp(0.85rem, 2.4vw, 0.95rem);
+  margin: 0 0 0.5rem 0; /* más compacto */
+  font-size: clamp(0.8rem, 2.4vw, 0.88rem);
   color: #64748b;
   text-align: center;
-  line-height: 1.35;
+  line-height: 1.3;
 }
 
 /* ============ CARD & FORM ============ */
 
 .login-card {
-  padding: 0.85rem 0.95rem;  /* Más angosto y menos alto */
+  padding: 0.5rem 0.7rem;  /* Aún más compacto */
   border-radius: 12px;
   background: #fff;
   box-shadow: 0 10px 25px -8px rgba(0, 0, 0, 0.10), 0 6px 16px -10px rgba(0,0,0,0.06);
@@ -89,7 +89,7 @@
 
 .register-form {
   display: grid;
-  gap: 0.6rem;  /* Aún más compacto */
+  gap: 0.4rem;  /* Gap aún más reducido */
 }
 
 /* ============ DISTRIBUCIÓN EN 2 COLUMNAS ============ */
@@ -122,10 +122,10 @@
 
 .uv-input {
   width: 100%;
-  padding: 14px 14px 14px 46px;
+  padding: 11px 12px 11px 42px;
   border: 1.5px solid #e2e8f0;
   border-radius: 10px;
-  font-size: 15px;
+  font-size: 14px;
   background: #ffffff;
   transition: all 0.2s ease;
   font-family: inherit;
@@ -153,12 +153,12 @@
   left: 14px;
   top: 0;
   transform: translateY(-50%);
-  font-size: 13px;
+  font-size: 12px;
   color: #4A90E2;
   pointer-events: none;
   transition: none;
   background: white;
-  padding: 0 6px;
+  padding: 0 5px;
   font-weight: 600;
   z-index: 1;
 }
@@ -186,8 +186,7 @@
 .password-wrapper {
   position: relative;
   display: flex;
-  align-items: flex-start;
-  gap: 14px;
+  flex-direction: column;
   width: 100%;
 }
 
@@ -257,28 +256,28 @@
 }
 
 .validator-header {
-  margin-bottom: 0.6rem;
+  margin-bottom: 0.5rem;
   border-bottom: 1px solid #f1f5f9;
-  padding-bottom: 0.5rem;
+  padding-bottom: 0.4rem;
 }
 
 .validator-title {
   font-weight: 600;
   color: #334155;
-  font-size: 0.9rem;
+  font-size: 0.82rem;
 }
 
 .validator-rules { 
   display: flex; 
   flex-direction: column; 
-  gap: 0.5rem; 
+  gap: 0.4rem; 
 }
 
 .validator-rule {
   display: flex; 
   align-items: center; 
-  gap: 0.5rem;
-  font-size: 0.85rem; 
+  gap: 0.4rem;
+  font-size: 0.78rem; 
   transition: all 0.2s ease;
 }
 
@@ -286,13 +285,13 @@
 .validator-rule.invalid { color: #ef4444; }
 
 .validator-icon {
-  width: 16px; 
-  height: 16px;
+  width: 14px; 
+  height: 14px;
   display: inline-flex; 
   align-items: center; 
   justify-content: center;
   border-radius: 50%;
-  font-size: 11px; 
+  font-size: 10px; 
   font-weight: 700; 
   flex-shrink: 0;
 }
@@ -311,22 +310,26 @@
   line-height: 1.3; 
 }
 
-/* Variante responsiva */
+/* Variante responsiva - ahora debajo del campo */
 .password-validator-responsive {
   background: #fff;
   border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  padding: 0.75rem;
-  min-width: 240px;
-  max-width: 100%;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-  animation: slideInRight 0.25s ease;
-  flex-shrink: 0;
+  border-radius: 8px;
+  padding: 0.6rem;
+  width: 100%;
+  margin-top: 0.5rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  animation: slideDown 0.2s ease;
 }
 
 @keyframes slideInRight {
   0% { opacity: 0; transform: translateX(-10px); }
   100% { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideDown {
+  0% { opacity: 0; transform: translateY(-8px); }
+  100% { opacity: 1; transform: translateY(0); }
 }
 
 /* ============ VALIDATION & STATES ============ */
@@ -363,16 +366,16 @@
 .checkbox-line {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 7px;
   color: #475569;
-  font-size: 0.95rem;
+  font-size: 0.8rem;
   user-select: none;
-  margin-top: 0.25rem;
+  margin-top: 0.1rem;
 }
 
 .checkbox-line input[type="checkbox"] { 
-  width: 18px; 
-  height: 18px; 
+  width: 16px; 
+  height: 16px; 
   cursor: pointer;
   accent-color: #4A90E2;
 }
@@ -381,16 +384,16 @@
 
 .login-button {
   width: 100%;
-  padding: 1rem 1.25rem;
+  padding: 0.7rem 0.9rem;
   border-radius: 10px;
   border: none;
   background: linear-gradient(135deg, #4A90E2 0%, #357abd 100%);
   color: #fff;
   font-weight: 600;
-  font-size: 1rem;
+  font-size: 0.9rem;
   cursor: pointer;
   transition: all 0.2s ease;
-  margin-top: 0.5rem;
+  margin-top: 0.3rem;
   box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
 }
 
@@ -425,9 +428,9 @@
 
 .login-help {
   text-align: center;
-  margin-top: 1rem;
+  margin-top: 0.5rem;
   color: #64748b;
-  font-size: 0.95rem;
+  font-size: 0.8rem;
 }
 
 .login-link {
@@ -474,58 +477,210 @@
   .password-validator { animation: none; }
 }
 
-/* Register page: fixed labels (no floating) */
-.register-page .login-form .uv-field {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 6px;
+/* Logo igual tamaño que Login */
+.register-page .logo-container {
+  margin-bottom: 0.5rem;
+}
+
+.register-page .welcome-logo {
+  width: 80px;
+  height: auto;
+}
+
+/* Title underline más pequeño en Register */
+.register-page .title-underline {
+  width: 120px;
+  height: 2.5px;
+  margin-top: 0.35rem;
+}
+
+/* ============ FLOATING LABELS LIKE LOGIN ============ */
+/* Usar mismo estilo flotante que Login pero con iconos ocultos */
+
+.register-page .uv-field {
   position: relative;
+  display: flex;
+  align-items: center;
 }
 
-/* Place label above input and remove float transitions */
-.register-page .uv-label {
-  order: 0;
-  position: static !important;
-  transform: none !important;
-  background: transparent !important;
-  padding: 0 !important;
-  left: auto !important;
-  top: auto !important;
-  color: #334155;
-  font-size: 0.9rem;
+/* Ocultar iconos en Register (limpio, solo label y texto) */
+.register-page .uv-icon {
+  display: none;
 }
 
-/* Keep input below label; remove extra left padding reserved for icons */
+/* Input con padding izquierdo normal (sin icono) */
 .register-page .uv-input {
-  order: 1;
-  padding: 12px !important;
+  width: 100%;
+  padding: 14px 16px !important;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 14px;
+  background: #ffffff;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+  outline: none;
 }
 
-/* Neutralize floating-label triggers from Login.css */
+.register-page .uv-input:focus {
+  border-color: #4A90E2;
+  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+}
+
+/* Label flotante - posición inicial */
+.register-page .uv-label {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9ca3af;
+  font-size: 14px;
+  font-weight: 400;
+  transition: all 0.2s ease;
+  pointer-events: none;
+  z-index: 1;
+  background: transparent;
+}
+
+/* Label flotante - cuando está enfocado o tiene contenido */
 .register-page .uv-input:focus + .uv-label,
 .register-page .uv-input:not(:placeholder-shown) + .uv-label {
-  transform: none !important;
-  color: #334155 !important;
-  background: transparent !important;
-  padding: 0 !important;
+  transform: translateY(-30px) scale(0.85);
+  color: #4A90E2;
+  background: #ffffff;
+  padding: 0 6px;
 }
 
-/* Hide inline field icons on Register page for cleaner stacked layout */
-.register-page .uv-icon {
-  display: none !important;
-}
-
-/* Ensure password field still reserves space for toggle button on the right */
+/* Password toggle button */
 .register-page .password-field-container .uv-input {
-  padding-right: 46px !important;
+  padding-right: 48px !important;
 }
 
-/* Ensure helper and error texts sit below the inputs */
+/* Validation errors debajo del campo */
 .register-page .validation-error,
 .register-page .field-hint {
   position: static;
   margin-top: 6px;
+}
+
+/* Validador de contraseña - Desktop a la derecha, Mobile debajo */
+.register-page .password-wrapper {
+  display: flex;
+  position: relative;
+}
+
+/* Desktop: validador a la derecha (solo en pantallas grandes) */
+@media (min-width: 1440px) {
+  .register-page .password-wrapper {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 14px;
+  }
+  
+  .register-page .password-validator,
+  .register-page .password-validator-responsive {
+    position: absolute;
+    left: calc(100% + 14px);
+    top: 0;
+    width: auto;
+    min-width: 240px;
+    max-width: 280px;
+    margin-top: 0;
+    border-radius: 12px;
+    padding: 0.6rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    animation: slideInRight 0.25s ease;
+  }
+}
+
+/* Mobile/Tablet/Desktop pequeño: validador debajo */
+@media (max-width: 1439px) {
+  .register-page .password-wrapper {
+    flex-direction: column;
+  }
+  
+  .register-page .password-validator,
+  .register-page .password-validator-responsive {
+    position: static !important;
+    left: auto !important;
+    top: auto !important;
+    width: 100%;
+    max-width: 100%;
+    margin-top: 0.5rem;
+    border-radius: 8px;
+    padding: 0.6rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    animation: slideDown 0.2s ease;
+  }
+}
+
+/* Validador de teléfono - igual que contraseña */
+.phone-wrapper {
+  display: flex;
+  position: relative;
+}
+
+/* Desktop: validador a la derecha (solo en pantallas grandes) */
+@media (min-width: 1440px) {
+  .phone-wrapper {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 14px;
+  }
+  
+  .phone-validator {
+    position: absolute;
+    left: calc(100% + 14px);
+    top: -10px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 0.6rem;
+    width: auto;
+    min-width: 240px;
+    max-width: 280px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    animation: slideInRight 0.25s ease;
+    z-index: 10;
+  }
+}
+
+/* Mobile/Tablet/Desktop pequeño: validador debajo */
+@media (max-width: 1439px) {
+  .phone-wrapper {
+    flex-direction: column;
+  }
+  
+  .phone-validator {
+    position: static;
+    width: 100%;
+    margin-top: 0.5rem;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 0.6rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    animation: slideDown 0.2s ease;
+  }
+}
+
+/* Mensaje de ayuda al hacer focus - dentro del input */
+.input-hint {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
+  color: #9ca3af;
+  font-style: normal;
+  animation: fadeInHint 0.15s ease;
+  pointer-events: none;
+  z-index: 5;
+  white-space: nowrap;
+}
+
+@keyframes fadeInHint {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
 }
 
 /* (Removido) Regla de asterisco para evitar duplicados en Register */
@@ -752,42 +907,57 @@
 
 /* ============ RESPONSIVE ============ */
 
-/* Desktop grande */
+/* Desktop grande - Mantener tamaño compacto */
 @media (min-width: 1400px) {
-  .register-inner { max-width: 620px; }
-  .login-card { padding: 2.25rem 2.75rem; }
+  .register-page .register-inner { max-width: 300px; }
+  .register-page .login-card { padding: 0.65rem 0.85rem; }
 }
 
 @media (min-width: 1600px) {
-  .register-inner { max-width: 660px; }
-  .login-card { padding: 2.5rem 3rem; }
+  .register-page .register-inner { max-width: 320px; }
+  .register-page .login-card { padding: 0.7rem 0.9rem; }
 }
 
 @media (min-width: 1920px) {
-  .register-inner { max-width: 700px; }
+  .register-page .register-inner { max-width: 340px; }
+}
+
+/* Pantallas medianas - Ocultar imagen antes */
+@media (max-width: 1200px) {
+  .register-layout.mirror {
+    flex-direction: column;
+  }
+  
+  .register-layout.mirror .register-right,
+  .register-right { 
+    display: none !important; 
+  }
+  
+  .register-layout.mirror .register-left,
+  .register-left {
+    width: 100% !important;
+    min-height: 100vh;
+  }
+  
+  .register-inner {
+    max-width: 400px;
+  }
 }
 
 /* Tablets */
 @media (max-width: 1024px) {
-  .auth.mirror {
-    flex-direction: column;
-    min-height: 100vh;
-    overflow-y: auto;
+  .register-right {
+    display: none !important;
   }
   
-  .auth.mirror .register-right { 
-    display: none; 
-  }
-  
-  .auth.mirror .register-left {
-    width: 100%;
-    min-height: 100vh;
+  .register-left {
+    width: 100% !important;
     padding: 2rem 1.5rem;
   }
 
   .register-inner {
-    max-width: 100%;
-    padding: 1rem 0;
+    max-width: 420px;
+    padding: 0.5rem 0;
   }
 
   /* Mantener 2 columnas en tablet */
@@ -806,19 +976,29 @@
 
   .password-wrapper { 
     flex-direction: column; 
-    gap: 0.5rem; 
+  }
+  
+  .login-card {
+    padding: 1rem 1.2rem;
   }
 }
 
 /* Mobile */
 @media (max-width: 768px) {
+  .register-right {
+    display: none !important;
+  }
+  
   .register-left { 
-    padding: 1.5rem 1rem; 
+    width: 100% !important;
+    padding: 1.5rem 1.5rem; 
   }
   
   .login-card { 
-    padding: 1.5rem 1.25rem; 
+    padding: 1.5rem 0.9rem; 
     border-radius: 14px; 
+    max-width: 95%;
+    margin: 0 auto;
   }
 
   /* Cambiar a 1 columna en mobile */
@@ -838,12 +1018,18 @@
 
 /* Mobile pequeño */
 @media (max-width: 480px) {
+  .register-right {
+    display: none !important;
+  }
+  
   .register-left { 
-    padding: 1rem 0.75rem; 
+    width: 100% !important;
+    padding: 1rem 1rem; 
   }
   
   .login-card { 
-    padding: 1.25rem 1rem; 
+    padding: 1.25rem 0.75rem;
+    max-width: 92%;
   }
   
   .register-form {
