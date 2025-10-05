@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Menu, X } from 'lucide-react';
 import './Postlogin.css';
 import DashboardHome from './DashboardHome';
+import { API_ENDPOINTS, apiRequest, clearToken } from '../../config/api';
 
 const Postlogin = () => {
   const [activeSection, setActiveSection] = useState(null);
@@ -18,7 +19,32 @@ const Postlogin = () => {
     { id: 'biometricas', icon: '/postlogin/biometrica.png', label: 'Biométrica', description: 'Explora tus datos biométricos para comprender características físicas y fisiológicas.' },
   ];
   
-  const handleLogout = () => {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      const me = await apiRequest(API_ENDPOINTS.ME, { method: 'GET' });
+      if (!mounted) return;
+      if (!me.ok) {
+        navigate('/login', { replace: true });
+        return;
+      }
+      setUser(me.data.user);
+      setLoading(false);
+      // Opcional: cargar datos del dashboard per-user
+      const db = await apiRequest(API_ENDPOINTS.DASHBOARD, { method: 'GET' });
+      if (db.ok) {
+        // Podrías almacenar en estado si vas a usar datos dinámicos
+      }
+    })();
+    return () => { mounted = false; };
+  }, [navigate]);
+
+  const handleLogout = async () => {
+    try { await apiRequest(API_ENDPOINTS.LOGOUT, { method: 'POST' }); } catch {}
+    clearToken();
     navigate('/');
   };
 
@@ -83,8 +109,9 @@ const Postlogin = () => {
   };
 
 
+  if (loading) return null;
   return (
-    <div className="postlogin-container">
+    <div className="postlogin-container" aria-live="polite">
       {/* Botón hamburguesa para móviles */}
       <button 
         className="mobile-menu-btn"

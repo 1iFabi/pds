@@ -21,7 +21,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-isazy3kl)20lf!i%30g4xj1$s8mjz+an9pq6smoa=$!1-eqzty'
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-isazy3kl)20lf!i%30g4xj1$s8mjz+an9pq6smoa=$!1-eqzty')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('RAILWAY_ENVIRONMENT') != 'production'
@@ -129,13 +129,26 @@ WSGI_APPLICATION = 'sequoh.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-# Simplify: always use SQLite locally (and by default)
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+# Database - PostgreSQL en producción (Railway), SQLite en local
+import dj_database_url
+
+if os.environ.get('DATABASE_URL'):
+    # Producción: PostgreSQL desde Railway
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=os.environ.get('DATABASE_URL'),
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
     }
-}
+else:
+    # Desarrollo: SQLite
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Password validation
@@ -226,6 +239,8 @@ ACCOUNT_AUTHENTICATION_METHOD = 'email'
 # CORS configuration for development and production
 # Permitir todos los orígenes solo en desarrollo
 CORS_ALLOW_ALL_ORIGINS = DEBUG
+# Habilitar envío de cookies/sesiones desde el frontend (React)
+CORS_ALLOW_CREDENTIALS = True
 
 # CORS headers
 CORS_ALLOW_HEADERS = [
@@ -239,6 +254,11 @@ CORS_ALLOW_HEADERS = [
     'x-csrftoken',
     'x-requested-with',
 ]
+
+# Cookies de sesión/CSRF. En producción con dominios distintos (Vercel/Railway)
+# puede requerirse SameSite=None + Secure=True para que el navegador acepte cookies cross-site.
+SESSION_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SAMESITE = 'Lax'
 
 LOGIN_URL = '/login'
 LOGIN_REDIRECT_URL = '/dashboard'

@@ -1,9 +1,9 @@
 Hola {{ user.first_name|default:user.username }},
 
-Gracias por registrarte en SeqUOH. Para activar tu cuenta, por favor confirma tu correo haciendo clic en el siguiente enlace:
+Gracias por registrarte en Genomia. Para activar tu cuenta, por favor confirma tu correo haciendo clic en el siguiente enlace:
 
 {{ activate_url }}
 
 Si no fuiste tú quien solicitó esta cuenta, puedes ignorar este mensaje.
 
-Equipo SeqUOH
+Equipo Genomia
