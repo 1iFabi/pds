@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { API_ENDPOINTS, apiRequest, setToken, getToken, clearToken } from "../../config/api.js";
+import ErrorMessage from "../../components/Errormessage.jsx";
 import "./Login.css";
 import ForgotPasswordModal from "./ForgotPasswordModal.jsx";
 import ResetPasswordModal from "./ResetPasswordModal.jsx";
@@ -16,8 +17,12 @@ export default function Login() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
-  const onChange = (e) =>
-    setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
+  const onChange = (e) => {
+    const { name, value } = e.target;
+    setForm((f) => ({ ...f, [name]: value }));
+    // Limpiar error del campo al escribir
+    setErrors((prev) => ({ ...prev, [name === 'email' ? 'email' : name]: '' }));
+  };
 
   // Si el usuario llega a /login con una sesión activa, cerrarla
   useEffect(() => {
@@ -104,7 +109,7 @@ export default function Login() {
     }
   }, [searchParams]);
 
-  const [loginError, setLoginError] = useState('');
+  const [errors, setErrors] = useState({ email: '', password: '', global: '' });
   const [loginSuccess, setLoginSuccess] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
@@ -118,7 +123,7 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setLoginError('');
+    setErrors({ email: '', password: '', global: '' });
     
     try {
       const result = await apiRequest(API_ENDPOINTS.LOGIN, {
@@ -145,11 +150,47 @@ export default function Login() {
           navigate(`/dashboard?session=${sessionId}`);
         }, 600);
       } else {
-        setLoginError(result.data.error || 'Error al iniciar sesión');
+        // Mapear errores del backend a campos específicos cuando sea posible
+        const { status, data } = result;
+        let fieldErrors = { email: '', password: '', global: '' };
+
+        // DRF puede devolver { username: ["..."], password: ["..."] }
+        // También puede devolver { error: "..." } o { detail: "..." }
+        const messages = [];
+
+        if (data) {
+          // Username backend mapea a 'email' en UI
+          if (data.username) {
+            fieldErrors.email = Array.isArray(data.username) ? data.username.join(' ') : String(data.username);
+          }
+          if (data.email) {
+            fieldErrors.email = Array.isArray(data.email) ? data.email.join(' ') : String(data.email);
+          }
+          if (data.password) {
+            fieldErrors.password = Array.isArray(data.password) ? data.password.join(' ') : String(data.password);
+          }
+          if (data.detail) messages.push(data.detail);
+          if (data.error) messages.push(data.error);
+        }
+
+        // 400/401 Invalid credentials: marcar ambos campos cuando no hay error específico
+        if ((status === 400 || status === 401) && !fieldErrors.email && !fieldErrors.password) {
+          fieldErrors.email = 'error'; // solo para marcar el campo en rojo
+          fieldErrors.password = 'error'; // solo para marcar el campo en rojo
+        }
+
+        // Si no hay errores de campo específicos, usar global (solo para debug interno)
+        const globalMsg = messages.join(' ').trim() || 'No se pudo iniciar sesión';
+        if (!fieldErrors.email && !fieldErrors.password) {
+          fieldErrors.global = globalMsg;
+        }
+
+        console.log('[Login Error Debug]', { status, data, fieldErrors });
+        setErrors(fieldErrors);
       }
     } catch (error) {
       console.error('Error de conexión:', error);
-      setLoginError('Error de conexión con el servidor. Verifica que el backend esté ejecutándose.');
+      setErrors({ email: '', password: '', global: 'Error de conexión con el servidor. Verifica que el backend esté ejecutándose.' });
     } finally {
       setLoading(false);
     }
@@ -185,7 +226,7 @@ export default function Login() {
 
           <form onSubmit={handleSubmit} className="login-form login-card form-container">
             {/* Email */}
-            <div className="uv-field">
+            <div className={`uv-field ${errors.email ? 'has-error' : ''}`}>
               <span className="uv-icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24" width="20" height="20">
                   <path
@@ -195,7 +236,7 @@ export default function Login() {
                 </svg>
               </span>
               <input
-                className="uv-input"
+                className={`uv-input ${errors.email ? 'error' : ''}`}
                 type="email"
                 name="email"
                 value={form.email}
@@ -203,13 +244,15 @@ export default function Login() {
                 autoComplete="username"
                 placeholder=" "
                 required
+                aria-invalid={!!errors.email}
+                aria-describedby={errors.email ? 'email-error' : undefined}
               />
               <label className="uv-label">Correo</label>
               <span className="uv-focus-bg" />
             </div>
 
             {/* Password */}
-            <div className="uv-field">
+            <div className={`uv-field ${errors.password ? 'has-error' : ''}`}>
               <span className="uv-icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24" width="20" height="20">
                   <path
@@ -219,7 +262,7 @@ export default function Login() {
                 </svg>
               </span>
               <input
-                className="uv-input"
+                className={`uv-input ${errors.password ? 'error' : ''}`}
                 type={showPwd ? "text" : "password"}
                 name="password"
                 value={form.password}
@@ -227,6 +270,8 @@ export default function Login() {
                 autoComplete="current-password"
                 placeholder=" "
                 required
+                aria-invalid={!!errors.password}
+                aria-describedby={errors.password ? 'password-error' : undefined}
               />
               <label className="uv-label">Contraseña</label>
               <span className="uv-focus-bg" />
@@ -240,7 +285,7 @@ export default function Login() {
                 {showPwd ? (
                   // Ícono de ojo tachado (ocultar)
                   <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8-4 8-11 8-11-8-11-8z"/>
                     <line x1="1" y1="1" x2="23" y2="23"/>
                   </svg>
                 ) : (
@@ -258,23 +303,8 @@ export default function Login() {
               {loading ? "Ingresando..." : "Ingresa tu cuenta"}
             </button>
 
-            {/* Mostrar errores de login - centrado y cerca del botón */}
-            {loginError && (
-              <div className="login-error" style={{
-                color: '#dc3545',
-                backgroundColor: '#f8d7da',
-                border: '1px solid #f5c6cb',
-                borderRadius: '4px',
-                padding: '8px 12px',
-                marginTop: '8px',
-                marginBottom: '0px',
-                fontSize: '14px',
-                textAlign: 'center'
-              }}>
-                {loginError}
-              </div>
-            )}
-            
+            {/* Errores ocultos - solo se muestran visualmente con bordes rojos */}
+
             {/* Mostrar mensaje de éxito */}
             {loginSuccess && (
               <div className="login-success" style={{

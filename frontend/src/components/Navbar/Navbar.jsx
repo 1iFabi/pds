@@ -3,6 +3,8 @@ import "./Navbar.css";
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { HashLink } from "react-router-hash-link";
+import SpinningCoin from "../SpinningCoin/SpinningCoin.jsx";
+
 
 const base = import.meta.env.BASE_URL;
 
@@ -14,6 +16,7 @@ const Navbar = ({ theme: forcedTheme }) => {
   const btnRef = useRef(null);
   const navRef = useRef(null);
   const location = useLocation();
+
 
   const activeTheme = forcedTheme || autoTheme;
   const isLight = activeTheme === "light";
@@ -196,7 +199,7 @@ const Navbar = ({ theme: forcedTheme }) => {
         {/* centro (logo) */}
         <div className="nav-logo" aria-label="Genomia logo">
           <a href="/" className="logo-link">
-            <img src={logoSrc} alt="Genomia logo" />
+            <SpinningCoin src={logoSrc} size={60} speed="8s" />
           </a>
         </div>
 

@@ -8,6 +8,7 @@ const ResetPasswordModal = ({ isOpen, onClose, token }) => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showPasswordValidation, setShowPasswordValidation] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -84,6 +85,7 @@ const ResetPasswordModal = ({ isOpen, onClose, token }) => {
     setSuccess(false);
     setShowPassword(false);
     setShowConfirmPassword(false);
+    setShowPasswordValidation(false);
     onClose();
   };
 
@@ -157,6 +159,7 @@ const ResetPasswordModal = ({ isOpen, onClose, token }) => {
                     name="password"
                     value={formData.password}
                     onChange={handleInputChange}
+                    onFocus={() => setShowPasswordValidation(true)}
                     placeholder=" "
                     required
                     disabled={loading}
@@ -188,35 +191,33 @@ const ResetPasswordModal = ({ isOpen, onClose, token }) => {
                   </button>
                 </div>
 
-                {/* Validador de contraseña */}
-                {formData.password && (
-                  <div className="password-validator">
-                    <div className={`validator-item ${passwordValidation.minLength ? 'valid' : 'invalid'}`}>
-                      <span className="validator-icon">
-                        {passwordValidation.minLength ? '✓' : '×'}
-                      </span>
-                      <span>Mínimo 10 caracteres</span>
-                    </div>
-                    <div className={`validator-item ${passwordValidation.hasUppercase ? 'valid' : 'invalid'}`}>
-                      <span className="validator-icon">
-                        {passwordValidation.hasUppercase ? '✓' : '×'}
-                      </span>
-                      <span>Una mayúscula</span>
-                    </div>
-                    <div className={`validator-item ${passwordValidation.hasNumber ? 'valid' : 'invalid'}`}>
-                      <span className="validator-icon">
-                        {passwordValidation.hasNumber ? '✓' : '×'}
-                      </span>
-                      <span>Un número</span>
-                    </div>
-                    <div className={`validator-item ${passwordValidation.hasSymbol ? 'valid' : 'invalid'}`}>
-                      <span className="validator-icon">
-                        {passwordValidation.hasSymbol ? '✓' : '×'}
-                      </span>
-                      <span>Un símbolo especial</span>
-                    </div>
+                {/* Validador de contraseña - JUSTO ABAJO DE NUEVA CONTRASEÑA */}
+                <div className="password-validator" style={{ display: 'block', visibility: 'visible', opacity: 1, position: 'relative', left: 0, right: 0, width: '100%', marginTop: '12px', marginBottom: '12px' }}>
+                  <div className={`validator-item ${passwordValidation.minLength ? 'valid' : 'invalid'}`}>
+                    <span className="validator-icon">
+                      {passwordValidation.minLength ? '✓' : '×'}
+                    </span>
+                    <span>Mínimo 10 caracteres</span>
                   </div>
-                )}
+                  <div className={`validator-item ${passwordValidation.hasUppercase ? 'valid' : 'invalid'}`}>
+                    <span className="validator-icon">
+                      {passwordValidation.hasUppercase ? '✓' : '×'}
+                    </span>
+                    <span>Una mayúscula</span>
+                  </div>
+                  <div className={`validator-item ${passwordValidation.hasNumber ? 'valid' : 'invalid'}`}>
+                    <span className="validator-icon">
+                      {passwordValidation.hasNumber ? '✓' : '×'}
+                    </span>
+                    <span>Un número</span>
+                  </div>
+                  <div className={`validator-item ${passwordValidation.hasSymbol ? 'valid' : 'invalid'}`}>
+                    <span className="validator-icon">
+                      {passwordValidation.hasSymbol ? '✓' : '×'}
+                    </span>
+                    <span>Un símbolo especial</span>
+                  </div>
+                </div>
 
                 {/* Confirmar Contraseña */}
                 <div className="uv-field">
@@ -316,7 +317,8 @@ const ResetPasswordModal = ({ isOpen, onClose, token }) => {
           max-width: 550px;
           width: 100%;
           max-height: 90vh;
-          overflow: auto;
+          overflow-y: auto;
+          overflow-x: visible;
         }
 
         .modal-header {
@@ -520,8 +522,16 @@ const ResetPasswordModal = ({ isOpen, onClose, token }) => {
           border: 1px solid #e2e8f0;
           border-radius: 8px;
           padding: 12px;
-          margin: 8px 0;
+          margin: 12px 0 !important;
           font-size: 14px;
+          display: block !important;
+          visibility: visible !important;
+          opacity: 1 !important;
+          position: relative !important;
+          left: 0 !important;
+          right: 0 !important;
+          width: 100% !important;
+          z-index: 10;
         }
 
         .validator-item {

@@ -81,6 +81,21 @@
   color: #108ac2 !important;
 }
 
+/* En móvil: colocar el texto dinámico debajo de "Descubre tus" */
+@media (max-width: 768px) {
+  .descubre-title {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+  .descubre-title .text-type-spacing {
+    margin-left: 0;
+    margin-top: 2px;
+    display: block;
+  }
+}
+
 /* ====== GRID Layout (como el mockup) ====== */
 .features-grid {
   display: grid;
