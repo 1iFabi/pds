@@ -226,76 +226,90 @@ export default function Login() {
 
           <form onSubmit={handleSubmit} className="login-form login-card form-container">
             {/* Email */}
-            <div className={`uv-field ${errors.email ? 'has-error' : ''}`}>
-              <span className="uv-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" width="20" height="20">
-                  <path
-                    d="M20 8l-8 5-8-5V6l8 5 8-5v2zm0 3v7H4v-7l8 5 8-5z"
-                    fill="currentColor"
-                  />
-                </svg>
-              </span>
-              <input
-                className={`uv-input ${errors.email ? 'error' : ''}`}
-                type="email"
-                name="email"
-                value={form.email}
-                onChange={onChange}
-                autoComplete="username"
-                placeholder=" "
-                required
-                aria-invalid={!!errors.email}
-                aria-describedby={errors.email ? 'email-error' : undefined}
-              />
-              <label className="uv-label">Correo</label>
-              <span className="uv-focus-bg" />
+            <div className="field-with-error-wrapper">
+              <div className={`uv-field ${errors.email ? 'has-error' : ''}`}>
+                <span className="uv-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="20" height="20">
+                    <path
+                      d="M20 8l-8 5-8-5V6l8 5 8-5v2zm0 3v7H4v-7l8 5 8-5z"
+                      fill="currentColor"
+                    />
+                  </svg>
+                </span>
+                <input
+                  className={`uv-input ${errors.email ? 'error' : ''}`}
+                  type="email"
+                  name="email"
+                  value={form.email}
+                  onChange={onChange}
+                  autoComplete="username"
+                  placeholder=" "
+                  required
+                  aria-invalid={!!errors.email}
+                  aria-describedby={errors.email ? 'email-error' : undefined}
+                />
+                <label className="uv-label">Correo</label>
+                <span className="uv-focus-bg" />
+              </div>
+              {errors.email && errors.email !== 'error' && (
+                <div className="error-message-right">
+                  <ErrorMessage message={errors.email} small={true} />
+                </div>
+              )}
             </div>
 
             {/* Password */}
-            <div className={`uv-field ${errors.password ? 'has-error' : ''}`}>
-              <span className="uv-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" width="20" height="20">
-                  <path
-                    d="M17 10h-1V7a4 4 0 10-8 0v3H7a2 2 0 00-2 2v7a2 2 0 002 2h10a2 2 0 002-2v-7a2 2 0 00-2-2zm-6 0V7a3 3 0 016 0v3h-6z"
-                    fill="currentColor"
-                  />
-                </svg>
-              </span>
-              <input
-                className={`uv-input ${errors.password ? 'error' : ''}`}
-                type={showPwd ? "text" : "password"}
-                name="password"
-                value={form.password}
-                onChange={onChange}
-                autoComplete="current-password"
-                placeholder=" "
-                required
-                aria-invalid={!!errors.password}
-                aria-describedby={errors.password ? 'password-error' : undefined}
-              />
-              <label className="uv-label">Contraseña</label>
-              <span className="uv-focus-bg" />
-              <button
-                type="button"
-                className="pwd-toggle"
-                onClick={() => setShowPwd((s) => !s)}
-                aria-label={showPwd ? "Ocultar contraseña" : "Mostrar contraseña"}
-                tabIndex="-1"
-              >
-                {showPwd ? (
-                  // Ícono de ojo tachado (ocultar)
-                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                    <line x1="1" y1="1" x2="23" y2="23"/>
+            <div className="field-with-error-wrapper">
+              <div className={`uv-field ${errors.password ? 'has-error' : ''}`}>
+                <span className="uv-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="20" height="20">
+                    <path
+                      d="M17 10h-1V7a4 4 0 10-8 0v3H7a2 2 0 00-2 2v7a2 2 0 002 2h10a2 2 0 002-2v-7a2 2 0 00-2-2zm-6 0V7a3 3 0 016 0v3h-6z"
+                      fill="currentColor"
+                    />
                   </svg>
-                ) : (
-                  // Ícono de ojo normal (mostrar)
-                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                    <circle cx="12" cy="12" r="3"/>
-                  </svg>
-                )}
-              </button>
+                </span>
+                <input
+                  className={`uv-input ${errors.password ? 'error' : ''}`}
+                  type={showPwd ? "text" : "password"}
+                  name="password"
+                  value={form.password}
+                  onChange={onChange}
+                  autoComplete="current-password"
+                  placeholder=" "
+                  required
+                  aria-invalid={!!errors.password}
+                  aria-describedby={errors.password ? 'password-error' : undefined}
+                />
+                <label className="uv-label">Contraseña</label>
+                <span className="uv-focus-bg" />
+                <button
+                  type="button"
+                  className="pwd-toggle"
+                  onClick={() => setShowPwd((s) => !s)}
+                  aria-label={showPwd ? "Ocultar contraseña" : "Mostrar contraseña"}
+                  tabIndex="-1"
+                >
+                  {showPwd ? (
+                    // Ícono de ojo tachado (ocultar)
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                      <line x1="1" y1="1" x2="23" y2="23"/>
+                    </svg>
+                  ) : (
+                    // Ícono de ojo normal (mostrar)
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                      <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                  )}
+                </button>
+              </div>
+              {errors.password && errors.password !== 'error' && (
+                <div className="error-message-right">
+                  <ErrorMessage message={errors.password} small={true} />
+                </div>
+              )}
             </div>
 
             {/* Botón de login */}

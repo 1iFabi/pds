@@ -198,9 +198,13 @@ const Navbar = ({ theme: forcedTheme }) => {
 
         {/* centro (logo) */}
         <div className="nav-logo" aria-label="Genomia logo">
-          <a href="/" className="logo-link">
+          <button 
+            onClick={() => window.location.href = '/'} 
+            className="logo-link"
+            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+          >
             <SpinningCoin src={logoSrc} size={60} speed="8s" />
-          </a>
+          </button>
         </div>
 
         {/* derecha: links desktop */}
@@ -257,9 +261,13 @@ const Navbar = ({ theme: forcedTheme }) => {
           aria-label="Menú"
         >
           <div className="drawer-header">
-            <a href="/" className="logo-link">
+            <button 
+              onClick={() => window.location.href = '/'} 
+              className="logo-link"
+              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+            >
               <img src={logoSrc} alt="Genomia logo" />
-            </a>
+            </button>
             <button
               className="drawer-close"
               aria-label="Cerrar menú"
