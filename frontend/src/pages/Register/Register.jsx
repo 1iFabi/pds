@@ -5,6 +5,7 @@ import { API_ENDPOINTS, apiRequest } from "../../config/api.js";
 import "./Register.css";
 import "../Login/Login.css";
 import VerificationModal from "../Login/VerificationModal.jsx";
+import Stepper, { Step } from "../../components/Stepper/Stepper.jsx";
 
 import logo from "/cNormal.png";
 import cromo from "/login.png";
@@ -25,6 +26,8 @@ const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [focusedField, setFocusedField] = useState(null);
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [attemptedNext, setAttemptedNext] = useState(false);
   const navigate = useNavigate();
 
   const passwordValidation = useMemo(() => {
@@ -65,9 +68,7 @@ const Register = () => {
   const [showVerificationModal, setShowVerificationModal] = useState(false);
   const [verificationMessage, setVerificationMessage] = useState('');
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
+  const handleSubmit = async () => {
     if (!isPasswordValid) {
       alert('La contraseña no cumple con todos los requisitos');
       return;
@@ -157,6 +158,54 @@ const Register = () => {
     }, 150);
   };
 
+  // Funciones de validación para cada paso
+  const validateStep = (stepNumber) => {
+    const errors = {};
+    
+    switch(stepNumber) {
+      case 1: // Información Personal
+        if (!formData.nombre.trim()) {
+          errors.nombre = 'El nombre es requerido';
+        }
+        if (!formData.apellido.trim()) {
+          errors.apellido = 'El apellido es requerido';
+        }
+        break;
+        
+      case 2: // Información de Contacto
+        if (!formData.correo.trim()) {
+          errors.correo = 'El correo es requerido';
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.correo)) {
+          errors.correo = 'El correo no es válido';
+        }
+        if (!formData.telefono.trim()) {
+          errors.telefono = 'El teléfono es requerido';
+        } else if (!/^\+569\d{8}$/.test(formData.telefono)) {
+          errors.telefono = 'El formato debe ser +569XXXXXXXX';
+        }
+        break;
+        
+      case 3: // Seguridad
+        if (!formData.contraseña) {
+          errors.contraseña = 'La contraseña es requerida';
+        } else if (!isPasswordValid) {
+          errors.contraseña = 'La contraseña no cumple con los requisitos';
+        }
+        if (!formData.repetirContraseña) {
+          errors.repetirContraseña = 'Debe repetir la contraseña';
+        } else if (!passwordsMatch) {
+          errors.repetirContraseña = 'Las contraseñas no coinciden';
+        }
+        if (!formData.terminos) {
+          errors.terminos = 'Debe aceptar los términos y condiciones';
+        }
+        break;
+    }
+    
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   React.useEffect(() => {
     const handleClickOutside = (event) => {
       if (showPasswordValidation && 
@@ -195,323 +244,359 @@ const Register = () => {
           <p className="subtitle register-subtitle">Regístrate para acceder a tu perfil genético.</p>
           <div className="title-underline" />
 
-          <form onSubmit={handleSubmit} className="login-form login-card register-form form-container">
-            {/* Fila 1: Nombre y Apellido */}
-            <div className="form-row">
-              <div className="uv-field">
-                <span className="uv-icon" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" width="20" height="20">
-                    <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z" fill="currentColor" />
-                  </svg>
-                </span>
-                <input
-                  className="uv-input"
-                  type="text"
-                  name="nombre"
-                  value={formData.nombre}
-                  onChange={handleInputChange}
-                  onFocus={() => setFocusedField('nombre')}
-                  onBlur={() => setFocusedField(null)}
-                  placeholder=" "
-                  required
-                  autoComplete="given-name"
-                />
-                <label className="uv-label">Nombre *</label>
-                <span className="uv-focus-bg" />
-                {focusedField === 'nombre' && !formData.nombre && (
-                  <div className="input-hint">Ej: María</div>
-                )}
-              </div>
-
-              <div className="uv-field">
-                <span className="uv-icon" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" width="20" height="20">
-                    <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z" fill="currentColor" />
-                  </svg>
-                </span>
-                <input
-                  className="uv-input"
-                  type="text"
-                  name="apellido"
-                  value={formData.apellido}
-                  onChange={handleInputChange}
-                  onFocus={() => setFocusedField('apellido')}
-                  onBlur={() => setFocusedField(null)}
-                  placeholder=" "
-                  required
-                  autoComplete="family-name"
-                />
-                <label className="uv-label">Apellido *</label>
-                <span className="uv-focus-bg" />
-                {focusedField === 'apellido' && !formData.apellido && (
-                  <div className="input-hint">Ej: González</div>
-                )}
-              </div>
-            </div>
-
-            {/* Fila 2: Correo (span completo) */}
-            <div className="uv-field">
-              <span className="uv-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" width="20" height="20">
-                  <path d="M20 8l-8 5-8-5V6l8 5 8-5v2zm0 3v7H4v-7l8 5 8-5z" fill="currentColor" />
-                </svg>
-              </span>
-              <input
-                className="uv-input"
-                type="email"
-                name="correo"
-                value={formData.correo}
-                onChange={handleInputChange}
-                onFocus={() => setFocusedField('correo')}
-                onBlur={() => setFocusedField(null)}
-                placeholder=" "
-                required
-              />
-              <label className="uv-label">Correo *</label>
-              <span className="uv-focus-bg" />
-              {focusedField === 'correo' && !formData.correo && (
-                <div className="input-hint">ejemplo@correo.com</div>
-              )}
-            </div>
-
-            {/* Fila 3: Teléfono con validador */}
-            <div className="phone-wrapper">
-              <div className="uv-field">
-                <span className="uv-icon" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" width="20" height="20">
-                    <path d="M22 16.92v3a2 2 0 01-2.18 2 19.8 19.8 0 01-8.63-3.07 19.5 19.5 0 01-6-6A19.8 19.8 0 012.1 4.1A2 2 0 014.1 2h3a2 2 0 012 1.72c.07.96.27 1.9.7 2.81a2 2 0 01-.45 2.11L8.1 9.9a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.91.43 1.85.63 2.81.7A2 2 0 0122 16.92z" fill="currentColor" />
-                  </svg>
-                </span>
-                <input
-                  className="uv-input"
-                  type="tel"
-                  name="telefono"
-                  value={formData.telefono}
-                  inputMode="tel"
-                  pattern="^\+569\d{8}$"
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    if (/^[+\d]*$/.test(value) && value.length <= 12) {
-                      handleInputChange(e);
-                    }
-                  }}
-                  onFocus={() => {
-                    setFocusedField('telefono');
-                    setShowPhoneValidation(true);
-                  }}
-                  onBlur={() => {
-                    setFocusedField(null);
-                    setTimeout(() => setShowPhoneValidation(false), 150);
-                  }}
-                  placeholder=" "
-                  required
-                  aria-describedby="phone-hint"
-                />
-                <label className="uv-label">Teléfono *</label>
-                <span className="uv-focus-bg" />
-                {focusedField === 'telefono' && !formData.telefono && (
-                  <div className="input-hint">+569XXXXXXXX</div>
-                )}
-              </div>
-              
-              {showPhoneValidation && (
-                <div className="phone-validator">
-                  <div className="validator-header">
-                    <span className="validator-title">Formato:</span>
-                  </div>
-                  <div className="validator-rules">
-                    <div className={`validator-rule ${/^\+569\d{8}$/.test(formData.telefono) ? 'valid' : 'invalid'}`}>
-                      <span className="validator-icon">{/^\+569\d{8}$/.test(formData.telefono) ? '✓' : '×'}</span>
-                      <span className="validator-text">Debe comenzar con +569</span>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Fila 4: Contraseña con validador */}
-            <div className="password-wrapper">
-              <div className="uv-field password-field-container">
-                <span className="uv-icon" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" width="20" height="20">
-                    <path d="M17 10h-1V7a4 4 0 10-8 0v3H7a2 2 0 00-2 2v7a2 2 0 002 2h10a2 2 0 002-2v-7a2 2 0 00-2-2zm-6 0V7a3 3 0 616 0v3h-6z" fill="currentColor" />
-                  </svg>
-                </span>
-                <input
-                  className="uv-input"
-                  type={showPassword ? "text" : "password"}
-                  name="contraseña"
-                  value={formData.contraseña}
-                  onChange={handleInputChange}
-                  onFocus={handlePasswordFocus}
-                  onBlur={handlePasswordBlur}
-                  placeholder=" "
-                  required
-                />
-                <label className="uv-label">Contraseña *</label>
-                <span className="uv-focus-bg" />
-                
-                <button
-                  type="button"
-                  className="pwd-toggle"
-                  onClick={() => setShowPassword(prev => !prev)}
-                  aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
-                  tabIndex="-1"
-                >
-                  {showPassword ? (
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
-                      <line x1="1" y1="1" x2="23" y2="23"/>
-                    </svg>
-                  ) : (
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                      <circle cx="12" cy="12" r="3"/>
-                    </svg>
-                  )}
-                </button>
-              </div>
-              
-              {(showPasswordValidation || formData.contraseña.length > 0) && (
-                <div className="password-validator password-validator-responsive">
-                  <div className="validator-header">
-                    <span className="validator-title">Requisitos:</span>
-                  </div>
-                  <div className="validator-rules">
-                    <div className={`validator-rule ${passwordValidation.minLength ? 'valid' : 'invalid'}`}>
-                      <span className="validator-icon">{passwordValidation.minLength ? '✓' : '×'}</span>
-                      <span className="validator-text">Mínimo 10 caracteres</span>
-                    </div>
-                    <div className={`validator-rule ${passwordValidation.hasUppercase ? 'valid' : 'invalid'}`}>
-                      <span className="validator-icon">{passwordValidation.hasUppercase ? '✓' : '×'}</span>
-                      <span className="validator-text">1 letra mayúscula</span>
-                    </div>
-                    <div className={`validator-rule ${passwordValidation.hasNumber ? 'valid' : 'invalid'}`}>
-                      <span className="validator-icon">{passwordValidation.hasNumber ? '✓' : '×'}</span>
-                      <span className="validator-text">1 número</span>
-                    </div>
-                    <div className={`validator-rule ${passwordValidation.hasSymbol ? 'valid' : 'invalid'}`}>
-                      <span className="validator-icon">{passwordValidation.hasSymbol ? '✓' : '×'}</span>
-                      <span className="validator-text">1 símbolo (!@#$%^&*)</span>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Fila 5: Repetir contraseña */}
-            <div className="uv-field password-field-container">
-              <span className="uv-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" width="20" height="20">
-                  <path d="M17 10h-1V7a4 4 0 10-8 0v3H7a2 2 0 00-2 2v7a2 2 0 002 2h10a2 2 0 002-2v-7a2 2 0 00-2-2zm-6 0V7a3 3 0 616 0v3h-6z" fill="currentColor" />
-                </svg>
-              </span>
-              <input
-                className={`uv-input ${formData.repetirContraseña && !passwordsMatch ? 'input-error' : ''}`}
-                type={showConfirmPassword ? "text" : "password"}
-                name="repetirContraseña"
-                value={formData.repetirContraseña}
-                onChange={handleInputChange}
-                placeholder=" "
-                required
-              />
-              <label className="uv-label">Repetir contraseña *</label>
-              <span className="uv-focus-bg" />
-              
-              <button
-                type="button"
-                className="pwd-toggle"
-                onClick={() => setShowConfirmPassword(prev => !prev)}
-                aria-label={showConfirmPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
-                tabIndex="-1"
-              >
-                {showConfirmPassword ? (
-                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
-                    <line x1="1" y1="1" x2="23" y2="23"/>
-                  </svg>
-                ) : (
-                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                    <circle cx="12" cy="12" r="3"/>
-                  </svg>
-                )}
-              </button>
-              
-              {formData.repetirContraseña && !passwordsMatch && (
-                <div className="password-error">Las contraseñas no coinciden</div>
-              )}
-            </div>
-
-            {/* Términos */}
-            <label className="checkbox-line">
-              <input
-                type="checkbox"
-                name="terminos"
-                checked={formData.terminos}
-                onChange={handleInputChange}
-                required
-              />
-              <span>
-                Acepto los{" "}
-                <a 
-                  href="#" 
-                  onClick={handleTermsClick}
-                  className="terms-link"
-                  style={{
-                    color: "#007bff",
-                    textDecoration: "underline",
-                    cursor: "pointer"
-                  }}
-                >
-                  términos y condiciones
-                </a> *
-              </span>
-            </label>
-
-            {registrationError && (
-              <div className="registration-error" style={{
-                color: '#dc3545',
-                backgroundColor: '#f8d7da',
-                border: '1px solid #f5c6cb',
-                borderRadius: '4px',
-                padding: '10px',
-                marginBottom: '15px',
-                fontSize: '14px'
-              }}>
-                {registrationError}
-              </div>
-            )}
-            
-            {registrationSuccess && (
-              <div className="registration-success" style={{
-                color: '#155724',
-                backgroundColor: '#d4edda',
-                border: '1px solid #c3e6cb',
-                borderRadius: '4px',
-                padding: '10px',
-                marginBottom: '15px',
-                fontSize: '14px'
-              }}>
-                ¡Registro exitoso! Redirigiendo al login...
-              </div>
-            )}
-
-            <button 
-              type="submit" 
-              className={`login-button ${(!isPasswordValid || !passwordsMatch || !phoneValidation.format || isLoading) ? 'button-disabled' : ''}`}
-              disabled={!isPasswordValid || !passwordsMatch || !phoneValidation.format || isLoading}
+          <div className="login-form login-card register-form form-container">
+            <Stepper
+              initialStep={1}
+              onStepChange={(step) => {
+                console.log('Paso actual:', step);
+                setFieldErrors({}); // Limpiar errores al cambiar de paso
+              }}
+              onFinalStepCompleted={handleSubmit}
+              validateStep={validateStep}
+              disableStepIndicators={true}
+              backButtonText="Anterior"
+              nextButtonText="Siguiente"
             >
-              {isLoading ? 'Registrando...' : 'Registrarse'}
-            </button>
+              {/* PASO 1: Nombre y Apellido */}
+              <Step>
+                <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem', color: '#333' }}>Información Personal</h2>
+                <div className="form-row">
+                  <div className={`uv-field ${fieldErrors.nombre ? 'uv-field-error' : ''}`}>
+                    <span className="uv-icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" width="20" height="20">
+                        <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z" fill="currentColor" />
+                      </svg>
+                    </span>
+                    <input
+                      className="uv-input"
+                      type="text"
+                      name="nombre"
+                      value={formData.nombre}
+                      onChange={handleInputChange}
+                      onFocus={() => setFocusedField('nombre')}
+                      onBlur={() => setFocusedField(null)}
+                      placeholder=" "
+                      required
+                      autoComplete="given-name"
+                    />
+                    <label className="uv-label">Nombre *</label>
+                    <span className="uv-focus-bg" />
+                    {focusedField === 'nombre' && !formData.nombre && (
+                      <div className="input-hint">Ej: María</div>
+                    )}
+                    {fieldErrors.nombre && (
+                      <div className="field-error-message">{fieldErrors.nombre}</div>
+                    )}
+                  </div>
 
-            <p className="login-help">
-              ¿Ya tienes cuenta?{" "}
-              <a className="login-link" href="#login" onClick={handleLoginClick}>
-                Inicia sesión
-              </a>
-            </p>
-          </form>
+                  <div className={`uv-field ${fieldErrors.apellido ? 'uv-field-error' : ''}`}>
+                    <span className="uv-icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" width="20" height="20">
+                        <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z" fill="currentColor" />
+                      </svg>
+                    </span>
+                    <input
+                      className="uv-input"
+                      type="text"
+                      name="apellido"
+                      value={formData.apellido}
+                      onChange={handleInputChange}
+                      onFocus={() => setFocusedField('apellido')}
+                      onBlur={() => setFocusedField(null)}
+                      placeholder=" "
+                      required
+                      autoComplete="family-name"
+                    />
+                    <label className="uv-label">Apellido *</label>
+                    <span className="uv-focus-bg" />
+                    {focusedField === 'apellido' && !formData.apellido && (
+                      <div className="input-hint">Ej: González</div>
+                    )}
+                    {fieldErrors.apellido && (
+                      <div className="field-error-message">{fieldErrors.apellido}</div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="step-spacer"></div>
+
+                <p className="login-help" style={{ marginTop: '1.5rem', textAlign: 'center' }}>
+                  ¿Ya tienes cuenta? {" "}
+                  <a className="login-link" href="#login" onClick={handleLoginClick}>
+                    Inicia sesión
+                  </a>
+                </p>
+              </Step>
+
+              {/* PASO 2: Correo y Teléfono */}
+              <Step>
+                <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem', color: '#333' }}>Información de Contacto</h2>
+                
+                <div className={`uv-field ${fieldErrors.correo ? 'uv-field-error' : ''}`} style={{ marginBottom: '1.5rem' }}>
+                  <span className="uv-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="20" height="20">
+                      <path d="M20 8l-8 5-8-5V6l8 5 8-5v2zm0 3v7H4v-7l8 5 8-5z" fill="currentColor" />
+                    </svg>
+                  </span>
+                  <input
+                    className="uv-input"
+                    type="email"
+                    name="correo"
+                    value={formData.correo}
+                    onChange={handleInputChange}
+                    onFocus={() => setFocusedField('correo')}
+                    onBlur={() => setFocusedField(null)}
+                    placeholder=" "
+                    required
+                  />
+                  <label className="uv-label">Correo *</label>
+                  <span className="uv-focus-bg" />
+                  {focusedField === 'correo' && !formData.correo && (
+                    <div className="input-hint">ejemplo@correo.com</div>
+                  )}
+                  {fieldErrors.correo && (
+                    <div className="field-error-message">{fieldErrors.correo}</div>
+                  )}
+                </div>
+
+                <div className="phone-wrapper">
+                  <div className={`uv-field ${fieldErrors.telefono ? 'uv-field-error' : ''}`}>
+                    <span className="uv-icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" width="20" height="20">
+                        <path d="M22 16.92v3a2 2 0 01-2.18 2 19.8 19.8 0 01-8.63-3.07 19.5 19.5 0 01-6-6A19.8 19.8 0 012.1 4.1A2 2 0 014.1 2h3a2 2 0 012 1.72c.07.96.27 1.9.7 2.81a2 2 0 01-.45 2.11L8.1 9.9a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.91.43 1.85.63 2.81.7A2 2 0 0122 16.92z" fill="currentColor" />
+                      </svg>
+                    </span>
+                    <input
+                      className="uv-input"
+                      type="tel"
+                      name="telefono"
+                      value={formData.telefono}
+                      inputMode="tel"
+                      pattern="^\+569\d{8}$"
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (/^[+\d]*$/.test(value) && value.length <= 12) {
+                          handleInputChange(e);
+                        }
+                      }}
+                      onFocus={() => {
+                        setFocusedField('telefono');
+                        setShowPhoneValidation(true);
+                      }}
+                      onBlur={() => {
+                        setFocusedField(null);
+                        setTimeout(() => setShowPhoneValidation(false), 150);
+                      }}
+                      placeholder=" "
+                      required
+                      aria-describedby="phone-hint"
+                    />
+                    <label className="uv-label">Teléfono *</label>
+                    <span className="uv-focus-bg" />
+                    {focusedField === 'telefono' && !formData.telefono && (
+                      <div className="input-hint">+569XXXXXXXX</div>
+                    )}
+                    {fieldErrors.telefono && (
+                      <div className="field-error-message">{fieldErrors.telefono}</div>
+                    )}
+                  </div>
+                  
+                  {showPhoneValidation && (
+                    <div className="phone-validator">
+                      <div className="validator-header">
+                        <span className="validator-title">Formato:</span>
+                      </div>
+                      <div className="validator-rules">
+                        <div className={`validator-rule ${/^\+569\d{8}$/.test(formData.telefono) ? 'valid' : 'invalid'}`}>
+                          <span className="validator-icon">{/^\+569\d{8}$/.test(formData.telefono) ? '✓' : '×'}</span>
+                          <span className="validator-text">Debe comenzar con +569</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </Step>
+
+              {/* PASO 3: Contraseña y Repetir Contraseña */}
+              <Step>
+                <h2 style={{ fontSize: '1.3rem', marginBottom: '1rem', color: '#333' }}>Seguridad</h2>
+                
+                <div className="password-wrapper" style={{ marginBottom: '1rem' }}>
+                  <div className={`uv-field password-field-container ${fieldErrors.contraseña ? 'uv-field-error' : ''}`}>
+                    <span className="uv-icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" width="20" height="20">
+                        <path d="M17 10h-1V7a4 4 0 10-8 0v3H7a2 2 0 00-2 2v7a2 2 0 002 2h10a2 2 0 002-2v-7a2 2 0 00-2-2zm-6 0V7a3 3 0 616 0v3h-6z" fill="currentColor" />
+                      </svg>
+                    </span>
+                    <input
+                      className="uv-input"
+                      type={showPassword ? "text" : "password"}
+                      name="contraseña"
+                      value={formData.contraseña}
+                      onChange={handleInputChange}
+                      onFocus={handlePasswordFocus}
+                      onBlur={handlePasswordBlur}
+                      placeholder=" "
+                      required
+                    />
+                    <label className="uv-label">Contraseña *</label>
+                    <span className="uv-focus-bg" />
+                    
+                    <button
+                      type="button"
+                      className="pwd-toggle"
+                      onClick={() => setShowPassword(prev => !prev)}
+                      aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                      tabIndex="-1"
+                    >
+                      {showPassword ? (
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                          <line x1="1" y1="1" x2="23" y2="23"/>
+                        </svg>
+                      ) : (
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                          <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                      )}
+                    </button>
+                    {fieldErrors.contraseña && (
+                      <div className="field-error-message">{fieldErrors.contraseña}</div>
+                    )}
+                  </div>
+                  
+                  {(showPasswordValidation || formData.contraseña.length > 0) && (
+                    <div className="password-validator password-validator-responsive">
+                      <div className="validator-header">
+                        <span className="validator-title">Requisitos:</span>
+                      </div>
+                      <div className="validator-rules">
+                        <div className={`validator-rule ${passwordValidation.minLength ? 'valid' : 'invalid'}`}>
+                          <span className="validator-icon">{passwordValidation.minLength ? '✓' : '×'}</span>
+                          <span className="validator-text">Mínimo 10 caracteres</span>
+                        </div>
+                        <div className={`validator-rule ${passwordValidation.hasUppercase ? 'valid' : 'invalid'}`}>
+                          <span className="validator-icon">{passwordValidation.hasUppercase ? '✓' : '×'}</span>
+                          <span className="validator-text">1 letra mayúscula</span>
+                        </div>
+                        <div className={`validator-rule ${passwordValidation.hasNumber ? 'valid' : 'invalid'}`}>
+                          <span className="validator-icon">{passwordValidation.hasNumber ? '✓' : '×'}</span>
+                          <span className="validator-text">1 número</span>
+                        </div>
+                        <div className={`validator-rule ${passwordValidation.hasSymbol ? 'valid' : 'invalid'}`}>
+                          <span className="validator-icon">{passwordValidation.hasSymbol ? '✓' : '×'}</span>
+                          <span className="validator-text">1 símbolo (!@#$%^&*)</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className={`uv-field password-field-container ${fieldErrors.repetirContraseña ? 'uv-field-error' : ''}`}>
+                  <span className="uv-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="20" height="20">
+                      <path d="M17 10h-1V7a4 4 0 10-8 0v3H7a2 2 0 00-2 2v7a2 2 0 002 2h10a2 2 0 002-2v-7a2 2 0 00-2-2zm-6 0V7a3 3 0 616 0v3h-6z" fill="currentColor" />
+                    </svg>
+                  </span>
+                  <input
+                    className={`uv-input ${formData.repetirContraseña && !passwordsMatch ? 'input-error' : ''}`}
+                    type={showConfirmPassword ? "text" : "password"}
+                    name="repetirContraseña"
+                    value={formData.repetirContraseña}
+                    onChange={handleInputChange}
+                    placeholder=" "
+                    required
+                  />
+                  <label className="uv-label">Repetir contraseña *</label>
+                  <span className="uv-focus-bg" />
+                  
+                  <button
+                    type="button"
+                    className="pwd-toggle"
+                    onClick={() => setShowConfirmPassword(prev => !prev)}
+                    aria-label={showConfirmPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                    tabIndex="-1"
+                  >
+                    {showConfirmPassword ? (
+                      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                        <line x1="1" y1="1" x2="23" y2="23"/>
+                      </svg>
+                    ) : (
+                      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                      </svg>
+                    )}
+                  </button>
+                  
+                  {formData.repetirContraseña && !passwordsMatch && (
+                    <div className="password-error">Las contraseñas no coinciden</div>
+                  )}
+                  {fieldErrors.repetirContraseña && (
+                    <div className="field-error-message">{fieldErrors.repetirContraseña}</div>
+                  )}
+                </div>
+
+                <label className={`checkbox-line ${fieldErrors.terminos ? 'checkbox-error' : ''}`} style={{ marginTop: '1rem' }}>
+                  <input
+                    type="checkbox"
+                    name="terminos"
+                    checked={formData.terminos}
+                    onChange={handleInputChange}
+                    required
+                  />
+                  <span>
+                    Acepto los{" "}
+                    <a 
+                      href="#" 
+                      onClick={handleTermsClick}
+                      className="terms-link"
+                      style={{
+                        color: "#007bff",
+                        textDecoration: "underline",
+                        cursor: "pointer"
+                      }}
+                    >
+                      términos y condiciones
+                    </a> *
+                  </span>
+                </label>
+                {fieldErrors.terminos && (
+                  <div className="field-error-message" style={{ marginTop: '6px' }}>{fieldErrors.terminos}</div>
+                )}
+
+                {registrationError && (
+                  <div className="registration-error" style={{
+                    color: '#dc3545',
+                    backgroundColor: '#f8d7da',
+                    border: '1px solid #f5c6cb',
+                    borderRadius: '4px',
+                    padding: '10px',
+                    marginTop: '15px',
+                    fontSize: '14px'
+                  }}>
+                    {registrationError}
+                  </div>
+                )}
+                
+                {registrationSuccess && (
+                  <div className="registration-success" style={{
+                    color: '#155724',
+                    backgroundColor: '#d4edda',
+                    border: '1px solid #c3e6cb',
+                    borderRadius: '4px',
+                    padding: '10px',
+                    marginTop: '15px',
+                    fontSize: '14px'
+                  }}>
+                    ¡Registro exitoso! Redirigiendo al login...
+                  </div>
+                )}
+              </Step>
+            </Stepper>
+          </div>
         </div>
       </section>
 

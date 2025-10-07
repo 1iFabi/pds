@@ -85,6 +85,12 @@
   background: #0D5E8C;
   border-radius: 999px;
   margin: 0 auto;
+  
+}
+
+/* Margen solo para login page */
+.login-page .title-underline {
+  margin-bottom: 1rem;
 }
 
 /* Tarjeta de login centrada */
@@ -106,6 +112,7 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  margin-top: 1rem;
 }
 
 /* Formulario */
@@ -114,6 +121,7 @@
   flex-direction: column;
   gap: 26px;
   width: 100%;
+  margin-top: 2.5rem;
 }
 
 /* Estilos de error de campo - más específicos */
@@ -144,12 +152,47 @@
   visibility: visible; /* Mostrar cuando hay error */
 }
 
+/* Wrapper para campo + mensaje de error al lado */
+.field-with-error-wrapper {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  width: 100%;
+}
+
 /* Campo personalizado con label flotante */
 .uv-field {
   position: relative;
   display: flex;
   align-items: center;
   margin-top: 0;
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+}
+
+/* Mensaje de error al lado derecho */
+.error-message-right {
+  position: absolute;
+  left: calc(100% + 1rem);
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  min-width: 200px;
+  max-width: 250px;
+  animation: slideInRight 0.3s ease;
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateY(-50%) translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
+  }
 }
 
 .uv-icon {
@@ -396,6 +439,36 @@
     padding: 0 24px;
     width: 100%;
     max-width: 400px;
+    margin-top: -1rem;
+  }
+  
+  /* Ajustar wrapper para apilar el error abajo en móvil */
+  .field-with-error-wrapper {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+  
+  /* Mensaje de error abajo en móvil */
+  .error-message-right {
+    position: static;
+    transform: none;
+    left: auto;
+    top: auto;
+    max-width: 100%;
+    min-width: auto;
+    animation: slideDown 0.3s ease;
+  }
+  
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
   
   /* 🔒 Scope en responsive también */

@@ -8,6 +8,7 @@ export default function Stepper({
   initialStep = 1,
   onStepChange = () => {},
   onFinalStepCompleted = () => {},
+  validateStep = () => true,
   stepCircleContainerClassName = '',
   stepContainerClassName = '',
   contentClassName = '',
@@ -45,19 +46,25 @@ export default function Stepper({
 
   const handleNext = () => {
     if (!isLastStep) {
-      setDirection(1);
-      updateStep(currentStep + 1);
+      // Validar el paso actual antes de avanzar
+      if (validateStep(currentStep)) {
+        setDirection(1);
+        updateStep(currentStep + 1);
+      }
     }
   };
 
   const handleComplete = () => {
-    setDirection(1);
-    updateStep(totalSteps + 1);
+    // Validar el último paso antes de completar
+    if (validateStep(currentStep)) {
+      setDirection(1);
+      updateStep(totalSteps + 1);
+    }
   };
 
   return (
     <div className="outer-container" {...rest}>
-      <div className={`step-circle-container ${stepCircleContainerClassName}`} style={{ border: '1px solid #222' }}>
+      <div className={`step-circle-container ${stepCircleContainerClassName}`}>
         <div className={`step-indicator-row ${stepContainerClassName}`}>
           {stepsArray.map((_, index) => {
             const stepNumber = index + 1;
@@ -128,7 +135,7 @@ function StepContentWrapper({ isCompleted, currentStep, direction, children, cla
   return (
     <motion.div
       className={className}
-      style={{ position: 'relative', overflow: 'hidden' }}
+      style={{ position: 'relative', overflow: 'visible' }}
       animate={{ height: isCompleted ? 0 : parentHeight }}
       transition={{ type: 'spring', duration: 0.4 }}
     >
@@ -193,12 +200,18 @@ function StepIndicator({ step, currentStep, onClickStep, disableStepIndicators }
   };
 
   return (
-    <motion.div onClick={handleClick} className="step-indicator" animate={status} initial={false}>
+    <motion.div 
+      onClick={handleClick} 
+      className="step-indicator" 
+      animate={status} 
+      initial={false}
+      style={{ cursor: disableStepIndicators ? 'default' : 'pointer' }}
+    >
       <motion.div
         variants={{
-          inactive: { scale: 1, backgroundColor: '#222', color: '#a3a3a3' },
-          active: { scale: 1, backgroundColor: '#5227FF', color: '#5227FF' },
-          complete: { scale: 1, backgroundColor: '#5227FF', color: '#3b82f6' }
+          inactive: { scale: 1, backgroundColor: '#e2e8f0', color: '#94a3b8' },
+          active: { scale: 1, backgroundColor: '#4A90E2', color: '#4A90E2' },
+          complete: { scale: 1, backgroundColor: '#4A90E2', color: '#ffffff' }
         }}
         transition={{ duration: 0.3 }}
         className="step-indicator-inner"
@@ -218,7 +231,7 @@ function StepIndicator({ step, currentStep, onClickStep, disableStepIndicators }
 function StepConnector({ isComplete }) {
   const lineVariants = {
     incomplete: { width: 0, backgroundColor: 'transparent' },
-    complete: { width: '100%', backgroundColor: '#5227FF' }
+    complete: { width: '100%', backgroundColor: '#4A90E2' }
   };
 
   return (

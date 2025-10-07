@@ -10,7 +10,7 @@
   display: flex;
   align-items: stretch;
   background: #f8fafc;
-  overflow: hidden;
+  overflow: visible;
   font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
 }
 
@@ -28,18 +28,17 @@
   align-items: center;
   justify-content: center;
   background: #f8fafc;
-  overflow-y: auto;
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+  overflow: visible;
 }
 .register-left::-webkit-scrollbar { width: 0; height: 0; }
 
 /* Contenedor interno del card - MÁS ANGOSTO Y MENOS ALTO */
 .register-inner {
   width: 100%;
-  max-width: 260px;
+  max-width: 500px;
   margin: 0 auto;
-  padding: 0.3rem 0;
+  padding: 1rem 0;
+  border: none;
 }
 
 /* Lado derecho (imagen) */
@@ -61,7 +60,7 @@
 /* ============ TÍTULOS ============ */
 
 .register-title {
-  margin: 0.5rem 0 0.2rem 0; /* más espacio arriba para el logo */
+  margin: 1rem 0 0.5rem 0;
   font-weight: 700;
   text-align: center;
   color: #0f172a;
@@ -69,7 +68,7 @@
 }
 
 .register-subtitle {
-  margin: 0 0 0.5rem 0; /* más compacto */
+  margin: 0 0 0 0;
   font-size: clamp(0.8rem, 2.4vw, 0.88rem);
   color: #64748b;
   text-align: center;
@@ -79,17 +78,20 @@
 /* ============ CARD & FORM ============ */
 
 .login-card {
-  padding: 0.5rem 0.7rem;  /* Aún más compacto */
+  padding: 0.8rem 1rem;
   border-radius: 12px;
-  background: #fff;
-  box-shadow: 0 10px 25px -8px rgba(0, 0, 0, 0.10), 0 6px 16px -10px rgba(0,0,0,0.06);
+  background: transparent;
+  box-shadow: none;
+  border: none;
   max-width: 100%;
   margin: 0 auto;
 }
 
 .register-form {
   display: grid;
-  gap: 0.4rem;  /* Gap aún más reducido */
+  gap: 0.4rem;
+  margin-top: 0rem;
+  border: none;
 }
 
 /* ============ DISTRIBUCIÓN EN 2 COLUMNAS ============ */
@@ -105,6 +107,8 @@
 .uv-field {
   position: relative;
   width: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .uv-icon {
@@ -130,6 +134,7 @@
   transition: all 0.2s ease;
   font-family: inherit;
   color: #1e293b;
+  flex-shrink: 0;
 }
 
 .uv-input::placeholder {
@@ -194,6 +199,8 @@
   position: relative;
   flex: 1;
   width: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .password-field-container .uv-input { 
@@ -256,28 +263,28 @@
 }
 
 .validator-header {
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.35rem;
   border-bottom: 1px solid #f1f5f9;
-  padding-bottom: 0.4rem;
+  padding-bottom: 0.3rem;
 }
 
 .validator-title {
   font-weight: 600;
   color: #334155;
-  font-size: 0.82rem;
+  font-size: 0.7rem;
 }
 
 .validator-rules { 
   display: flex; 
   flex-direction: column; 
-  gap: 0.4rem; 
+  gap: 0.3rem; 
 }
 
 .validator-rule {
   display: flex; 
   align-items: center; 
-  gap: 0.4rem;
-  font-size: 0.78rem; 
+  gap: 0.3rem;
+  font-size: 0.68rem; 
   transition: all 0.2s ease;
 }
 
@@ -285,13 +292,13 @@
 .validator-rule.invalid { color: #ef4444; }
 
 .validator-icon {
-  width: 14px; 
-  height: 14px;
+  width: 12px; 
+  height: 12px;
   display: inline-flex; 
   align-items: center; 
   justify-content: center;
   border-radius: 50%;
-  font-size: 10px; 
+  font-size: 9px; 
   font-weight: 700; 
   flex-shrink: 0;
 }
@@ -340,12 +347,13 @@
 }
 
 .password-error {
-  position: absolute;
-  bottom: -20px;
-  left: 0;
-  font-size: 0.8rem;
-  color: #ef4444;
-  font-weight: 500;
+  margin-top: 4px;
+  font-size: 0.65rem;
+  color: #dc2626;
+  font-weight: 400;
+  display: block;
+  line-height: 1.2;
+  padding-left: 2px;
 }
 
 .validation-error {
@@ -353,6 +361,43 @@
   font-size: 0.8rem;
   color: #ef4444;
   font-weight: 500;
+}
+
+/* Error state for fields */
+.uv-field-error .uv-input {
+  border-color: #ef4444 !important;
+  background-color: #fef2f2 !important;
+}
+
+.uv-field-error .uv-label {
+  color: #ef4444 !important;
+}
+
+.uv-field-error .uv-icon {
+  color: #ef4444 !important;
+}
+
+.field-error-message {
+  position: relative;
+  margin-top: 4px;
+  font-size: 0.65rem;
+  color: #dc2626;
+  font-weight: 400;
+  display: block;
+  line-height: 1.2;
+  padding-left: 2px;
+  width: 100%;
+  z-index: 1;
+}
+
+/* Error state for checkbox */
+.checkbox-error {
+  color: #ef4444 !important;
+}
+
+.checkbox-error input[type="checkbox"] {
+  outline: 2px solid #ef4444;
+  outline-offset: 2px;
 }
 
 .field-hint {
@@ -482,16 +527,22 @@
   margin-bottom: 0.5rem;
 }
 
+/* Logo del mismo tamaño que Login */
 .register-page .welcome-logo {
   width: 80px;
   height: auto;
 }
 
-/* Title underline más pequeño en Register */
+/* Aplicar mismo responsive que Login */
+@media (max-width: 1024px) {
+  .register-page .welcome-logo {
+    width: clamp(60px, 15vw, 80px);
+  }
+}
+
+/* Title underline oculto en Register */
 .register-page .title-underline {
-  width: 120px;
-  height: 2.5px;
-  margin-top: 0.35rem;
+  display: none;
 }
 
 /* ============ FLOATING LABELS LIKE LOGIN ============ */
@@ -500,12 +551,18 @@
 .register-page .uv-field {
   position: relative;
   display: flex;
-  align-items: center;
-}
+  flex-direction: column;
+  align-items: stretch;
+  }
 
 /* Ocultar iconos en Register (limpio, solo label y texto) */
 .register-page .uv-icon {
-  display: none;
+  display: none !important;
+}
+
+/* Asegurar que los iconos no afecten el error state */
+.uv-field-error .uv-icon {
+  color: #ef4444 !important;
 }
 
 /* Input con padding izquierdo normal (sin icono) */
@@ -544,10 +601,18 @@
 /* Label flotante - cuando está enfocado o tiene contenido */
 .register-page .uv-input:focus + .uv-label,
 .register-page .uv-input:not(:placeholder-shown) + .uv-label {
-  transform: translateY(-30px) scale(0.85);
+  transform: translateY(-40px) scale(0.85);
   color: #4A90E2;
   background: #ffffff;
   padding: 0 6px;
+}
+
+/* Label flotante - cuando hay error */
+.register-page .uv-field-error .uv-label {
+  transform: translateY(-40px) scale(0.85) !important;
+  background: #ffffff;
+  padding: 0 6px;
+  top: 50%;
 }
 
 /* Password toggle button */
@@ -562,38 +627,55 @@
   margin-top: 6px;
 }
 
-/* Validador de contraseña - Desktop a la derecha, Mobile debajo */
+/* Validador de contraseña - Desktop AFUERA a la derecha, Mobile debajo */
 .register-page .password-wrapper {
   display: flex;
   position: relative;
+  flex-direction: column;
 }
 
-/* Desktop: validador a la derecha (solo en pantallas grandes) */
-@media (min-width: 1440px) {
+/* Desktop: validador AFUERA del card, a la derecha */
+@media (min-width: 1024px) {
   .register-page .password-wrapper {
-    flex-direction: row;
-    align-items: flex-start;
-    gap: 14px;
+    flex-direction: column;
+  }
+  
+  .register-page .password-field-container {
+    width: 100%;
   }
   
   .register-page .password-validator,
   .register-page .password-validator-responsive {
-    position: absolute;
-    left: calc(100% + 14px);
-    top: 0;
-    width: auto;
-    min-width: 240px;
-    max-width: 280px;
+    position: absolute !important;
+    left: calc(100% + 0.8rem) !important;
+    top: 0 !important;
+    width: 180px;
+    min-width: 180px;
+    max-width: 180px;
     margin-top: 0;
-    border-radius: 12px;
-    padding: 0.6rem;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    border-radius: 8px;
+    padding: 0.5rem 0.6rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
     animation: slideInRight 0.25s ease;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    z-index: 1000;
+  }
+  
+  .register-page .password-validator .validator-title,
+  .register-page .password-validator-responsive .validator-title {
+    font-size: 0.7rem;
+    font-weight: 600;
+  }
+  
+  .register-page .password-validator .validator-text,
+  .register-page .password-validator-responsive .validator-text {
+    font-size: 0.68rem;
   }
 }
 
-/* Mobile/Tablet/Desktop pequeño: validador debajo */
-@media (max-width: 1439px) {
+/* Mobile/Tablet: validador debajo */
+@media (max-width: 1023px) {
   .register-page .password-wrapper {
     flex-direction: column;
   }
@@ -606,69 +688,39 @@
     width: 100%;
     max-width: 100%;
     margin-top: 0.5rem;
-    border-radius: 8px;
-    padding: 0.6rem;
+    border-radius: 10px;
+    padding: 0.75rem;
     box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     animation: slideDown 0.2s ease;
+    background: #fff;
+    border: 1px solid #e5e7eb;
   }
 }
 
-/* Validador de teléfono - igual que contraseña */
+/* Validador de teléfono - Siempre debajo */
 .phone-wrapper {
   display: flex;
   position: relative;
+  flex-direction: column;
 }
 
-/* Desktop: validador a la derecha (solo en pantallas grandes) */
-@media (min-width: 1440px) {
-  .phone-wrapper {
-    flex-direction: row;
-    align-items: flex-start;
-    gap: 14px;
-  }
-  
-  .phone-validator {
-    position: absolute;
-    left: calc(100% + 14px);
-    top: -10px;
-    background: #fff;
-    border: 1px solid #e5e7eb;
-    border-radius: 12px;
-    padding: 0.6rem;
-    width: auto;
-    min-width: 240px;
-    max-width: 280px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-    animation: slideInRight 0.25s ease;
-    z-index: 10;
-  }
-}
-
-/* Mobile/Tablet/Desktop pequeño: validador debajo */
-@media (max-width: 1439px) {
-  .phone-wrapper {
-    flex-direction: column;
-  }
-  
-  .phone-validator {
-    position: static;
-    width: 100%;
-    margin-top: 0.5rem;
-    background: #fff;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    padding: 0.6rem;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-    animation: slideDown 0.2s ease;
-  }
+.phone-validator {
+  position: static;
+  width: 100%;
+  margin-top: 0.5rem;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 0.6rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  animation: slideDown 0.2s ease;
 }
 
 /* Mensaje de ayuda al hacer focus - dentro del input */
 .input-hint {
   position: absolute;
   left: 16px;
-  top: 50%;
-  transform: translateY(-50%);
+  top: 11px;
   font-size: 14px;
   color: #9ca3af;
   font-style: normal;
@@ -681,6 +733,19 @@
 @keyframes fadeInHint {
   0% { opacity: 0; }
   100% { opacity: 1; }
+}
+
+/* Wrapper interno para agrupar input + label + icon */
+.uv-field-wrapper {
+  position: relative;
+  width: 100%;
+  flex-shrink: 0;
+}
+
+/* Asegurar que password field container también use flex column */
+.password-field-container {
+  display: flex;
+  flex-direction: column;
 }
 
 /* (Removido) Regla de asterisco para evitar duplicados en Register */
@@ -905,21 +970,36 @@
   margin: 0;
 }
 
+/* ============ STEP SPACER - SOLO MÓVIL ============ */
+
+/* Desktop: sin espaciador */
+.step-spacer {
+  height: 0;
+}
+
+/* Móvil: agregar espaciador para igualar altura */
+@media (max-width: 768px) {
+  .step-spacer {
+    height: 0rem;
+  }
+}
+
 /* ============ RESPONSIVE ============ */
 
-/* Desktop grande - Mantener tamaño compacto */
+/* Desktop grande - Card más ancho para acomodar validador */
 @media (min-width: 1400px) {
-  .register-page .register-inner { max-width: 300px; }
-  .register-page .login-card { padding: 0.65rem 0.85rem; }
+  .register-page .register-inner { max-width: 550px; }
+  .register-page .login-card { padding: 0.85rem 1.1rem; }
 }
 
 @media (min-width: 1600px) {
-  .register-page .register-inner { max-width: 320px; }
-  .register-page .login-card { padding: 0.7rem 0.9rem; }
+  .register-page .register-inner { max-width: 600px; }
+  .register-page .login-card { padding: 0.9rem 1.2rem; }
 }
 
 @media (min-width: 1920px) {
-  .register-page .register-inner { max-width: 340px; }
+  .register-page .register-inner { max-width: 650px; }
+  .register-page .login-card { padding: 1rem 1.3rem; }
 }
 
 /* Pantallas medianas - Ocultar imagen antes */
