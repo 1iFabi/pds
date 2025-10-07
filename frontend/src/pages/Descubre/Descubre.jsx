@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import TextType from "../../components/TextType/TextType";
 import "./Descubre.css";
+import "../../styles/breadcrumb.css";
 
 const Descubre = () => {
   const sectionRef = useRef(null);
@@ -30,7 +31,7 @@ const Descubre = () => {
         <div className="descubre-content">
           {/* Header */}
           <div className={`descubre-header ${isVisible ? "animate" : ""}`}>
-            <div className="breadcrumb">Descubre</div>
+<div className="breadcrumb breadcrumb--blue">Descubre</div>
 
             <h2 className="descubre-title">
               Descubre tus{" "}

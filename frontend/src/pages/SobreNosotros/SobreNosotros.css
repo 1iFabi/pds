@@ -1,314 +1,80 @@
-/* SobreNosotros.css  */
+/* SobreNosotros.css - layout como captura */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
 
-.sobre-nosotros-container {
-  width: 100vw;
-  min-height: 100dvh;
-  padding: clamp(15px, 2vmin, 40px);
-  box-sizing: border-box;
-  font-family: 'Inter', sans-serif; 
-  display: flex;
-  flex-direction: column;
-  gap: 0px;
-  background: #f8f9fa;
-  padding-top: calc(80px + clamp(15px, 2vmin, 40px));
-}
-
-.sobre-nosotros-header {
-  display: flex;
-  gap: clamp(20px, 4vmin, 40px);
-  flex-basis: 25%;
-  min-height: 0;
-  align-items: center;
-}
-
-.sobre-nosotros-title {
-  font-size: clamp(1.2rem, 4vw, 2.2rem); 
-  font-weight: 700;
-  color: #277EAF;
-  line-height: 0.9;
-  flex-shrink: 0;
-  margin: 0;
-}
-
-.sobre-nosotros-title .nosotros {
-  display: block;
-  font-weight: 600;
-  color: #94BDF0;
-  padding-left: 2.2em;
-  margin-top: -0.1em;
-}
-
-.sobre-nosotros-content {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  min-width: 0;
-}
-
-.sobre-nosotros-description {
-  font-size: clamp(0.75rem, 1.7vmin, 1rem);
-  line-height: 1.6;
-  color: #707070;
-  margin: 0;
-  text-align: justify;
-}
-
-.sobre-nosotros-description .highlight {
-  font-weight: bold;
-  color: #4A4A4A;
-}
-
-.equipo-section {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-}
-
-.equipo-title {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  margin-bottom: 0px;
-  font-family: 'Inter', sans-serif;
-  font-size: clamp(1.2rem, 4vw, 2.2rem);
-  font-weight: 600;
-  color: #277EAF;
-}
-
-.equipo-title::before,
-.equipo-title::after {
-  content: '';
-  flex: 1;
-  height: 2px;
-  background-color: #277EAF;
-}
-
-.equipo-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: clamp(10px, 2vmin, 20px);
-  flex: 1;
-  min-height: 0;
-  justify-items: center;
-}
-
-.miembro-card {
-  display: flex;
-  flex-direction: column;
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  overflow: hidden;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  background: white;
+/* Contenedor general */
+.sn{
+  --c-brand: #108AC2;
+  --c-brand-strong: #1189c2;
+  --c-text: #5a6b80;
   width: 100%;
-  max-width: 280px;
-  min-height: 320px;
+  min-height: 100vh;
+  box-sizing: border-box;
+  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  padding: 120px 24px 80px;
+  background: linear-gradient(180deg, #F7FBFF 0%, #E6F2FE 55%, #D6E8FD 100%);
 }
 
-.miembro-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+/* Breadcrumb centrado */
+.sn-crumb{ display:flex; justify-content:center; }
+
+/* Título principal */
+.sn-title{
+  margin: 0px auto 30px; text-align:center; color: var(--c-brand-strong); font-weight:600;
+  letter-spacing:-0.02em; line-height: 1.06; font-size: clamp(30px, 5vw, 46px);
+  max-width: 1200px;
 }
 
-.miembro-imagen {
-  height: 65%;
-  background-size: cover;
-  background-position: center;
-  flex-shrink: 0;
+.sn-features{ display:grid; grid-template-columns: repeat(3,1fr); gap:20px; max-width: 1200px; margin: 0 auto 24px; }
+.sn-feature{ position:relative; overflow:hidden; background:#ffffff; border:1px solid #e7eef6; border-radius:20px; padding:24px; box-shadow: 0 12px 32px rgba(4,41,84,0.06); transition: transform .18s ease, box-shadow .18s ease, background .18s ease, border-color .18s ease; }
+.sn-feature::after{ content:""; position:absolute; inset: -40% -10% auto -10%; height: 120px; background: radial-gradient(220px 60px at 10% 40%, rgba(16,138,194,.12), rgba(16,138,194,0)); opacity:0; transition: opacity .25s ease; }
+.sn-feature:hover{ box-shadow: 0 14px 30px rgba(4,41,84,0.10); border-color:#dfe8f3; }
+.sn-feature:hover::after{ opacity:1; }
+.sn-feature.is-accent{ background: var(--c-brand); color:#fff; border-color: rgba(255,255,255,.35); }
+.sn-icon{ width:46px; height:46px; display:grid; place-items:center; border-radius:999px; background:#E6F4FE; margin-bottom:10px; transition: filter .18s ease; }
+.sn-icon svg{ color: var(--c-brand); }
+.sn-feature.is-accent .sn-icon{ background: rgba(255,255,255,.15); }
+.sn-feature.is-accent .sn-icon svg{ color:#fff; }
+.sn-feature-title{ margin:0 0 8px; font-weight:800; color: var(--c-brand-strong); font-size:18px; letter-spacing:-0.01em; }
+.sn-feature.is-accent .sn-feature-title{ color:#fff; }
+.sn-feature-desc{ margin:0; color: var(--c-text); font-size:14px; line-height:1.55; }
+.sn-feature.is-accent .sn-feature-desc{ color: #f4fbff; }
+.sn-feature-desc{ margin:0; color: var(--c-text); font-size:14px; line-height:1.55; }
+.sn-feature.is-accent .sn-feature-desc{ color: #f4fbff; }
+
+/* Separador y título del equipo */
+.sn-team-title{
+  display:flex; align-items:center; gap:16px; color: var(--c-brand-strong); font-weight:600; letter-spacing:-0.02em; line-height:1.06;
+  font-size: clamp(26px, 4vw, 30px); margin: 6px auto 18px; max-width: 1200px;
 }
+.sn-team-title::before, .sn-team-title::after{ content:''; flex:1; height:2px; background: #1189c2; opacity:.5; }
 
-.miembro-imagen.alex { background-image: url('/SobreNosotros/2.png'); }
-.miembro-imagen.carol { background-image: url('/SobreNosotros/1.png'); }
-.miembro-imagen.susan { background-image: url('/SobreNosotros/3.png'); }
-.miembro-imagen.gabriel { background-image: url('/SobreNosotros/5.png'); }
-.miembro-imagen.jonathan { background-image: url('/SobreNosotros/4.png'); }
+/* Grid equipo (reusamos existente pero ajustamos estilo) */
+.equipo-grid{ display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:20px; max-width:1200px; margin:0 auto; }
+.miembro-card{ background:#fff; border:1px solid #e7eef6; border-radius:16px; overflow:hidden; box-shadow: 0 12px 32px rgba(4,41,84,0.06); transition: transform .18s ease, box-shadow .18s ease; }
+.miembro-card:hover{ transform: translateY(-3px); box-shadow: 0 16px 36px rgba(4,41,84,0.10); }
+.miembro-imagen{ width: 100%; height: 180px; display:flex; align-items:flex-start; justify-content:center; position:relative; overflow:hidden; padding-top: 40px; }
+.miembro-img{ width: 280px; max-width: 95%; height:auto; object-fit: contain; object-position: center; display:block; margin: 0 auto; }
+.miembro-info{ padding:8px 16px 16px; text-align:center; display:flex; flex-direction:column; gap:8px; }
+.miembro-nombre{ margin:0; color:#108AC2; font-weight:700; letter-spacing:-0.01em; font-size:16px; }
+.miembro-cargo{ margin:0; color:#6b7a90; font-size:12.5px; }
 
-.miembro-info {
-  flex: 1;
-  padding: clamp(8px, 1.5vmin, 15px);
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-around;
-  min-height: 0;
+/* Botón LinkedIn como la captura (pastilla azul pequeña) */
+.linkedin-btn{ align-self:center; display:inline-flex; align-items:center; gap:8px; padding:8px 12px; border-radius:999px; background:#ffffff; color:#108AC2; text-decoration:none; font-weight:800; font-size:13px; border:1px solid #dbe7f4; box-shadow: 0 4px 12px rgba(16,138,194,.08); transition: background .18s ease, border-color .18s ease, box-shadow .18s ease, color .18s ease; }
+.linkedin-btn:hover{ background:#E6F4FE; border-color:#beddff; box-shadow: 0 8px 18px rgba(16,138,194,.12); }
+.linkedin-icon{ width:16px; height:16px; color:#108AC2; }
+
+/* Responsivo */
+@media (min-width: 1280px){
+  .equipo-grid{ grid-template-columns: repeat(5, 1fr); max-width: 1200px; }
+  .miembro-img{ width: 300px; }
 }
-
-.miembro-nombre {
-  font-size: clamp(0.85rem, 1.8vmin, 1.15rem);
-  font-weight: bold;
-  color: #2E86AB;
-  line-height: 1.2;
+@media (max-width: 1024px){
+  .sn-features{ grid-template-columns: 1fr; gap:18px; }
+  .sn-team-title{ margin-top: 10px; }
+  /* Equipo: uno por fila en tablet */
+  .equipo-grid{ grid-template-columns: 1fr; gap:20px; justify-items:center; }
+  .miembro-card{ width:100%; max-width: 560px; }
 }
-
-.miembro-cargo {
-  font-size: clamp(0.75rem, 1.5vmin, 0.9rem);
-  color: #666;
-  line-height: 1.2;
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.linkedin-btn {
-  background-color: #2E86AB;
-  color: white;
-  padding: clamp(6px, 1vmin, 10px) clamp(12px, 2vmin, 16px);
-  border-radius: 4px;
-  font-size: clamp(0.8rem, 1.4vmin, 0.9rem);
-  cursor: pointer;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  transition: background-color 0.3s ease;
-  align-self: center;
-  white-space: nowrap;
-  min-height: 36px;
-  touch-action: manipulation;
-}
-
-.linkedin-btn:hover {
-  background-color: #1a5f7a;
-  color: white;
-}
-
-.linkedin-btn::before {
-  content: 'in';
-  font-weight: bold;
-  font-size: clamp(0.5rem, 1vmin, 0.7rem);
-  background: white;
-  color: #2E86AB;
-  padding: 1px 3px;
-  border-radius: 2px;
-}
-
-/* Tablets */
-@media (max-width: 1024px) {
-  .equipo-grid {
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: clamp(8px, 1.5vmin, 15px);
-  }
-  
-  .miembro-card {
-    max-width: 250px;
-    min-height: 280px;
-  }
-}
-
-/* Tablets pequeñas */
-@media (max-width: 768px) {
-  .sobre-nosotros-container {
-    padding: clamp(10px, 1.5vmin, 20px);
-    padding-top: calc(70px + clamp(10px, 1.5vmin, 20px));
-  }
-  
-  .sobre-nosotros-header {
-    flex-direction: column;
-    text-align: center;
-    align-items: center;
-    flex-basis: auto;
-    gap: clamp(15px, 3vmin, 25px);
-  }
-
-  .sobre-nosotros-title .nosotros {
-    padding-left: 0;
-  }
-
-  .sobre-nosotros-description {
-    text-align: center;
-  }
-  
-  .equipo-grid {
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: clamp(6px, 1.2vmin, 12px);
-  }
-  
-  .miembro-card {
-    max-width: 220px;
-    min-height: 260px;
-  }
-}
-
-/* Móviles - 1 persona por fila */
-@media (max-width: 480px) {
-  .sobre-nosotros-container {
-    padding: 15px;
-    padding-top: calc(60px + 15px);
-  }
-  
-  .sobre-nosotros-header {
-    gap: 15px;
-  }
-  
-  .equipo-grid {
-    grid-template-columns: 1fr;
-    gap: 16px;
-    justify-items: center;
-  }
-  
-  .miembro-card {
-    max-width: 100%;
-    width: 100%;
-    min-height: 340px;
-  }
-  
-  .miembro-imagen {
-    height: 240px;
-  }
-  
-  .miembro-info {
-    padding: 12px 16px;
-  }
-  
-  .miembro-nombre {
-    font-size: 1rem;
-    margin: 0 0 6px 0;
-  }
-  
-  .miembro-cargo {
-    font-size: 0.85rem;
-    margin: 0 0 10px 0;
-    line-height: 1.3;
-  }
-  
-  .linkedin-btn {
-    min-height: 40px;
-    padding: 10px 16px;
-    font-size: 0.9rem;
-    width: 100%;
-    max-width: 200px;
-  }
-}
-
-/* Móviles muy pequeños */
-@media (max-width: 360px) {
-  .miembro-card {
-    min-height: 320px;
-  }
-  
-  .miembro-imagen {
-    height: 220px;
-  }
-  
-  .miembro-info {
-    padding: 10px 12px;
-  }
-  
-  .miembro-nombre {
-    font-size: 0.95rem;
-  }
-  
-  .miembro-cargo {
-    font-size: 0.8rem;
-  }
-  
-  .linkedin-btn {
-    font-size: 0.85rem;
-    padding: 9px 14px;
-  }
-}
+@media (max-width: 768px){ .sn{ padding: 100px 16px 60px; } }
+@media (max-width: 480px){ .equipo-grid{ grid-template-columns: 1fr; gap:18px; } .miembro-card{ max-width: 560px; width:100%; } }
