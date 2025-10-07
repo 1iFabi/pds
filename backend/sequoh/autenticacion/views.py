@@ -93,8 +93,31 @@ class LoginAPIView(APIView):
                             }, status=400)
                 except Exception:
                     pass
-                # Si las credenciales son incorrectas, devuelve un error
-                return Response({"error": "Credenciales inválidas"}, status=400)
+                
+                # Determinar qué campo específico está mal
+                error_response = {}
+                
+                # Verificar si el usuario existe para identificar si es email o password incorrecto
+                try:
+                    user_exists = False
+                    if username:
+                        # Buscar por username o email
+                        user_exists = User.objects.filter(username=username).exists() or User.objects.filter(email=username).exists()
+                    
+                    if user_exists:
+                        # El usuario existe, entonces la contraseña está mal
+                        error_response["password"] = ["Contraseña incorrecta"]
+                    else:
+                        # El usuario no existe, entonces el email/username está mal
+                        error_response["username"] = ["Este correo no está registrado"]
+                except Exception:
+                    # Si hay error en la consulta, devolver error genérico por ambos campos
+                    error_response = {
+                        "username": ["Revisa tu correo"],
+                        "password": ["Revisa tu contraseña"]
+                    }
+                
+                return Response(error_response, status=400)
         except json.JSONDecodeError:
             # Maneja el error si el formato JSON es incorrecto
             return Response({"error": "Formato de solicitud inválido"}, status=400)
