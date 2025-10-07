@@ -30,17 +30,7 @@
   align-items: center;
 }
 
-/* ====== Breadcrumb ====== */
-.breadcrumb {
-  display: inline-block;
-  background: #108AC2;
-  color: #fff;
-  padding: 6px 16px;
-  border-radius: 20px;
-  font-size: 15px;
-  font-weight: 600;
-  margin-bottom: 15px;
-}
+/* Breadcrumb usa estilos compartidos en src/styles/breadcrumb.css */
 
 /* ====== Header ====== */
 .descubre-header {
@@ -245,7 +235,7 @@
   /* Evitar overflow de textos en móvil (3 líneas máx) */
   .card-description {
     display: -webkit-box;
-    -webkit-line-clamp: 3;
+    line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
   }

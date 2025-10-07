@@ -1,6 +1,7 @@
 // src/components/Conoce/Conoce.jsx
 import { useEffect, useRef, useState } from "react";
 import "./Conoce.css";
+import "../../styles/breadcrumb.css";
 
 export default function Conoce() {
   const sectionRef = useRef(null);
@@ -98,7 +99,7 @@ export default function Conoce() {
       <div className="conoce-container">
         <div className="conoce-content">
           <div className={`conoce-header ${isVisible ? "animate" : ""}`}>
-            <div className="conoce-breadcrumb">Conoce</div>
+          <div className="breadcrumb breadcrumb--white">Conoce</div>
             <h2 className="conoce-title">¿Cómo funciona el mapeo?</h2>
             <p className="conoce-subtitle">
               Si quieres realizar un muestreo de tu ADN para conocer tu ancestría y la genómica de
