@@ -169,3 +169,9 @@
 }
 
 body{ background: #000; }
+
+.rail-btn {
+  pointer-events: none; /* No se puede hacer click */
+  opacity: 0.8; /* opcional, para que se note que no son interactivos */
+  cursor: default; /* quita el puntero de mano */
+}
