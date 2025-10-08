@@ -24,7 +24,7 @@
 .step-circle-container {
   margin-left: auto;
   margin-right: auto;
-  margin-top: -1rem;
+  margin-top: 4rem;
   width: 100%;
   max-width: 28rem;
   border-radius: 2rem;
@@ -40,6 +40,7 @@
   .step-circle-container {
     max-width: 90vw;
     width: 90vw;
+    margin-top: -4rem;
   }
 }
 

@@ -119,7 +119,7 @@ export default function Stepper({
                 </button>
               )}
               <button onClick={isLastStep ? handleComplete : handleNext} className="next-button" {...nextButtonProps}>
-                {isLastStep ? 'Complete' : nextButtonText}
+                {isLastStep ? 'Registrar' : nextButtonText}
               </button>
             </div>
           </div>

@@ -7,6 +7,7 @@ export const API_ENDPOINTS = {
   PASSWORD_RESET: `${API_BASE_URL}/password-reset/`,
   PASSWORD_RESET_CONFIRM: `${API_BASE_URL}/password-reset-confirm/`,
   ME: `${API_BASE_URL}/me/`,
+  DELETE_ACCOUNT: `${API_BASE_URL}/me/delete-account/`,
   LOGOUT: `${API_BASE_URL}/logout/`,
   DASHBOARD: `${API_BASE_URL}/dashboard/`,
 };
