@@ -20,16 +20,26 @@ from django.http import JsonResponse
 from autenticacion.allauth_views import CustomConfirmEmailView
 
 
+def status_view(request):
+    return JsonResponse({"status": "ok"})
+
+
 def index(request):
-    return JsonResponse({"status": "ok", "app": "sequoh", "admin": "/admin/", "auth": "/api/auth/"})
+    return JsonResponse({"status": "ok"})
 
 
 urlpatterns = [
     path('', index, name='index'),
-    path('admin/', admin.site.urls),
+    path('api/status/', status_view, name='api_status'),
+    path('ciff/', admin.site.urls),
+    path('CIFF/', admin.site.urls),
     # Esta línea incluye las URLs de tu aplicación de autenticación
     path('api/auth/', include('autenticacion.urls')),
     # Sobreescribir la URL de confirmación de allauth para usar nuestro view personalizado
     path('accounts/confirm-email/<str:key>/', CustomConfirmEmailView.as_view(), name='account_confirm_email'),
     path('accounts/', include('allauth.urls')),
 ]
+
+
+
+

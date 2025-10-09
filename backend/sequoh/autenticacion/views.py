@@ -93,8 +93,31 @@ class LoginAPIView(APIView):
                             }, status=400)
                 except Exception:
                     pass
-                # Si las credenciales son incorrectas, devuelve un error
-                return Response({"error": "Credenciales inválidas"}, status=400)
+                
+                # Determinar qué campo específico está mal
+                error_response = {}
+                
+                # Verificar si el usuario existe para identificar si es email o password incorrecto
+                try:
+                    user_exists = False
+                    if username:
+                        # Buscar por username o email
+                        user_exists = User.objects.filter(username=username).exists() or User.objects.filter(email=username).exists()
+                    
+                    if user_exists:
+                        # El usuario existe, entonces la contraseña está mal
+                        error_response["password"] = ["Contraseña incorrecta"]
+                    else:
+                        # El usuario no existe, entonces el email/username está mal
+                        error_response["username"] = ["Este correo no está registrado"]
+                except Exception:
+                    # Si hay error en la consulta, devolver error genérico por ambos campos
+                    error_response = {
+                        "username": ["Revisa tu correo"],
+                        "password": ["Revisa tu contraseña"]
+                    }
+                
+                return Response(error_response, status=400)
         except json.JSONDecodeError:
             # Maneja el error si el formato JSON es incorrecto
             return Response({"error": "Formato de solicitud inválido"}, status=400)
@@ -120,6 +143,128 @@ class MeAPIView(APIView):
         resp = Response({"user": data})
         resp["Cache-Control"] = "no-store"
         return resp
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class ChangePasswordAPIView(APIView):
+    """Permite a un usuario autenticado cambiar su contraseña."""
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        try:
+            data = json.loads(request.body or '{}')
+            current_password = data.get('current_password', '')
+            new_password = data.get('new_password', '')
+            confirm_password = data.get('confirm_password', '')
+
+            # Validaciones básicas
+            if not all([current_password, new_password, confirm_password]):
+                return Response(
+                    {"error": "Todos los campos son obligatorios"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Verificar que las contraseñas nuevas coincidan
+            if new_password != confirm_password:
+                return Response(
+                    {"error": "Las contraseñas nuevas no coinciden"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Verificar que la contraseña actual sea correcta
+            user = request.user
+            if not user.check_password(current_password):
+                return Response(
+                    {"error": "La contraseña actual es incorrecta"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Validar la nueva contraseña con las mismas reglas del registro
+            password_errors = RegisterAPIView().validate_password(new_password)
+            if password_errors:
+                return Response(
+                    {"error": password_errors},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Verificar que la nueva contraseña no sea igual a la actual
+            if current_password == new_password:
+                return Response(
+                    {"error": "La nueva contraseña debe ser diferente a la actual"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Cambiar la contraseña
+            user.set_password(new_password)
+            user.save()
+
+            return Response(
+                {"success": True, "message": "Contraseña actualizada exitosamente"},
+                status=status.HTTP_200_OK
+            )
+
+        except json.JSONDecodeError:
+            return Response(
+                {"error": "Formato de solicitud inválido"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            return Response(
+                {"error": f"Error interno del servidor: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class DeleteAccountAPIView(APIView):
+    """Permite a un usuario eliminar su cuenta tras confirmarlo."""
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request):
+        try:
+            data = json.loads(request.body or '{}')
+        except json.JSONDecodeError:
+            return Response(
+                {"error": "Formato de solicitud invalido"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        password = data.get('password', '')
+        confirmation = (data.get('confirmation') or '').strip().lower()
+
+        if not password:
+            return Response(
+                {"error": "Debes ingresar tu contrasena actual"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if confirmation != 'eliminar':
+            return Response(
+                {"error": 'Debes escribir "ELIMINAR" para confirmar'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        user = request.user
+        if not user.check_password(password):
+            return Response(
+                {"error": "Contrasena incorrecta"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            user.delete()
+        except Exception:
+            return Response(
+                {"error": "No se pudo eliminar la cuenta"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+        return Response(
+            {"success": True, "message": "Cuenta eliminada correctamente"},
+            status=status.HTTP_200_OK
+        )
 
 
 @method_decorator(csrf_exempt, name='dispatch')

@@ -50,7 +50,7 @@ export default function Hero() {
 
       <div className="hero-br">
         <p className="hero-kicker">Explora tu mapa genético de manera clara, confiable e interactiva.</p>
-        <a href="#learn-more" className="cta">Descubre <span aria-hidden>↗</span></a>
+        <a href="login" className="cta">Ingresa Aquí <span aria-hidden>↗</span></a>
       </div>
     </section>
   );
