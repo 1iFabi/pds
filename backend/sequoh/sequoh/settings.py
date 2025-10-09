@@ -219,7 +219,8 @@ ACCOUNT_ADAPTER = 'autenticacion.adapters.GmailAPIAccountAdapter'
 # Verificación obligatoria y URLs de redirección tras confirmar
 REQUIRE_EMAIL_VERIFICATION = True
 EMAIL_VERIFICATION_EXPIRE_HOURS = 24
-FRONTEND_DOMAIN = os.environ.get('FRONTEND_DOMAIN', 'http://localhost:5173')
+# Priorizar producción (Vercel) sobre localhost
+FRONTEND_DOMAIN = os.environ.get('FRONTEND_DOMAIN', 'https://pds-kappa.vercel.app')
 # URL absoluta de redirección al login del FRONTEND (Vercel)
 FRONTEND_LOGIN_REDIRECT = os.environ.get(
     'FRONTEND_LOGIN_URL', f"{FRONTEND_DOMAIN.rstrip('/')}/login?verified=1"
