@@ -1,18 +1,43 @@
-import React, { useMemo, useState } from 'react'
-import { LogOut, Dna, Activity, Heart, Globe, Pill, TestTube, User, ChevronDown, ChevronUp, KeyRound, UserX, Bot, MessageCircle, Grid3x3 } from 'lucide-react'
+import React, { useMemo, useState, useEffect } from 'react'
+import { LogOut, Dna, Activity, Heart, Globe, Pill, TestTube, User, ChevronDown, ChevronUp, KeyRound, UserX, Bot, MessageCircle, Grid3x3, Menu, X } from 'lucide-react'
 import ChangePasswordModal from '../ChangePasswordModal/ChangePasswordModal.jsx'
 import DeleteAccountModal from '../DeleteAccountModal/DeleteAccountModal.jsx'
 import './Sidebar.css'
 
 const defaultIcons = [Dna, Activity, Heart, Globe, Pill, TestTube]
 
-const Sidebar = ({ items = [], onLogout, user }) => {
+const Sidebar = ({ items = [], onLogout, user, isMobileMenuOpen = false, setIsMobileMenuOpen = () => {} }) => {
   const [isHovered, setIsHovered] = useState(false)
   const [isProfileExpanded, setIsProfileExpanded] = useState(false)
   const [isCategoriesExpanded, setIsCategoriesExpanded] = useState(false)
   const [isAIExpanded, setIsAIExpanded] = useState(false)
   const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false)
   const [isDeleteAccountModalOpen, setIsDeleteAccountModalOpen] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 1024)
+      if (window.innerWidth > 1024 && setIsMobileMenuOpen) {
+        setIsMobileMenuOpen(false)
+      }
+    }
+    
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [setIsMobileMenuOpen])
+
+  // Bloquear scroll del body cuando el menú está abierto en móviles
+  useEffect(() => {
+    if (!isMobile) return
+    const html = document.documentElement
+    const prev = html.style.overflow
+    html.style.overflow = isMobileMenuOpen ? 'hidden' : prev || ''
+    return () => {
+      html.style.overflow = prev || ''
+    }
+  }, [isMobileMenuOpen, isMobile])
 
   const navItems = useMemo(() => {
     return items.map((it, idx) => {
@@ -44,16 +69,36 @@ const Sidebar = ({ items = [], onLogout, user }) => {
     setIsAIExpanded(!isAIExpanded)
   }
 
+  const closeMenuAndNavigate = (href) => (e) => {
+    if (isMobile) {
+      setIsMobileMenuOpen(false)
+    }
+  }
+
+  const isExpanded = isHovered;
+
   return (
-    <div 
-      className={`sidebar ${isHovered ? 'sidebar--unfolded' : 'sidebar--folded'}`}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
+    <>
+      {/* Overlay para cerrar el menú en móviles */}
+      <div 
+        className={`sidebar__overlay ${isMobile && isMobileMenuOpen ? 'sidebar__overlay--open' : ''}`}
+        onClick={() => setIsMobileMenuOpen(false)}
+        aria-hidden={!isMobileMenuOpen}
+      />
+
+      <aside 
+        className={`sidebar ${
+          isExpanded ? 'sidebar--unfolded' : 'sidebar--folded'
+        } ${
+          isMobile && isMobileMenuOpen ? 'sidebar--mobile-open' : ''
+        }`}
+        onMouseEnter={() => !isMobile && setIsHovered(true)}
+        onMouseLeave={() => !isMobile && setIsHovered(false)}
+      >
       <div className="sidebar__header">
         <div className="sidebar__brand">
           <img src="/cSolido.png" alt="GenomIA Logo" className="sidebar__logo" />
-          {isHovered && <span className="sidebar__brand-text">Genom<span className="sidebar__brand-highlight">IA</span>.</span>}
+          {isExpanded && !isMobile && <span className="sidebar__brand-text">Genom<span className="sidebar__brand-highlight">IA</span>.</span>}
         </div>
       </div>
 
@@ -63,10 +108,10 @@ const Sidebar = ({ items = [], onLogout, user }) => {
             type="button" 
             className="sidebar__nav-item sidebar__profile-toggle"
             onClick={toggleProfile}
-            title={!isHovered ? 'Perfil' : undefined}
+            title={!isExpanded && !isMobile ? 'Perfil' : undefined}
           >
             <User size={20} className="sidebar__nav-icon" />
-            {isHovered && (
+            {(isExpanded || isMobile) && (
               <>
                 <span className="sidebar__nav-label">Perfil</span>
                 {isProfileExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
@@ -74,7 +119,7 @@ const Sidebar = ({ items = [], onLogout, user }) => {
             )}
           </button>
 
-          {isProfileExpanded && isHovered && (
+          {isProfileExpanded && (isExpanded || isMobile) && (
             <div className="sidebar__profile-content">
               <div className="sidebar__profile-greeting">
                 Hola {displayName}
@@ -111,17 +156,17 @@ const Sidebar = ({ items = [], onLogout, user }) => {
           )}
         </div>
 
-        {isHovered && <div className="sidebar__divider" />}
+        {(isExpanded || isMobile) && <div className="sidebar__divider" />}
 
         <div className="sidebar__categories-section">
           <button 
             type="button" 
             className="sidebar__nav-item sidebar__categories-toggle"
             onClick={toggleCategories}
-            title={!isHovered ? 'Categorías' : undefined}
+            title={!isExpanded && !isMobile ? 'Categorías' : undefined}
           >
             <Grid3x3 size={20} className="sidebar__nav-icon" />
-            {isHovered && (
+            {(isExpanded || isMobile) && (
               <>
                 <span className="sidebar__nav-label">Categorías</span>
                 {isCategoriesExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
@@ -129,7 +174,7 @@ const Sidebar = ({ items = [], onLogout, user }) => {
             )}
           </button>
 
-          {isCategoriesExpanded && isHovered && (
+          {isCategoriesExpanded && (isExpanded || isMobile) && (
             <div className="sidebar__categories-content">
               <ul className="sidebar__categories-menu">
                 {navItems.map((nav) => (
@@ -137,6 +182,7 @@ const Sidebar = ({ items = [], onLogout, user }) => {
                     <a 
                       href={nav.href} 
                       className="sidebar__categories-item"
+                      onClick={closeMenuAndNavigate(nav.href)}
                     >
                       <nav.Icon size={18} className="sidebar__categories-icon" />
                       <span>{nav.label}</span>
@@ -148,17 +194,17 @@ const Sidebar = ({ items = [], onLogout, user }) => {
           )}
         </div>
 
-        {isHovered && <div className="sidebar__divider" />}
+        {(isExpanded || isMobile) && <div className="sidebar__divider" />}
 
         <div className="sidebar__ai-section">
           <button 
             type="button" 
             className="sidebar__nav-item sidebar__ai-toggle"
             onClick={toggleAI}
-            title={!isHovered ? 'Pregunta a la IA' : undefined}
+            title={!isExpanded && !isMobile ? 'Pregunta a la IA' : undefined}
           >
             <Bot size={20} className="sidebar__nav-icon" />
-            {isHovered && (
+            {(isExpanded || isMobile) && (
               <>
                 <span className="sidebar__nav-label">Pregunta a la IA</span>
                 {isAIExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
@@ -166,11 +212,15 @@ const Sidebar = ({ items = [], onLogout, user }) => {
             )}
           </button>
 
-          {isAIExpanded && isHovered && (
+          {isAIExpanded && (isExpanded || isMobile) && (
             <div className="sidebar__ai-content">
               <ul className="sidebar__ai-menu">
                 <li>
-                  <a href="#chatear-ia" className="sidebar__ai-item">
+                  <a 
+                    href="#chatear-ia" 
+                    className="sidebar__ai-item"
+                    onClick={closeMenuAndNavigate('#chatear-ia')}
+                  >
                     <MessageCircle size={18} className="sidebar__ai-icon" />
                     <span>Chatea con la IA</span>
                   </a>
@@ -186,11 +236,14 @@ const Sidebar = ({ items = [], onLogout, user }) => {
           <button 
             type="button" 
             className="sidebar__logout" 
-            onClick={onLogout}
-            title={!isHovered ? 'Cerrar sesión' : undefined}
+            onClick={() => {
+              if (isMobile) setIsMobileMenuOpen(false)
+              onLogout()
+            }}
+            title={!isExpanded && !isMobile ? 'Cerrar sesión' : undefined}
           >
             <LogOut size={20} />
-            {isHovered && <span>Cerrar sesión</span>}
+            {(isExpanded || isMobile) && <span>Cerrar sesión</span>}
           </button>
         )}
       </div>
@@ -207,7 +260,8 @@ const Sidebar = ({ items = [], onLogout, user }) => {
         }}
         userName={displayName}
       />
-    </div>
+      </aside>
+    </>
   )
 }
 
