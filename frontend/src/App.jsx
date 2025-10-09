@@ -1,5 +1,5 @@
 // src/App.jsx
-import { Routes, Route, useLocation } from "react-router-dom";
+import { Routes, Route, useLocation, Navigate } from "react-router-dom";
 import Navbar from "./components/Navbar/Navbar";
 import Hero from "./pages/Hero/Hero";
 import Descubre from "./pages/Descubre/Descubre";
@@ -41,6 +41,8 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/dashboard" element={<ProtectedRoute><Postlogin /></ProtectedRoute>} />
+        {/* Catch-all: redirige cualquier ruta desconocida a la página de inicio */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </>
   );

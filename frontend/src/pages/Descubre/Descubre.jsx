@@ -1,7 +1,8 @@
 // src/components/Descubre/Descubre.jsx
 import { useEffect, useRef, useState } from "react";
-import TextType from "../../components/TextType/TextType"; // 🔹 Import del título animado
+import TextType from "../../components/TextType/TextType";
 import "./Descubre.css";
+import "../../styles/breadcrumb.css";
 
 const Descubre = () => {
   const sectionRef = useRef(null);
@@ -18,54 +19,20 @@ const Descubre = () => {
     return () => observer.disconnect();
   }, []);
 
-  const features = [
-    {
-      number: "1",
-      title: "Enfermedades",
-      description:
-        "Tu ADN revela predisposiciones a ciertas condiciones de salud, útil para prevención y cuidado personal.",
-      image: "/descubre/Enfermedades.png",
-      delay: "1s",
-    },
-    {
-      number: "2",
-      title: "Rasgos Genéticos",
-      description:
-        "Descubre características únicas determinadas por tu genética, como sueño, sabores o energía.",
-      image: "/descubre/Geneticos.png",
-      delay: "1s",
-    },
-    {
-      number: "3",
-      title: "Biométricas",
-      description:
-        "Conoce cómo tus genes influyen en tu cuerpo: metabolismo, peso, altura y otros indicadores.",
-      image: "/descubre/Biometricas.png",
-      delay: "1.4s",
-    },
-    {
-      number: "4",
-      title: "Ancestría",
-      description:
-        "Explora tus orígenes y la diversidad genética que compone tu historia familiar.",
-      image: "/descubre/Ancestria.png",
-      delay: "1.4s",
-    },
-  ];
-
   return (
     <section
       ref={sectionRef}
       className="descubre"
       data-nav-theme="light"
       id="learn-more"
+      aria-label="Sección Descubre"
     >
       <div className="descubre-container">
         <div className="descubre-content">
+          {/* Header */}
           <div className={`descubre-header ${isVisible ? "animate" : ""}`}>
-            <div className="breadcrumb">Descubre</div>
+<div className="breadcrumb breadcrumb--blue">Descubre</div>
 
-            {/* 🔹 Título animado importado del código 1 */}
             <h2 className="descubre-title">
               Descubre tus{" "}
               <TextType
@@ -90,23 +57,82 @@ const Descubre = () => {
             </p>
           </div>
 
-          <div className="features-grid">
-            {features.map((feature, index) => (
-              <div
-                key={index}
-                className={`feature-card ${isVisible ? "animate" : ""}`}
-                style={{ "--delay": feature.delay }}
-              >
-                <div className="card-image">
-                  <img src={feature.image} alt={feature.title} />
-                </div>
-                <div className="card-content">
-                  <div className="card-number">{feature.number}</div>
-                  <h3 className="card-title">{feature.title}</h3>
-                  <p className="card-description">{feature.description}</p>
-                </div>
+          {/* GRID */}
+          <div className={`features-grid ${isVisible ? "animate" : ""}`}>
+            {/* 1. Farmacogenética */}
+            <article className="feature-card">
+              <div className="card-content">
+                <h3 className="card-title">Farmacogenética</h3>
+                <p className="card-description">
+                  Optimiza tratamientos según tu genética para mayor eficacia y
+                  menor riesgo de efectos adversos.
+                </p>
               </div>
-            ))}
+              <div className="card-image">
+                <img src="/Descubree/Farmacogen.png" alt="Farmacogenética" />
+              </div>
+            </article>
+
+            {/* 2. Enfermedades */}
+            <article className="feature-card">
+              <div className="card-content">
+                <h3 className="card-title">Enfermedades</h3>
+                <p className="card-description">
+                  Reportes claros de predisposición genética para apoyar la
+                  prevención y el cuidado personal.
+                </p>
+              </div>
+              <div className="card-image">
+                <img src="/Descubree/Enfermedades.png" alt="Farmacogenética" />
+              </div>
+            </article>
+
+            {/* 3. Explora tus Orígenes (alta, span 2 filas) */}
+            <article className="feature-card card-origenes">
+              <header className="origenes-head">
+                <h3 className="card-title">Explora tus Orígenes</h3>
+                <p className="card-description">
+                  Traza tus orígenes y la diversidad genética que compone tu historia familiar.
+                </p>
+              </header>
+
+              {/* Imagen compuesta (pills + globo) */}
+              <div className="origenes-art">
+                <img
+                  src="/Descubree/Ancestry.png"  /* usa tu ruta real */
+                  alt="Distribución de ancestría"
+                  loading="lazy"
+                />
+              </div>
+            </article>
+
+            {/* 4. Biométricas */}
+            <article className="feature-card">
+              <div className="card-content">
+                <h3 className="card-title">Biométricas</h3>
+                <p className="card-description">
+                  Indicadores corporales influenciados por tus genes: metabolismo,
+                  peso, altura y más.
+                </p>
+              </div>
+              <div className="card-image">
+                <img src="/Descubree/Biometric.png" alt="Farmacogenética" />
+              </div>
+            </article>
+
+            {/* 5. Rasgos */}
+            <article className="feature-card">
+              <div className="card-content">
+                <h3 className="card-title">Rasgos</h3>
+                <p className="card-description">
+                  Características determinadas por tu ADN: sueño, sabores,
+                  energía y otros rasgos.
+                </p>
+              </div>
+              <div className="card-image">
+                <img src="/Descubree/Rasgos.png" alt="Farmacogenética" />
+              </div>
+            </article>
           </div>
         </div>
       </div>
