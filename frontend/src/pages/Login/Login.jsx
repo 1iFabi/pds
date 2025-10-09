@@ -317,23 +317,6 @@ export default function Login() {
               {loading ? "Ingresando..." : "Ingresa tu cuenta"}
             </button>
 
-            {/* Errores ocultos - solo se muestran visualmente con bordes rojos */}
-
-            {/* Mostrar mensaje de éxito */}
-            {loginSuccess && (
-              <div className="login-success" style={{
-                color: '#155724',
-                backgroundColor: '#d4edda',
-                border: '1px solid #c3e6cb',
-                borderRadius: '4px',
-                padding: '10px',
-                marginBottom: '15px',
-                fontSize: '14px'
-              }}>
-                ¡Login exitoso!
-              </div>
-            )}
-
 
             <p className="login-help">
               ¿No tienes cuenta?{" "}
