@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Dashboard from './Dashboard';
-import { API_ENDPOINTS, apiRequest, clearToken } from '../../config/api';
+import { getUser, signOut } from '../../services/auth.js';
 
 const Postlogin = () => {
   const [user, setUser] = useState(null);
@@ -12,15 +12,19 @@ const Postlogin = () => {
     let mounted = true;
 
     (async () => {
-      const response = await apiRequest(API_ENDPOINTS.ME, { method: 'GET' });
+      const { data, error } = await getUser();
       if (!mounted) return;
 
-      if (!response.ok) {
+      if (error || !data?.user) {
         navigate('/login', { replace: true });
         return;
       }
 
-      setUser(response.data.user ?? response.data);
+      setUser({
+        id: data.user.id,
+        email: data.user.email,
+        ...data.user.user_metadata,
+      });
       setLoading(false);
     })();
 
@@ -31,11 +35,10 @@ const Postlogin = () => {
 
   const handleLogout = async () => {
     try {
-      await apiRequest(API_ENDPOINTS.LOGOUT, { method: 'POST' });
+      await signOut();
     } catch (error) {
-      console.error('Error al cerrar sesion', error);
+      console.error('Error al cerrar sesión', error);
     }
-    clearToken();
     navigate('/');
   };
 

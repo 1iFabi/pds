@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { API_ENDPOINTS, apiRequest, setToken, getToken, clearToken } from "../../config/api.js";
+import { signIn, signOut as _signOut } from "../../services/auth.js";
 import ErrorMessage from "../../components/Errormessage.jsx";
 import "./Login.css";
 import ForgotPasswordModal from "./ForgotPasswordModal.jsx";
@@ -26,10 +26,10 @@ export default function Login() {
 
   // Si el usuario llega a /login con una sesión activa, cerrarla
   useEffect(() => {
-    const token = getToken();
-    if (token) {
-      clearToken();
-    }
+    // Ensure any lingering app-local token is cleared by signing out previous sessions
+    (async () => {
+      try { await _signOut(); } catch {}
+    })();
   }, []);
 
 // Detectar si hay un token de reset en la URL
@@ -126,17 +126,8 @@ export default function Login() {
     setErrors({ email: '', password: '', global: '' });
     
     try {
-      const result = await apiRequest(API_ENDPOINTS.LOGIN, {
-        method: 'POST',
-        body: JSON.stringify({
-          username: form.email,
-          password: form.password
-        }),
-      });
-      
-      if (result.ok && result.data.success && result.data.token) {
-        // Guardar JWT para siguientes requests
-        setToken(result.data.token);
+      const { data, error } = await signIn(form.email, form.password);
+      if (!error && data?.user) {
         setLoginSuccess(true);
         setShowSuccessModal(true);
         setTimeout(() => {
@@ -150,42 +141,12 @@ export default function Login() {
           navigate(`/dashboard?session=${sessionId}`);
         }, 600);
       } else {
-        // Mapear errores del backend a campos específicos cuando sea posible
-        const { status, data } = result;
+        // Mapear error genérico
         let fieldErrors = { email: '', password: '', global: '' };
-
-        // DRF puede devolver { username: ["..."], password: ["..."] }
-        // También puede devolver { error: "..." } o { detail: "..." }
-        const messages = [];
-
-        if (data) {
-          // Username backend mapea a 'email' en UI
-          if (data.username) {
-            fieldErrors.email = Array.isArray(data.username) ? data.username.join(' ') : String(data.username);
-          }
-          if (data.email) {
-            fieldErrors.email = Array.isArray(data.email) ? data.email.join(' ') : String(data.email);
-          }
-          if (data.password) {
-            fieldErrors.password = Array.isArray(data.password) ? data.password.join(' ') : String(data.password);
-          }
-          if (data.detail) messages.push(data.detail);
-          if (data.error) messages.push(data.error);
-        }
-
-        // 400/401 Invalid credentials: marcar ambos campos cuando no hay error específico
-        if ((status === 400 || status === 401) && !fieldErrors.email && !fieldErrors.password) {
-          fieldErrors.email = 'error'; // solo para marcar el campo en rojo
-          fieldErrors.password = 'error'; // solo para marcar el campo en rojo
-        }
-
-        // Si no hay errores de campo específicos, usar global (solo para debug interno)
-        const globalMsg = messages.join(' ').trim() || 'No se pudo iniciar sesión';
-        if (!fieldErrors.email && !fieldErrors.password) {
-          fieldErrors.global = globalMsg;
-        }
-
-        console.log('[Login Error Debug]', { status, data, fieldErrors });
+        // Supabase devuelve error.message descriptivo
+        fieldErrors.global = 'Credenciales inválidas';
+        fieldErrors.email = 'error';
+        fieldErrors.password = 'error';
         setErrors(fieldErrors);
       }
     } catch (error) {

@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { API_ENDPOINTS, apiRequest } from '../../config/api.js';
+import { getUser, reauthenticate, updatePassword } from '../../services/auth.js';
 
 const ChangePasswordModal = ({ isOpen, onClose }) => {
   const [formData, setFormData] = useState({
@@ -53,28 +53,30 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
     setError('');
 
     try {
-      // Endpoint para cambiar contraseña autenticado (sin token de reset)
-      const result = await apiRequest(`${API_ENDPOINTS.ME}change-password/`, {
-        method: 'POST',
-        body: JSON.stringify({
-          current_password: formData.currentPassword,
-          new_password: formData.password,
-          confirm_password: formData.confirmPassword
-        }),
-      });
-
-      if (result.ok) {
+      // Verificar contraseña actual reautenticando
+      const { data: userData } = await getUser();
+      const email = userData?.user?.email;
+      if (!email) {
+        setError('Sesión inválida. Inicia sesión nuevamente.');
+        return;
+      }
+      const { error: authError } = await reauthenticate(email, formData.currentPassword);
+      if (authError) {
+        setError('La contraseña actual es incorrecta');
+        return;
+      }
+      const { error: updError } = await updatePassword(formData.password);
+      if (!updError) {
         setSuccess(true);
-        // Cerrar modal después de 2 segundos
         setTimeout(() => {
           handleClose();
         }, 2000);
       } else {
-        setError(result.data.error || result.data.detail || 'Error al cambiar la contraseña');
+        setError(updError.message || 'Error al cambiar la contraseña');
       }
     } catch (error) {
       console.error('Error de conexión:', error);
-      setError('Error de conexión con el servidor.');
+      setError('Error de conexión.');
     } finally {
       setLoading(false);
     }

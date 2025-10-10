@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { API_ENDPOINTS, apiRequest, clearToken } from '../../config/api.js';
+import { signOut } from '../../services/auth.js';
 import { useNavigate } from 'react-router-dom';
 
 const DeleteAccountModal = ({ isOpen, onClose, userName }) => {
@@ -28,27 +28,13 @@ const DeleteAccountModal = ({ isOpen, onClose, userName }) => {
     setError('');
 
     try {
-      const result = await apiRequest(API_ENDPOINTS.DELETE_ACCOUNT, {
-        method: 'DELETE',
-        body: JSON.stringify({
-          password: password,
-          confirmation: confirmText
-        }),
-      });
-
-      if (result.ok) {
-        setSuccess(true);
-        // Esperar 2 segundos, limpiar token y redirigir al login
-        setTimeout(() => {
-          clearToken();
-          navigate('/');
-        }, 2000);
-      } else {
-        setError(result.data.error || result.data.detail || 'Error al eliminar la cuenta');
-      }
+      // Eliminación de cuenta requiere Service Role/servidor. Deshabilitado en frontend.
+      setError('Esta acción requiere confirmación desde el servidor. Por ahora, no es posible eliminar la cuenta desde la app.');
+      // Como alternativa, cerramos sesión para seguridad
+      await signOut();
     } catch (error) {
-      console.error('Error de conexión:', error);
-      setError('Error de conexión con el servidor.');
+      console.error('Error:', error);
+      setError('Ocurrió un error.');
     } finally {
       setLoading(false);
     }
@@ -128,9 +114,10 @@ const DeleteAccountModal = ({ isOpen, onClose, userName }) => {
                 </svg>
                 <div>
                   <h3 className="warning-title">Acción Irreversible</h3>
-                  <p className="warning-text">
-                    Esta acción eliminará permanentemente tu cuenta y todos tus datos asociados. No podrás recuperar tu información.
-                  </p>
+              <p className="warning-text">
+                Esta acción requiere confirmación desde el servidor (Service Role).
+                Por ahora, no es posible eliminar la cuenta desde la app. Si deseas continuar, contáctanos para gestionar la eliminación.
+              </p>
                 </div>
               </div>
 

@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
-import { API_ENDPOINTS, apiRequest } from '../../config/api.js';
+import { updatePassword } from '../../services/auth.js';
 
-const ResetPasswordModal = ({ isOpen, onClose, token }) => {
+const ResetPasswordModal = ({ isOpen, onClose }) => {
   const [formData, setFormData] = useState({
     password: '',
     confirmPassword: ''
@@ -52,28 +52,19 @@ const ResetPasswordModal = ({ isOpen, onClose, token }) => {
     setError('');
 
     try {
-      const result = await apiRequest(API_ENDPOINTS.PASSWORD_RESET_CONFIRM, {
-        method: 'POST',
-        body: JSON.stringify({
-          token: token,
-          password: formData.password,
-          confirmPassword: formData.confirmPassword
-        }),
-      });
-
-      if (result.ok) {
+      const { error } = await updatePassword(formData.password);
+      if (!error) {
         setSuccess(true);
-        // Cerrar modal después de 2 segundos y recargar la página
         setTimeout(() => {
           onClose();
-          window.location.reload();
-        }, 2000);
+          window.location.href = '/login';
+        }, 1500);
       } else {
-        setError(result.data.error || 'Error al restablecer la contraseña');
+        setError(error.message || 'Error al restablecer la contraseña');
       }
     } catch (error) {
       console.error('Error de conexión:', error);
-      setError('Error de conexión con el servidor. Verifica que el backend esté ejecutándose.');
+      setError('Error de conexión.');
     } finally {
       setLoading(false);
     }

@@ -17,6 +17,7 @@
     "@coreui/react": "^5.9.1",
     "@fortawesome/free-solid-svg-icons": "^7.0.1",
     "@fortawesome/react-fontawesome": "^3.0.2",
+    "@supabase/supabase-js": "^2.75.0",
     "@tailwindcss/vite": "^4.1.13",
     "gsap": "^3.13.0",
     "lucide-react": "^0.544.0",

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { API_ENDPOINTS, apiRequest } from '../config/api';
+import { resendVerification } from '../services/auth.js';
 import './EmailVerification.css';
 
 const EmailVerification = () => {
@@ -11,74 +11,36 @@ const EmailVerification = () => {
   const [resendEmail, setResendEmail] = useState('');
   const [resendStatus, setResendStatus] = useState('');
 
-  const token = searchParams.get('token');
-
   useEffect(() => {
-    if (token) {
-      verifyEmail(token);
+    // Supabase devuelve en el hash: #access_token=...&type=signup
+    const hash = window.location.hash || '';
+    const isSignup = hash.includes('type=signup');
+    if (isSignup) {
+      setStatus('success');
+      setMessage('¡Email verificado! Ya puedes iniciar sesión.');
+      setTimeout(() => navigate('/login'), 2500);
     } else {
       setStatus('error');
-      setMessage('Token de verificación no encontrado en la URL');
+      setMessage('No se encontró un enlace de verificación válido.');
     }
-  }, [token]);
-
-  const verifyEmail = async (verificationToken) => {
-    try {
-      const response = await apiRequest(API_ENDPOINTS.VERIFY_EMAIL, {
-        method: 'POST',
-        body: JSON.stringify({ token: verificationToken }),
-      });
-
-      if (response.ok) {
-        setStatus('success');
-        setMessage(response.data.message || 'Email verificado exitosamente');
-        
-        // Redirigir al login después de 3 segundos
-        setTimeout(() => {
-          navigate('/login', { 
-            state: { 
-              message: '¡Email verificado exitosamente! Ya puedes iniciar sesión.',
-              type: 'success'
-            }
-          });
-        }, 3000);
-      } else {
-        if (response.data.error?.includes('expirado')) {
-          setStatus('expired');
-        } else {
-          setStatus('error');
-        }
-        setMessage(response.data.error || 'Error verificando el email');
-      }
-    } catch (error) {
-      setStatus('error');
-      setMessage('Error de conexión. Inténtalo de nuevo.');
-    }
-  };
+  }, [navigate]);
 
   const handleResendVerification = async (e) => {
     e.preventDefault();
-    
     if (!resendEmail.trim()) {
       setResendStatus('error');
       return;
     }
-
     setResendStatus('sending');
-    
     try {
-      const response = await apiRequest(API_ENDPOINTS.RESEND_VERIFICATION, {
-        method: 'POST',
-        body: JSON.stringify({ email: resendEmail.trim() }),
-      });
-
-      if (response.ok) {
+      const { error } = await resendVerification(resendEmail.trim());
+      if (!error) {
         setResendStatus('success');
         setResendEmail('');
       } else {
         setResendStatus('error');
       }
-    } catch (error) {
+    } catch (_) {
       setResendStatus('error');
     }
   };

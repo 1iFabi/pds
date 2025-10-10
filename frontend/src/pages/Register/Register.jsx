@@ -1,7 +1,7 @@
 // components/Register/Register.jsx
 import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { API_ENDPOINTS, apiRequest } from "../../config/api.js";
+import { signUp } from "../../services/auth.js";
 import "./Register.css";
 import "../Login/Login.css";
 import VerificationModal from "../Login/VerificationModal.jsx";
@@ -93,34 +93,24 @@ const Register = () => {
     setRegistrationError('');
     
     try {
-      const result = await apiRequest(API_ENDPOINTS.REGISTER, {
-        method: 'POST',
-        body: JSON.stringify({
-          nombre: formData.nombre,
-          apellido: formData.apellido,
-          correo: formData.correo,
-          telefono: formData.telefono,
-          contraseña: formData.contraseña,
-          repetirContraseña: formData.repetirContraseña,
-          terminos: formData.terminos
-        }),
+      const metadata = {
+        nombre: formData.nombre,
+        apellido: formData.apellido,
+        telefono: formData.telefono,
+      };
+      const { data, error } = await signUp({
+        email: formData.correo,
+        password: formData.contraseña,
+        metadata,
+        redirectTo: `${window.location.origin}/login`,
       });
-      
-      if (result.ok && result.data.success) {
-        const requiresVerification = !!result.data.requires_verification;
-        const mensaje = result.data.mensaje || 'Usuario registrado exitosamente.';
-        if (requiresVerification) {
-          setVerificationMessage(mensaje);
-          setShowVerificationModal(true);
-        } else {
-          setRegistrationSuccess(true);
-          setShowSuccessModal(true);
-          setTimeout(() => {
-            navigate('/login');
-          }, 2000);
-        }
+
+      if (!error) {
+        // Supabase envía email de verificación automáticamente
+        setVerificationMessage('Te enviamos un correo para verificar tu cuenta. Revisa tu bandeja de entrada.');
+        setShowVerificationModal(true);
       } else {
-        setRegistrationError(result.data.error || 'Error en el registro');
+        setRegistrationError(error.message || 'Error en el registro');
       }
     } catch (error) {
       console.error('Error de conexión:', error);

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { API_ENDPOINTS, apiRequest } from '../../config/api.js';
+import { requestPasswordReset } from '../../services/auth.js';
 
 const ForgotPasswordModal = ({ isOpen, onClose }) => {
   const [email, setEmail] = useState('');
@@ -15,20 +15,16 @@ const ForgotPasswordModal = ({ isOpen, onClose }) => {
     setMessage('');
 
     try {
-      const result = await apiRequest(API_ENDPOINTS.PASSWORD_RESET, {
-        method: 'POST',
-        body: JSON.stringify({ email }),
-      });
-
-      if (result.ok) {
+      const { error } = await requestPasswordReset(email, `${window.location.origin}/reset-password`);
+      if (!error) {
         setStep('success');
-        setMessage(result.data.message);
+        setMessage('Si el correo existe, te enviamos un enlace para restablecer la contraseña.');
       } else {
-        setError(result.data.error || 'Error al enviar el correo de recuperación');
+        setError(error.message || 'Error al enviar el correo de recuperación');
       }
     } catch (error) {
       console.error('Error de conexión:', error);
-      setError('Error de conexión con el servidor. Verifica que el backend esté ejecutándose.');
+      setError('Error de conexión.');
     } finally {
       setLoading(false);
     }

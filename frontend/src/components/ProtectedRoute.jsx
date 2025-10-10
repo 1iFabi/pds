@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { API_ENDPOINTS, apiRequest, getToken } from '../config/api';
+import { getUser } from '../services/auth.js';
 
 export default function ProtectedRoute({ children }) {
   const [ok, setOk] = useState(false);
@@ -10,14 +10,9 @@ export default function ProtectedRoute({ children }) {
   useEffect(() => {
     let mounted = true;
     (async () => {
-      const token = getToken();
-      if (!token) {
-        navigate('/login', { replace: true });
-        return;
-      }
-      const res = await apiRequest(API_ENDPOINTS.ME, { method: 'GET' });
+      const { data, error } = await getUser();
       if (!mounted) return;
-      if (!res.ok) {
+      if (error || !data?.user) {
         navigate('/login', { replace: true });
       } else {
         setOk(true);

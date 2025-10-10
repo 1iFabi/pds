@@ -6,16 +6,14 @@ const ResetPasswordPage = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
-  const [token, setToken] = useState('');
 
   useEffect(() => {
-    const t = searchParams.get('token');
-    if (!t) {
-      // Si no hay token, redirigir a login
+    // Supabase incluye tokens en el hash: #access_token=...&type=recovery
+    const hasRecovery = window.location.hash.includes('type=recovery');
+    if (!hasRecovery) {
       navigate('/login');
       return;
     }
-    setToken(t);
     setOpen(true);
   }, [searchParams, navigate]);
 
@@ -23,7 +21,6 @@ const ResetPasswordPage = () => {
     <div className="auth login-page" style={{ minHeight: '100vh' }}>
       <ResetPasswordModal
         isOpen={open}
-        token={token}
         onClose={() => {
           setOpen(false);
           navigate('/login');
