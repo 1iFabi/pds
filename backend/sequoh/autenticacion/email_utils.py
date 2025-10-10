@@ -259,8 +259,18 @@ def send_email(to_email: str,
                subject: str,
                html_body: str | None = None,
                text_body: str = "",
-               inline_images: dict[str, bytes] | None = None) -> bool:
-    """Envía un email genérico usando la API de Gmail (texto y/o HTML)."""
+               inline_images: dict[str, bytes] | None = None,
+               *,
+               from_email: str | None = None,
+               from_name: str | None = None,
+               reply_to: str | None = None) -> bool:
+    """Envía un email genérico usando la API de Gmail (texto y/o HTML).
+
+    Parámetros extra:
+    - from_email: dirección de remitente a usar (por defecto DEFAULT_FROM_EMAIL)
+    - from_name: nombre visible del remitente (se formatea como "Nombre <email>")
+    - reply_to: dirección para responder (Reply-To)
+    """
     try:
         service = get_gmail_service()
 
@@ -272,7 +282,7 @@ def send_email(to_email: str,
             if html_body:
                 alt.attach(MIMEText(html_body, 'html', 'utf-8'))
             msg.attach(alt)
-            for cid, content in inline_images.items():
+            for cid, content in (inline_images or {}).items():
                 try:
                     img = MIMEImage(content)
                 except Exception:
@@ -289,10 +299,24 @@ def send_email(to_email: str,
         else:
             msg = MIMEText(text_body or "", 'plain', 'utf-8')
 
-        from_addr = getattr(settings, 'DEFAULT_FROM_EMAIL', 'no-reply@example.com')
+        # Construir encabezados
+        default_from = getattr(settings, 'DEFAULT_FROM_EMAIL', 'no-reply@example.com')
+        chosen_email = (from_email or default_from or '').strip()
+        # Si default ya viene con "Nombre <email>", respetarlo cuando no se provee from_email
+        if from_email:
+            if from_name:
+                from_header = f"{from_name} <{chosen_email}>"
+            else:
+                # Permitir que from_email ya venga formateado
+                from_header = chosen_email
+        else:
+            from_header = chosen_email
+
         msg['Subject'] = subject
-        msg['From'] = from_addr
+        msg['From'] = from_header
         msg['To'] = to_email
+        if reply_to:
+            msg['Reply-To'] = reply_to
 
         raw = base64.urlsafe_b64encode(msg.as_bytes()).decode('utf-8')
         result = service.users().messages().send(userId='me', body={'raw': raw}).execute()
