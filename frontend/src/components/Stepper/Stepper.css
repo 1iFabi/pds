@@ -131,6 +131,19 @@
   transform: translateY(0);
 }
 
+.next-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
+  box-shadow: 0 2px 8px rgba(100, 116, 139, 0.2);
+  transform: none;
+}
+
+.next-button:disabled:hover {
+  transform: none;
+  box-shadow: 0 2px 8px rgba(100, 116, 139, 0.2);
+}
+
 .step-indicator {
   position: relative;
   cursor: pointer;

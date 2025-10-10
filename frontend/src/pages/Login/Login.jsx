@@ -35,11 +35,18 @@ export default function Login() {
 // Detectar si hay un token de reset en la URL
   useEffect(() => {
     const token = searchParams.get('token');
+    const forgot = searchParams.get('forgot');
+    
     if (token) {
       // Mostrar SOLO el modal de restablecer contraseña, sin modales intermedios
       setResetToken(token);
       setShowResetPassword(true);
       // Limpiar la URL después de obtener el token
+      window.history.replaceState({}, document.title, '/login');
+    } else if (forgot === 'true') {
+      // Abrir modal de "Olvidé mi contraseña"
+      setShowForgotPassword(true);
+      // Limpiar la URL
       window.history.replaceState({}, document.title, '/login');
     }
   }, [searchParams]);
@@ -291,16 +298,16 @@ export default function Login() {
                   tabIndex="-1"
                 >
                   {showPwd ? (
-                    // Ícono de ojo tachado (ocultar)
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                      <line x1="1" y1="1" x2="23" y2="23"/>
-                    </svg>
-                  ) : (
-                    // Ícono de ojo normal (mostrar)
+                    // Ícono de ojo normal (contraseña visible)
                     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
                       <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                  ) : (
+                    // Ícono de ojo tachado (contraseña oculta)
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                      <line x1="1" y1="1" x2="23" y2="23"/>
                     </svg>
                   )}
                 </button>
