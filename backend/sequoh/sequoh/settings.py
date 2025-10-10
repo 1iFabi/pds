@@ -207,7 +207,7 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 # EMAIL CONFIGURATION - Usar API de Gmail mediante adapter de allauth
 DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'GenomIA <proyectogenomia@gmail.com>')
 SERVER_EMAIL = os.environ.get('SERVER_EMAIL', 'proyectogenomia@gmail.com')
-EMAIL_SUBJECT_PREFIX = '[SeqUOH] '
+EMAIL_SUBJECT_PREFIX = '[GenomIA] '
 
 # Rutas para credenciales/token de Gmail API (puedes ajustarlas por env)
 GMAIL_CREDENTIALS_FILE = os.environ.get('GMAIL_CREDENTIALS_FILE', str((BASE_DIR / 'config' / 'credentials.json').resolve()))
@@ -219,9 +219,12 @@ ACCOUNT_ADAPTER = 'autenticacion.adapters.GmailAPIAccountAdapter'
 # Verificación obligatoria y URLs de redirección tras confirmar
 REQUIRE_EMAIL_VERIFICATION = True
 EMAIL_VERIFICATION_EXPIRE_HOURS = 24
-# Priorizar producción (Vercel) sobre localhost
-FRONTEND_DOMAIN = os.environ.get('FRONTEND_DOMAIN', 'https://pds-kappa.vercel.app')
-# URL absoluta de redirección al login del FRONTEND (Vercel)
+# Dominio del FRONTEND: local en DEBUG, Vercel en producción (ajustable por env)
+FRONTEND_DOMAIN = os.environ.get(
+    'FRONTEND_DOMAIN',
+    'http://localhost:5173' if DEBUG else 'https://pds-kappa.vercel.app'
+)
+# URL absoluta de redirección al login del FRONTEND
 FRONTEND_LOGIN_REDIRECT = os.environ.get(
     'FRONTEND_LOGIN_URL', f"{FRONTEND_DOMAIN.rstrip('/')}/login?verified=1"
 )

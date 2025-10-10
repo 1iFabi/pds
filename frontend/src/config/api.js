@@ -10,6 +10,7 @@ export const API_ENDPOINTS = {
   DELETE_ACCOUNT: `${API_BASE_URL}/me/delete-account/`,
   LOGOUT: `${API_BASE_URL}/logout/`,
   DASHBOARD: `${API_BASE_URL}/dashboard/`,
+  CONTACT: `${API_BASE_URL}/contact/`,
 };
 
 export const getToken = () => localStorage.getItem('token');
