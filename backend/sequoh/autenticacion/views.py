@@ -17,7 +17,7 @@ from django.utils import timezone
 from urllib.parse import urlencode, quote
 from datetime import timedelta
 from allauth.account.models import EmailAddress
-from .email_utils import send_welcome_email, send_password_reset_email
+from .email_utils import send_welcome_email, send_password_reset_email, send_contact_form_email
 from .jwt_utils import encode_jwt
 from .authentication import JWTAuthentication
 import json
@@ -342,8 +342,12 @@ class RegisterAPIView(APIView):
                 return Response({"error": "El formato del correo electrónico no es válido"}, status=status.HTTP_400_BAD_REQUEST)
             
             # Verificar si el usuario ya existe
-            if User.objects.filter(username=correo).exists():
-                return Response({"error": "Ya existe un usuario con este correo electrónico"}, status=status.HTTP_400_BAD_REQUEST)
+            if User.objects.filter(username=correo).exists() or User.objects.filter(email=correo).exists():
+                return Response({
+                    "error": "Este correo ya está registrado",
+                    "email_exists": True,
+                    "message": "¿Olvidaste tu contraseña?"
+                }, status=status.HTTP_400_BAD_REQUEST)
             
             # Crear el usuario
             user = User.objects.create_user(
@@ -602,3 +606,62 @@ class VerifyEmailView(APIView):
                 secure=not settings.DEBUG, samesite='Lax'
             )
             return resp
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class ContactFormAPIView(APIView):
+    """Vista pública para recibir mensajes del formulario de contacto."""
+    
+    def post(self, request):
+        try:
+            data = json.loads(request.body)
+            nombre = data.get('nombre', '').strip()
+            email = data.get('email', '').strip()
+            mensaje = data.get('mensaje', '').strip()
+            
+            # Validaciones
+            if not nombre or not email or not mensaje:
+                return Response(
+                    {"error": "Todos los campos son obligatorios"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Validar formato de email
+            email_regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+            if not re.match(email_regex, email):
+                return Response(
+                    {"error": "El formato del email no es válido"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Validar longitud mínima del mensaje
+            if len(mensaje) < 10:
+                return Response(
+                    {"error": "El mensaje debe tener al menos 10 caracteres"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Enviar email
+            success = send_contact_form_email(nombre, email, mensaje)
+            
+            if success:
+                return Response({
+                    "success": True,
+                    "message": "Tu mensaje ha sido enviado correctamente. Te responderemos pronto."
+                }, status=status.HTTP_200_OK)
+            else:
+                return Response(
+                    {"error": "Hubo un problema al enviar tu mensaje. Por favor, intenta nuevamente."},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+                
+        except json.JSONDecodeError:
+            return Response(
+                {"error": "Formato de solicitud inválido"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            return Response(
+                {"error": f"Error interno del servidor: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

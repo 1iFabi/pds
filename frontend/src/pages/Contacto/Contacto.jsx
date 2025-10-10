@@ -6,6 +6,67 @@ export default function Contacto() {
   const [showTermsModal, setShowTermsModal] = useState(false);
   const handleTermsClick = (e) => { e.preventDefault(); setShowTermsModal(true); };
   const handleCloseTermsModal = () => setShowTermsModal(false);
+  
+  // Estados para el formulario de contacto
+  const [formData, setFormData] = useState({
+    nombre: '',
+    email: '',
+    mensaje: ''
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitMessage, setSubmitMessage] = useState({ type: '', text: '' });
+  
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    // Limpiar mensaje de error/éxito al escribir
+    if (submitMessage.text) {
+      setSubmitMessage({ type: '', text: '' });
+    }
+  };
+  
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setSubmitMessage({ type: '', text: '' });
+    
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      const response = await fetch(`${API_URL}/api/auth/contact/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        setSubmitMessage({ 
+          type: 'success', 
+          text: data.message || 'Tu mensaje ha sido enviado correctamente. Te responderemos pronto.' 
+        });
+        // Limpiar formulario
+        setFormData({ nombre: '', email: '', mensaje: '' });
+      } else {
+        setSubmitMessage({ 
+          type: 'error', 
+          text: data.error || 'Hubo un problema al enviar tu mensaje. Por favor, intenta nuevamente.' 
+        });
+      }
+    } catch (error) {
+      setSubmitMessage({ 
+        type: 'error', 
+        text: 'Error de conexión. Por favor, verifica tu conexión a internet e intenta nuevamente.' 
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <footer className="ft" id="contacto" role="contentinfo" data-nav-theme="light">
@@ -65,14 +126,50 @@ export default function Contacto() {
           <section className="ft__col ft__contact" aria-label="Contáctanos">
             <h4 className="ft__title">Contáctanos</h4>
             <p className="ft__muted">¿Tienes alguna duda? Escríbenos.</p>
-            <form className="ft__contact-form" action="mailto:hola@genomia.cl" method="post" encType="text/plain">
+            <form className="ft__contact-form" onSubmit={handleSubmit}>
               <div className="ft__row">
-                <input type="text" name="nombre" placeholder="Nombre*" aria-label="Nombre" required />
-                <input type="email" name="email" placeholder="Email*" aria-label="Email" required />
+                <input 
+                  type="text" 
+                  name="nombre" 
+                  placeholder="Nombre*" 
+                  aria-label="Nombre" 
+                  value={formData.nombre}
+                  onChange={handleInputChange}
+                  disabled={isSubmitting}
+                  required 
+                />
+                <input 
+                  type="email" 
+                  name="email" 
+                  placeholder="Email*" 
+                  aria-label="Email" 
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  disabled={isSubmitting}
+                  required 
+                />
               </div>
 
-              <textarea name="mensaje" rows="4" placeholder="Tu mensaje...*" aria-label="Mensaje" required />
-              <button type="submit" className="ft__btn">Enviar</button>
+              <textarea 
+                name="mensaje" 
+                rows="4" 
+                placeholder="Tu mensaje...*" 
+                aria-label="Mensaje" 
+                value={formData.mensaje}
+                onChange={handleInputChange}
+                disabled={isSubmitting}
+                required 
+              />
+              
+              {submitMessage.text && (
+                <div className={`ft__message ft__message--${submitMessage.type}`}>
+                  {submitMessage.text}
+                </div>
+              )}
+              
+              <button type="submit" className="ft__btn" disabled={isSubmitting}>
+                {isSubmitting ? 'Enviando...' : 'Enviar'}
+              </button>
               <small className="ft__fine">Usaremos tu correo solo para responderte.</small>
             </form>
           </section>

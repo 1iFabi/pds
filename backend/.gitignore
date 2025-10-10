@@ -34,3 +34,13 @@ db.sqlite3-journal
 # OS
 .DS_Store
 Thumbs.db
+
+# Credentials & Secrets (Gmail API, etc.)
+credentials.json
+token.json
+*.pem
+*.key
+*.p12
+secrets/
+config/credentials.json
+config/token.json

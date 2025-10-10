@@ -205,8 +205,8 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 
 
 # EMAIL CONFIGURATION - Usar API de Gmail mediante adapter de allauth
-DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'SeqUOH <fourfuturesa@gmail.com>')
-SERVER_EMAIL = os.environ.get('SERVER_EMAIL', 'fourfuturesa@gmail.com')
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'GenomIA <proyectogenomia@gmail.com>')
+SERVER_EMAIL = os.environ.get('SERVER_EMAIL', 'proyectogenomia@gmail.com')
 EMAIL_SUBJECT_PREFIX = '[SeqUOH] '
 
 # Rutas para credenciales/token de Gmail API (puedes ajustarlas por env)
