@@ -13,12 +13,14 @@ import base64
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.image import MIMEImage
+from email.utils import parseaddr, formataddr
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from django.conf import settings
 import os
+import json
 import logging
 
 logger = logging.getLogger(__name__)
@@ -233,34 +235,70 @@ def get_gmail_service():
     cred_path = getattr(settings, 'GMAIL_CREDENTIALS_FILE', os.path.join(settings.BASE_DIR, 'config', 'credentials.json'))
     token_path = getattr(settings, 'GMAIL_TOKEN_FILE', os.path.join(settings.BASE_DIR, 'config', 'token.json'))
 
-    logger.info(f"Gmail: cred_path={cred_path} token_path={token_path}")
+    # Permitir credenciales desde variables de entorno (más cómodo en Railway)
+    token_json_env = os.environ.get('GMAIL_TOKEN_JSON') or getattr(settings, 'GMAIL_TOKEN_JSON', None)
+    cred_json_env = os.environ.get('GMAIL_CREDENTIALS_JSON') or getattr(settings, 'GMAIL_CREDENTIALS_JSON', None)
 
-    # 1) Cargar token si existe
-    if os.path.exists(token_path):
+    logger.info(f"Gmail: cred_path={cred_path} token_path={token_path} token_env={'yes' if token_json_env else 'no'}")
+
+    # 1) Cargar token desde ENV si está presente
+    if token_json_env and not creds:
         try:
-            creds = Credentials.from_authorized_user_file(token_path, SCOPES)
-            logger.info("Gmail: token cargado desde archivo")
+            token_dict = json.loads(token_json_env)
+            creds = Credentials.from_authorized_user_info(token_dict, SCOPES)
+            logger.info("Gmail: token cargado desde variable de entorno")
         except Exception as e:
-            logger.error(f"Gmail: error leyendo token: {e}")
+            logger.error(f"Gmail: error leyendo token desde ENV: {e}")
             creds = None
-    else:
-        logger.warning("Gmail: token.json no existe en la ruta indicada")
 
-    # 2) Si está expirado pero tiene refresh_token, intentar refrescar
+    # 2) Si no vino por ENV, intentar desde archivo
+    if not creds:
+        if os.path.exists(token_path):
+            try:
+                creds = Credentials.from_authorized_user_file(token_path, SCOPES)
+                logger.info("Gmail: token cargado desde archivo")
+            except Exception as e:
+                logger.error(f"Gmail: error leyendo token: {e}")
+                creds = None
+        else:
+            logger.warning("Gmail: token.json no existe en la ruta indicada")
+
+    # 3) Si está expirado pero tiene refresh_token, intentar refrescar
     if creds and not creds.valid:
         if creds.expired and creds.refresh_token:
             try:
                 creds.refresh(Request())
                 logger.info("Gmail: token refrescado correctamente")
+                # Guardar token refrescado solo si estamos trabajando con archivo (no sobreescribimos ENV)
+                if not token_json_env:
+                    try:
+                        os.makedirs(os.path.dirname(token_path), exist_ok=True)
+                        with open(token_path, 'w', encoding='utf-8') as f:
+                            f.write(creds.to_json())
+                        logger.info("Gmail: token refrescado guardado en archivo")
+                    except Exception as e:
+                        logger.warning(f"Gmail: no se pudo guardar el token refrescado: {e}")
             except Exception as e:
                 logger.error(f"Gmail: error refrescando token: {e}")
 
-    # 3) Si sigue inválido, decidir según entorno
+    # 4) Si sigue inválido, decidir según entorno
     if not creds or not creds.valid:
         if getattr(settings, 'DEBUG', False):
             # Solo en desarrollo intentamos flujo interactivo (abre navegador)
             logger.info("Gmail: iniciando flujo OAuth local (solo DEBUG)")
-            flow = InstalledAppFlow.from_client_secrets_file(cred_path, SCOPES)
+            # Preferir credenciales desde ENV si se proporcionaron
+            if cred_json_env:
+                try:
+                    temp_path = os.path.join(os.path.dirname(token_path), 'credentials_env.json')
+                    os.makedirs(os.path.dirname(temp_path), exist_ok=True)
+                    with open(temp_path, 'w', encoding='utf-8') as f:
+                        f.write(cred_json_env)
+                    flow = InstalledAppFlow.from_client_secrets_file(temp_path, SCOPES)
+                except Exception:
+                    flow = InstalledAppFlow.from_client_secrets_file(cred_path, SCOPES)
+            else:
+                flow = InstalledAppFlow.from_client_secrets_file(cred_path, SCOPES)
+
             creds = flow.run_local_server(port=0)
             try:
                 os.makedirs(os.path.dirname(token_path), exist_ok=True)
@@ -273,7 +311,7 @@ def get_gmail_service():
             # En producción, fallar con mensaje claro (no se puede abrir navegador)
             raise RuntimeError(
                 "Gmail API: token inválido o ausente en producción. "
-                "Asegura GMAIL_TOKEN_FILE con refresh_token válido o usa variables de entorno para apuntar al token."
+                "Provee GMAIL_TOKEN_JSON (ENV) con refresh_token válido o GMAIL_TOKEN_FILE apuntando a token.json."
             )
 
     return build('gmail', 'v1', credentials=creds)
@@ -323,18 +361,13 @@ def send_email(to_email: str,
         else:
             msg = MIMEText(text_body or "", 'plain', 'utf-8')
 
-        # Construir encabezados
+        # Construir encabezados usando parseaddr/formataddr para evitar duplicados
         default_from = getattr(settings, 'DEFAULT_FROM_EMAIL', 'no-reply@example.com')
-        chosen_email = (from_email or default_from or '').strip()
-        # Si default ya viene con "Nombre <email>", respetarlo cuando no se provee from_email
-        if from_email:
-            if from_name:
-                from_header = f"{from_name} <{chosen_email}>"
-            else:
-                # Permitir que from_email ya venga formateado
-                from_header = chosen_email
-        else:
-            from_header = chosen_email
+        raw_from = (from_email or default_from or '').strip()
+        name_in_default, email_in_default = parseaddr(raw_from)
+        # Si se pasó from_name, tiene prioridad para el nombre visible
+        display_name = (from_name or name_in_default or '')
+        from_header = formataddr((display_name, email_in_default)) if email_in_default else raw_from
 
         msg['Subject'] = subject
         msg['From'] = from_header
