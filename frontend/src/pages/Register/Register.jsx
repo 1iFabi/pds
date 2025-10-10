@@ -2,6 +2,8 @@
 import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { API_ENDPOINTS, apiRequest } from "../../config/api.js";
+import { useToast } from "../../hooks/useToast.js";
+import ToastContainer from "../../components/Toast/ToastContainer.jsx";
 import "./Register.css";
 import "../Login/Login.css";
 import VerificationModal from "../Login/VerificationModal.jsx";
@@ -61,12 +63,14 @@ const Register = () => {
   };
 
   const [isLoading, setIsLoading] = useState(false);
-  const [registrationError, setRegistrationError] = useState('');
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [showVerificationModal, setShowVerificationModal] = useState(false);
   const [verificationMessage, setVerificationMessage] = useState('');
+  
+  // Sistema de notificaciones Toast
+  const toast = useToast();
 
   const handleSubmit = async () => {
     if (!isPasswordValid) {
@@ -89,8 +93,7 @@ const Register = () => {
       return;
     }
     
-    setIsLoading(true);
-    setRegistrationError('');
+    // No necesitamos limpiar errores porque los toasts se autogestionan
     
     try {
       const result = await apiRequest(API_ENDPOINTS.REGISTER, {
@@ -120,13 +123,29 @@ const Register = () => {
           }, 2000);
         }
       } else {
-        setRegistrationError(result.data.error || 'Error en el registro');
+        const errorMessage = result.data.error || 'Error en el registro';
+        
+        // Detectar si el correo ya existe y mostrar toast con acción
+        if (result.data.email_exists) {
+          toast.error(errorMessage, {
+            duration: 7000,
+            action: {
+              label: '¿Olvidaste tu contraseña?',
+              onClick: () => {
+                navigate('/login?forgot=true');
+              }
+            }
+          });
+        } else {
+          // Otros errores sin acción
+          toast.error(errorMessage);
+        }
       }
     } catch (error) {
       console.error('Error de conexión:', error);
-      setRegistrationError('Error de conexión con el servidor. Verifica que el backend esté ejecutándose.');
+      toast.error('Error de conexión con el servidor. Verifica tu conexión a internet.');
     }
-    setIsLoading(false);
+    // No establecemos isLoading aquí porque el Stepper lo maneja
   };
 
   const handleLoginClick = (e) => {
@@ -451,13 +470,13 @@ const Register = () => {
                     >
                       {showPassword ? (
                         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
-                          <line x1="1" y1="1" x2="23" y2="23"/>
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                          <circle cx="12" cy="12" r="3"/>
                         </svg>
                       ) : (
                         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                          <circle cx="12" cy="12" r="3"/>
+                          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                          <line x1="1" y1="1" x2="23" y2="23"/>
                         </svg>
                       )}
                     </button>
@@ -520,13 +539,13 @@ const Register = () => {
                   >
                     {showConfirmPassword ? (
                       <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
-                        <line x1="1" y1="1" x2="23" y2="23"/>
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                        <circle cx="12" cy="12" r="3"/>
                       </svg>
                     ) : (
                       <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                        <line x1="1" y1="1" x2="23" y2="23"/>
                       </svg>
                     )}
                   </button>
@@ -566,34 +585,6 @@ const Register = () => {
                 {fieldErrors.terminos && (
                   <div className="field-error-message" style={{ marginTop: '6px' }}>{fieldErrors.terminos}</div>
                 )}
-
-                {registrationError && (
-                  <div className="registration-error" style={{
-                    color: '#dc3545',
-                    backgroundColor: '#f8d7da',
-                    border: '1px solid #f5c6cb',
-                    borderRadius: '4px',
-                    padding: '10px',
-                    marginTop: '15px',
-                    fontSize: '14px'
-                  }}>
-                    {registrationError}
-                  </div>
-                )}
-                
-                {registrationSuccess && (
-                  <div className="registration-success" style={{
-                    color: '#155724',
-                    backgroundColor: '#d4edda',
-                    border: '1px solid #c3e6cb',
-                    borderRadius: '4px',
-                    padding: '10px',
-                    marginTop: '15px',
-                    fontSize: '14px'
-                  }}>
-                    ¡Registro exitoso! Redirigiendo al login...
-                  </div>
-                )}
               </Step>
             </Stepper>
           </div>
@@ -604,7 +595,10 @@ const Register = () => {
         <img src={cromo} alt="imagen de cromosomas" />
       </section>
 
-      <VerificationModal 
+      {/* Toast Container para notificaciones */}
+      <ToastContainer toasts={toast.toasts} removeToast={toast.removeToast} />
+
+      <VerificationModal
         isOpen={showVerificationModal}
         onClose={() => {
           setShowVerificationModal(false);

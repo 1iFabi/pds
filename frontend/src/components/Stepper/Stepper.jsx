@@ -23,6 +23,7 @@ export default function Stepper({
 }) {
   const [currentStep, setCurrentStep] = useState(initialStep);
   const [direction, setDirection] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const stepsArray = Children.toArray(children);
   const totalSteps = stepsArray.length;
   const isCompleted = currentStep > totalSteps;
@@ -54,11 +55,20 @@ export default function Stepper({
     }
   };
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
     // Validar el último paso antes de completar
     if (validateStep(currentStep)) {
-      setDirection(1);
-      updateStep(totalSteps + 1);
+      setIsSubmitting(true);
+      try {
+        // Esperar a que onFinalStepCompleted termine (si es async)
+        await onFinalStepCompleted();
+        // Solo avanzar si el registro fue exitoso
+        // NO avanzamos automáticamente, dejamos que el componente maneje el flujo
+      } catch (error) {
+        console.error('Error en handleComplete:', error);
+      } finally {
+        setIsSubmitting(false);
+      }
     }
   };
 
@@ -118,8 +128,13 @@ export default function Stepper({
                   {backButtonText}
                 </button>
               )}
-              <button onClick={isLastStep ? handleComplete : handleNext} className="next-button" {...nextButtonProps}>
-                {isLastStep ? 'Registrar' : nextButtonText}
+              <button 
+                onClick={isLastStep ? handleComplete : handleNext} 
+                className="next-button" 
+                disabled={isSubmitting}
+                {...nextButtonProps}
+              >
+                {isSubmitting ? 'Procesando...' : (isLastStep ? 'Registrar' : nextButtonText)}
               </button>
             </div>
           </div>
