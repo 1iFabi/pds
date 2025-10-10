@@ -10,6 +10,7 @@ from .views import (
     LogoutAPIView,
     DashboardAPIView,
     DeleteAccountAPIView,
+    ContactAPIView,
 )
 
 urlpatterns = [
@@ -18,6 +19,10 @@ urlpatterns = [
     path('resend-verification/', ResendVerificationAPIView.as_view(), name='api_resend_verification'),
     path('password-reset/', PasswordResetRequestAPIView.as_view(), name='api_password_reset'),
     path('password-reset-confirm/', PasswordResetConfirmAPIView.as_view(), name='api_password_reset_confirm'),
+
+    # Público
+    path('contact/', ContactAPIView.as_view(), name='api_contact'),
+
     # Endpoints protegidos por sesión
     path('me/', MeAPIView.as_view(), name='api_me'),
     path('me/change-password/', ChangePasswordAPIView.as_view(), name='api_change_password'),

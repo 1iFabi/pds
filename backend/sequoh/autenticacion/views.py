@@ -17,7 +17,7 @@ from django.utils import timezone
 from urllib.parse import urlencode, quote
 from datetime import timedelta
 from allauth.account.models import EmailAddress
-from .email_utils import send_welcome_email, send_password_reset_email
+from .email_utils import send_welcome_email, send_password_reset_email, send_email, build_branded_html
 from .jwt_utils import encode_jwt
 from .authentication import JWTAuthentication
 import json
@@ -305,6 +305,67 @@ class DashboardAPIView(APIView):
 
 
 @method_decorator(csrf_exempt, name='dispatch')
+class ContactAPIView(APIView):
+    """Recibe mensajes del formulario de contacto y los envía por correo."""
+    authentication_classes = []
+    permission_classes = []
+
+    def post(self, request):
+        # Intentar leer JSON, si falla, usar form-encoded
+        try:
+            data = json.loads(request.body or '{}')
+        except json.JSONDecodeError:
+            data = request.POST or {}
+
+        nombre = (data.get('nombre') or '').strip()
+        email = (data.get('email') or '').strip().lower()
+        mensaje = (data.get('mensaje') or '').strip()
+
+        # Validaciones básicas
+        errors = {}
+        if not nombre:
+            errors['nombre'] = 'El nombre es obligatorio.'
+        if not email or not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email):
+            errors['email'] = 'El correo electrónico no es válido.'
+        if not mensaje or len(mensaje) < 5:
+            errors['mensaje'] = 'El mensaje es demasiado corto.'
+
+        if errors:
+            return Response({"ok": False, "errors": errors}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Construir contenidos
+        subject = f"Nuevo mensaje de contacto de {nombre}"
+        text_body = (
+            f"Nombre: {nombre}\n"
+            f"Email: {email}\n\n"
+            f"Mensaje:\n{mensaje}\n"
+        )
+
+        inner_html = f"""
+          <p><strong>Nombre:</strong> {nombre}</p>
+          <p><strong>Email:</strong> {email}</p>
+          <div style=\"margin-top:16px; padding:12px; background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px;\">
+            <div style=\"font-weight:600; color:#374151; margin-bottom:8px;\">Mensaje</div>
+            <div style=\"white-space:pre-wrap; color:#111827;\">{mensaje}</div>
+          </div>
+        """
+        html_body = build_branded_html(inner_html=inner_html, title_text="Nuevo mensaje de contacto")
+
+        # Enviar el correo al buzón de GenomIA
+        recipient = 'proyectogenomia@gmail.com'
+        ok = False
+        try:
+            ok = send_email(to_email=recipient, subject=subject, html_body=html_body, text_body=text_body)
+        except Exception as e:
+            ok = False
+
+        if not ok:
+            return Response({"ok": False, "error": "No se pudo enviar el mensaje en este momento."}, status=status.HTTP_502_BAD_GATEWAY)
+
+        return Response({"ok": True, "message": "Mensaje enviado correctamente."}, status=status.HTTP_200_OK)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
 class RegisterAPIView(APIView):
     def post(self, request):
         try:
@@ -342,8 +403,11 @@ class RegisterAPIView(APIView):
                 return Response({"error": "El formato del correo electrónico no es válido"}, status=status.HTTP_400_BAD_REQUEST)
             
             # Verificar si el usuario ya existe
-            if User.objects.filter(username=correo).exists():
-                return Response({"error": "Ya existe un usuario con este correo electrónico"}, status=status.HTTP_400_BAD_REQUEST)
+            if User.objects.filter(username=correo).exists() or User.objects.filter(email=correo).exists():
+                return Response({
+                    "error": "Este correo ya está registrado",
+                    "email_exists": True
+                }, status=status.HTTP_400_BAD_REQUEST)
             
             # Crear el usuario
             user = User.objects.create_user(
@@ -391,7 +455,10 @@ class RegisterAPIView(APIView):
         except json.JSONDecodeError:
             return Response({"error": "Formato de solicitud inválido"}, status=status.HTTP_400_BAD_REQUEST)
         except IntegrityError:
-            return Response({"error": "Error al crear el usuario, el correo ya existe"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({
+                "error": "Este correo ya está registrado",
+                "email_exists": True
+            }, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response({"error": f"Error interno del servidor: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 

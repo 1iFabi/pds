@@ -1,6 +1,14 @@
 """
-Utilidades para el manejo de emails en la aplicación SeqUOH utilizando la API de Gmail
+Utilidades para el manejo de emails en la aplicación SeqUOH (Genomia) usando la API de Gmail.
+Incluye:
+- Branding accesible (paleta nueva + tokens)
+- Preheader
+- Botones consistentes
+- Card con sombra y radios
+- Soporte dark mode básico (Apple Mail / algunos clientes)
+- Fallback de logo a /cNormal.png (no usa SeqUOHLogo.png)
 """
+
 import base64
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -11,20 +19,40 @@ from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from django.conf import settings
 import os
-import json
 import logging
 
 logger = logging.getLogger(__name__)
 
-# Configuración de Gmail API
+# =========================
+#   Configuración Gmail
+# =========================
 SCOPES = ['https://www.googleapis.com/auth/gmail.send']
 
-# Paleta basada en tu frontend (Navbar --brand y tonos Login)
-BRAND_PRIMARY = "#277EAF"  # barra superior / acento
-BRAND_DARK = "#0D5E8C"     # títulos y acentos
-BANNER_TEXT = "#FFFFFF"
+# =========================
+#   Branding & UI tokens
+# =========================
+BRAND = {
+    "name": "Genomia",
+    "colors": {
+        # petróleo accesible (AA sobre blanco y en botón)
+        "primary": "#0E7490",   # teal-700
+        "primary_dark": "#0B5C70",
+        "accent": "#14B8A6",    # teal-500
+        "ink": "#111827",       # gray-900
+        "body": "#374151",      # gray-700
+        "muted": "#6B7280",     # gray-500
+        "border": "#E5E7EB",    # gray-200
+        "card_bg": "#FFFFFF",
+        "bg": "#F8FAFC"         # slate-50
+    },
+    "radius": 14,
+    "shadow": "0 2px 6px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06)"
+}
 
 
+# =========================
+#   Helpers de assets/UI
+# =========================
 def _asset_url(path: str) -> str:
     base = getattr(settings, 'FRONTEND_DOMAIN', 'http://localhost:5173').rstrip('/')
     if not path.startswith('/'):
@@ -33,15 +61,20 @@ def _asset_url(path: str) -> str:
 
 
 def load_logo_bytes() -> bytes | None:
-    """Intenta cargar el logo desde el repo para incrustarlo inline (CID).
-    Prioriza backend/static (para Railway), luego frontend.
+    """
+    Busca *primero* cNormal.png en distintas ubicaciones (backend y frontend).
+    No usa SeqUOHLogo.png.
     """
     candidates = [
-        settings.BASE_DIR / 'static' / 'branding' / 'logo.png',
-        settings.BASE_DIR / 'sequoh' / 'static' / 'branding' / 'logo.png',
-        settings.BASE_DIR.parent.parent / 'frontend' / 'public' / 'SeqUoh_Logo.png',
+        # backend/static
+        settings.BASE_DIR / 'static' / 'branding' / 'cNormal.png',
+        settings.BASE_DIR / 'sequoh' / 'static' / 'branding' / 'cNormal.png',
+        # frontend
+        settings.BASE_DIR.parent.parent / 'frontend' / 'public' / 'cNormal.png',
+        settings.BASE_DIR.parent.parent / 'frontend' / 'dist' / 'cNormal.png',
+        # fallback a Logo.png si no existe cNormal.png
+        settings.BASE_DIR / 'static' / 'branding' / 'Logo.png',
         settings.BASE_DIR.parent.parent / 'frontend' / 'public' / 'Logo.png',
-        settings.BASE_DIR.parent.parent / 'frontend' / 'dist' / 'SeqUoh_Logo.png',
         settings.BASE_DIR.parent.parent / 'frontend' / 'dist' / 'Logo.png',
     ]
     for p in candidates:
@@ -54,66 +87,148 @@ def load_logo_bytes() -> bytes | None:
     return None
 
 
-def build_branded_html(inner_html: str, title_text: str | None = None, logo_src: str | None = None) -> str:
-    """Envuelve contenido con banner + contenedor central inspirado en EmailTemplate.
-
-    - Banner con logo centrado y nombre del sitio
-    - Card central con sombra, fondo limpio
-    - Botón con acento de la paleta
+def email_button(url: str, label: str, *, kind: str = "primary") -> str:
     """
-    _default_url = _asset_url('SeqUoh_Logo.png')
+    Botón bulletproof para email (anchor con estilos inline).
+    kind: "primary" | "neutral"
+    """
+    c = BRAND["colors"]
+    if kind == "neutral":
+        bg = c["ink"]
+        # ojo: :hover no siempre aplica en clientes de correo, lo dejamos informativo
+    else:
+        bg = c["primary"]
+    return (
+        f'<a href="{url}" '
+        f'style="background:{bg}; color:#FFFFFF; text-decoration:none; '
+        f'display:inline-block; line-height:1; font-weight:700; '
+        f'padding:12px 22px; border-radius:{BRAND["radius"]}px; '
+        f'box-shadow: {BRAND["shadow"]};">'
+        f'{label}</a>'
+    )
+
+
+def build_branded_html(inner_html: str,
+                       title_text: str | None = None,
+                       logo_src: str | None = None,
+                       preheader: str | None = None) -> str:
+    """
+    Plantilla base con:
+    - preheader (oculto visual, visible en inbox preview)
+    - banner con logo cNormal.png (CID si viene)
+    - card central prolija y accesible
+    - light/dark tweaks donde aplica
+    """
+    c = BRAND["colors"]
+    _default_logo = _asset_url('cNormal.png')
     _logo_src = logo_src or 'cid:logo_cid'
-    title_html = ''
-    if title_text:
-        title_html = f'<h2 style="color: {BRAND_DARK}; margin: 0 0 16px 0; font-size: 24px; font-weight: 700; line-height: 1.3;">{title_text}</h2>'
+    _pre = (preheader or "").replace('"', "'")
+
+    title_html = (
+        f'<h2 style="color:{c["ink"]}; margin:0 0 16px 0; '
+        f'font-size:24px; font-weight:800; line-height:1.25;">{title_text}</h2>'
+        if title_text else ""
+    )
 
     return f"""
-    <!DOCTYPE html>
-    <html lang="es">
-      <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      </head>
-      <body style=\"margin:0; padding:0; background:#f9fafb; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;\">
-        <table role=\"presentation\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" style=\"background:#f9fafb; padding:32px 16px;\">
-          <tr>
-            <td align=\"center\">
-              <table role=\"presentation\" width=\"600\" cellspacing=\"0\" cellpadding=\"0\" style=\"max-width:600px; width:100%;\">
-                <!-- Logo y nombre del sitio -->
-                <tr>
-                  <td align=\"center\" style=\"padding:0 0 24px 0;\">
-                    <img src=\"{_logo_src if _logo_src.startswith('cid:') else (_logo_src or _default_url)}\" width=\"48\" height=\"48\" alt=\"Genomia\" style=\"display:block; border:0; border-radius:8px;\" />
-                  </td>
-                </tr>
-                <!-- Card principal -->
-                <tr>
-                  <td>
-                    <table role=\"presentation\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" style=\"background:#ffffff; border-radius:12px; box-shadow:0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06); border:1px solid #e5e7eb;\">
-                      <tr>
-                        <td style=\"padding:40px 32px;\">
-                          {title_html}
-                          <div style=\"color:#374151; font-size:15px; line-height:1.6;\">
-                            {inner_html}
-                          </div>
-                        </td>
-                      </tr>
-                    </table>
-                  </td>
-                </tr>
-                <!-- Footer -->
-                <tr>
-                  <td align=\"center\" style=\"padding:24px 0 0 0;\">
-                    <p style=\"margin:0; color:#6b7280; font-size:13px; line-height:1.5;\">Genomia</p>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-        </table>
-      </body>
-    </html>
-    """
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>{(title_text or BRAND["name"])}</title>
+    <!-- Preheader: mostrado en la bandeja, oculto en el cuerpo -->
+    <span style="display:none!important;visibility:hidden;opacity:0;color:transparent;
+      height:0;width:0;overflow:hidden;mso-hide:all;">
+      {_pre}
+    </span>
+    <style>
+      /* Dark mode (Apple Mail / algunos clientes) */
+      @media (prefers-color-scheme: dark) {{
+        :root {{
+          color-scheme: dark;
+          supported-color-schemes: dark;
+        }}
+        .bg {{
+          background: #0B1220 !important;
+        }}
+        .card {{
+          background: #0F172A !important;
+          border-color: #1F2937 !important;
+        }}
+        .text {{
+          color: #E5E7EB !important;
+        }}
+        .muted {{
+          color: #9CA3AF !important;
+        }}
+      }}
+    </style>
+  </head>
+  <body style="margin:0; padding:0; background:{c["bg"]}; 
+               font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" class="bg"
+           style="background:{c["bg"]}; padding:32px 16px;">
+      <tr>
+        <td align="center">
+          <table role="presentation" width="600" cellspacing="0" cellpadding="0"
+                 style="max-width:600px; width:100%;">
+            <!-- Logo -->
+            <tr>
+              <td align="center" style="padding:0 0 16px 0;">
+                <img src="{_logo_src if _logo_src.startswith('cid:') else (_logo_src or _default_logo)}"
+                  alt="{BRAND["name"]}"
+                  style="display:block; border:0; border-radius:12px;
+                          max-width:100px; height:auto; aspect-ratio:1/1; object-fit:contain;" />
 
+              </td>
+            </tr>
+
+            <!-- Card -->
+            <tr>
+              <td>
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0"
+                       class="card"
+                       style="background:{c["card_bg"]}; border-radius:{BRAND["radius"]}px; 
+                              box-shadow:{BRAND["shadow"]}; border:1px solid {c["border"]};">
+                  <tr>
+                    <td style="padding:36px 28px;">
+                      {title_html}
+                      <div class="text" style="color:{c["body"]}; font-size:15px; line-height:1.65;">
+                        {inner_html}
+                      </div>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- Footer -->
+            <tr>
+              <td align="center" style="padding:18px 0 0 0;">
+                <p class="muted" style="margin:0; color:{c["muted"]}; font-size:12px; line-height:1.5;">
+                  {BRAND["name"]}
+                </p>
+              </td>
+            </tr>
+
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
+"""
+
+
+def text_block(*lines: str) -> str:
+    """Crea un bloque de texto plano coherente para multipart/alternative."""
+    return "\n".join(lines).strip() + "\n"
+
+
+# =========================
+#   Gmail Service & Send
+# =========================
 def get_gmail_service():
     """Obtiene el servicio de Gmail usando OAuth2 y rutas configurables."""
     creds = None
@@ -145,7 +260,12 @@ def get_gmail_service():
     service = build('gmail', 'v1', credentials=creds)
     return service
 
-def send_email(to_email: str, subject: str, html_body: str | None = None, text_body: str = "", inline_images: dict[str, bytes] | None = None) -> bool:
+
+def send_email(to_email: str,
+               subject: str,
+               html_body: str | None = None,
+               text_body: str = "",
+               inline_images: dict[str, bytes] | None = None) -> bool:
     """Envía un email genérico usando la API de Gmail (texto y/o HTML)."""
     try:
         service = get_gmail_service()
@@ -180,18 +300,11 @@ def send_email(to_email: str, subject: str, html_body: str | None = None, text_b
             msg = MIMEText(text_body or "", 'plain', 'utf-8')
 
         from_addr = getattr(settings, 'DEFAULT_FROM_EMAIL', 'no-reply@example.com')
-        # Si DEFAULT_FROM_EMAIL viene con nombre "Nombre <correo>", Gmail ignora el nombre pero no rompe
-        if isinstance(msg, MIMEMultipart):
-            msg['Subject'] = subject
-            msg['From'] = from_addr
-            msg['To'] = to_email
-            raw = base64.urlsafe_b64encode(msg.as_bytes()).decode('utf-8')
-        else:
-            msg['Subject'] = subject
-            msg['From'] = from_addr
-            msg['To'] = to_email
-            raw = base64.urlsafe_b64encode(msg.as_bytes()).decode('utf-8')
+        msg['Subject'] = subject
+        msg['From'] = from_addr
+        msg['To'] = to_email
 
+        raw = base64.urlsafe_b64encode(msg.as_bytes()).decode('utf-8')
         result = service.users().messages().send(userId='me', body={'raw': raw}).execute()
         logger.info(f"Email enviado a {to_email} - asunto: {subject} - id: {result.get('id')} ")
         return True
@@ -200,16 +313,16 @@ def send_email(to_email: str, subject: str, html_body: str | None = None, text_b
         return False
 
 
-def send_verification_email(user_email, user_name, verification_url):
+# =========================
+#   Mails específicos
+# =========================
+def send_verification_email(user_email: str, user_name: str, verification_url: str) -> bool:
     """
-    Envía email con enlace de verificación de cuenta usando la API de Gmail
+    Envía email con enlace de verificación de cuenta.
     """
     try:
-        # Creamos el servicio de Gmail
-        service = get_gmail_service()
-
         subject = 'Verifica tu correo'
-        
+
         # Preparar logo inline (CID) si hay archivo disponible
         inline_images = {}
         logo_bytes = load_logo_bytes()
@@ -217,90 +330,103 @@ def send_verification_email(user_email, user_name, verification_url):
             inline_images['logo_cid'] = logo_bytes
             logo_src = 'cid:logo_cid'
         else:
-            logo_src = _asset_url('SeqUoh_Logo.png')
-        
+            logo_src = _asset_url('cNormal.png')
+
+        btn_html = email_button(verification_url, "Verificar mi cuenta", kind="primary")
         inner = f"""
           <p>Hola {user_name},</p>
-          <p>
-            Gracias por registrarte en Genomia. Para activar tu cuenta, por favor verifica tu correo haciendo clic en el siguiente botón:
-          </p>
-          <div style=\"text-align:center; margin: 24px 0;\">
-            <a href=\"{verification_url}\" style=\"display:inline-block; background:{BRAND_PRIMARY}; color:#ffffff; text-decoration:none; padding:12px 24px; border-radius:8px; font-weight:700; font-size:15px;\">Verificar mi cuenta</a>
+          <p>Gracias por registrarte en {BRAND["name"]}. Para activar tu cuenta, haz clic en el botón:</p>
+          <div style="text-align:center; margin: 22px 0;">
+            {btn_html}
           </div>
-          <p style=\"background:#fff8e1; border:1px solid #ffeaa7; border-radius:8px; padding:12px; color:#7c5a00;\">
+          <p style="background:#FFF8E1; border:1px solid #FFE08A; border-radius:10px; padding:12px; color:#7C5A00;">
             <strong>Importante:</strong> Este enlace caduca en {getattr(settings, 'EMAIL_VERIFICATION_EXPIRE_HOURS', 24)} horas.
           </p>
-          <p style=\"color:#6b7280; font-size:13px;\">Si no solicitaste esta cuenta, puedes ignorar este email.</p>
+          <p style="color:#6B7280; font-size:13px;">Si no solicitaste esta cuenta, puedes ignorar este correo.</p>
         """
-        html_content = build_branded_html(inner_html=inner, title_text='Verifica tu correo', logo_src=logo_src)
-        
-        text_content = f"""
-        Hola {user_name},
+        html_content = build_branded_html(
+            inner_html=inner,
+            title_text='Verifica tu correo',
+            logo_src=logo_src,
+            preheader="Activa tu cuenta con un clic."
+        )
 
-        Gracias por registrarte en Genomia. Para activar tu cuenta, visita:
-        {verification_url}
+        text_content = text_block(
+            f"Hola {user_name},",
+            f"Gracias por registrarte en {BRAND['name']}. Para activar tu cuenta, visita:",
+            verification_url,
+            "",
+            f"Este enlace caduca en {getattr(settings, 'EMAIL_VERIFICATION_EXPIRE_HOURS', 24)} horas.",
+            "",
+            f"Equipo {BRAND['name']}"
+        )
 
-        Este enlace caduca en {getattr(settings, 'EMAIL_VERIFICATION_EXPIRE_HOURS', 24)} horas.
-
-        Equipo Genomia
-        """
-
-        # Enviar
-        send_email(
+        ok = send_email(
             to_email=user_email,
             subject=subject,
             html_body=html_content,
             text_body=text_content,
             inline_images=inline_images or None,
         )
-        logger.info(f"Email de verificación enviado a {user_email}")
-        return True
+        if ok:
+            logger.info(f"Email de verificación enviado a {user_email}")
+        return ok
     except Exception as e:
         logger.error(f"Error enviando email de verificación a {user_email}: {str(e)}")
         return False
 
-def send_welcome_email(user_email, user_name):
-    """Envía email de bienvenida tras verificación usando la API de Gmail."""
+
+def send_welcome_email(user_email: str, user_name: str) -> bool:
+    """Envía email de bienvenida tras verificación."""
     try:
-        subject = 'Bienvenido a Genomia'
-        login_url = getattr(settings, 'FRONTEND_LOGIN_REDIRECT', f"{getattr(settings, 'FRONTEND_DOMAIN', 'http://localhost:5173').rstrip('/')}/login")
-        # Preparar logo inline (CID) si hay archivo disponible
+        subject = 'Bienvenid@ a Genomia'
+        login_url = getattr(
+            settings,
+            'FRONTEND_LOGIN_REDIRECT',
+            f"{getattr(settings, 'FRONTEND_DOMAIN', 'http://localhost:5173').rstrip('/')}/login"
+        )
+
         inline_images = {}
         logo_bytes = load_logo_bytes()
         if logo_bytes:
             inline_images['logo_cid'] = logo_bytes
             logo_src = 'cid:logo_cid'
         else:
-            logo_src = _asset_url('SeqUoh_Logo.png')
+            logo_src = _asset_url('cNormal.png')
 
+        btn_html = email_button(login_url, "Ir a mi cuenta", kind="neutral")
         inner = f"""
           <p>Hola {user_name},</p>
-          <p>¡Bienvenido a Genomia! Aquí podrás explorar tu perfil genético, descubrir tu ancestría y mucho más.</p>
-          <div style=\"text-align:center; margin: 24px 0;\">
-            <a href=\"{login_url}\" style=\"background:#1f2937; color:#ffffff; text-decoration:none; padding:12px 22px; border-radius:8px; font-weight:700; display:inline-block;\">Ir a mi cuenta</a>
+          <p>¡Bienvenid@ a {BRAND["name"]}! Aquí podrás explorar tu perfil genético, tu ancestría y más.</p>
+          <div style="text-align:center; margin: 22px 0;">
+            {btn_html}
           </div>
         """
-        html_content = build_branded_html(inner_html=inner, title_text='¡Bienvenido a Genomia!', logo_src=logo_src)
+        html_content = build_branded_html(
+            inner_html=inner,
+            title_text='¡Bienvenid@!',
+            logo_src=logo_src,
+            preheader="Tu cuenta ya está lista. Entra cuando quieras."
+        )
 
-        text_content = f"""
-        ¡Bienvenido a Genomia, {user_name}!
+        text_content = text_block(
+            f"¡Bienvenid@ a {BRAND['name']}, {user_name}!",
+            "Explora tu perfil genético, ancestría y más.",
+            f"Inicia sesión: {login_url}",
+            "",
+            f"Equipo {BRAND['name']}"
+        )
 
-        Aquí podrás explorar tu perfil genético, descubrir tu ancestría y mucho más.
-
-        Ingresa a tu cuenta: {login_url}
-
-        Equipo Genomia
-        """
-        
-        send_email(
+        ok = send_email(
             to_email=user_email,
             subject=subject,
             html_body=html_content,
             text_body=text_content,
             inline_images=inline_images or None,
         )
-        logger.info(f"Email de bienvenida enviado a {user_email}")
-        return True
+        if ok:
+            logger.info(f"Email de bienvenida enviado a {user_email}")
+        return ok
     except Exception as e:
         logger.error(f"Error enviando email de bienvenida a {user_email}: {str(e)}")
         return False
@@ -309,40 +435,55 @@ def send_welcome_email(user_email, user_name):
 def send_password_reset_email(user_email: str, user_name: str, reset_url: str) -> bool:
     """Envía un email de restablecimiento de contraseña con botón al frontend."""
     try:
-        subject = 'Restablece tu contraseña - Genomia'
-        # Preparar logo inline (CID) si hay archivo disponible
+        subject = 'Restablece tu contraseña'
         inline_images = {}
         logo_bytes = load_logo_bytes()
         if logo_bytes:
             inline_images['logo_cid'] = logo_bytes
             logo_src = 'cid:logo_cid'
         else:
-            logo_src = _asset_url('SeqUoh_Logo.png')
+            logo_src = _asset_url('cNormal.png')
 
+        expire_hours = getattr(settings, 'PASSWORD_RESET_EXPIRE_HOURS',
+                               getattr(settings, 'EMAIL_VERIFICATION_EXPIRE_HOURS', 24))
+
+        btn_html = email_button(reset_url, "Restablecer contraseña", kind="neutral")
         inner = f"""
           <p>Hola {user_name or ''},</p>
-          <p>Recibimos una solicitud para restablecer tu contraseña. Haz clic en el siguiente botón para continuar:</p>
-          <div style=\"text-align:center; margin: 24px 0;\">
-            <a href=\"{reset_url}\" style=\"background:#1f2937; color:#ffffff; text-decoration:none; padding:12px 22px; border-radius:8px; font-weight:700; display:inline-block;\">Restablecer contraseña</a>
+          <p>Recibimos una solicitud para restablecer tu contraseña. Continúa aquí:</p>
+          <div style="text-align:center; margin: 22px 0;">
+            {btn_html}
           </div>
-          <p style=\"background:#fff8e1; border:1px solid #ffeaa7; border-radius:8px; padding:12px; color:#7c5a00;\"><strong>Importante:</strong> Este enlace caduca en {getattr(settings, 'PASSWORD_RESET_EXPIRE_HOURS', getattr(settings, 'EMAIL_VERIFICATION_EXPIRE_HOURS', 24))} horas.</p>
-          <p style=\"color:#6b7280; font-size:13px;\">Si no solicitaste este cambio, puedes ignorar este correo.</p>
+          <p style="background:#FFF8E1; border:1px solid #FFE08A; border-radius:10px; padding:12px; color:#7C5A00;">
+            <strong>Importante:</strong> Este enlace caduca en {expire_hours} horas.
+          </p>
+          <p style="color:#6B7280; font-size:13px;">Si no solicitaste este cambio, ignora este correo.</p>
         """
-        html_content = build_branded_html(inner_html=inner, title_text='Recuperación de contraseña', logo_src=logo_src)
-        text_content = f"""
-        Restablece tu contraseña
+        html_content = build_branded_html(
+            inner_html=inner,
+            title_text='Recuperación de contraseña',
+            logo_src=logo_src,
+            preheader="Tu link de recuperación está listo."
+        )
 
-        Para continuar, visita: {reset_url}
+        text_content = text_block(
+            "Restablece tu contraseña",
+            f"Enlace: {reset_url}",
+            f"Este link caduca en {expire_hours} horas.",
+            "",
+            f"Equipo {BRAND['name']}"
+        )
 
-        Este enlace caduca en {getattr(settings, 'PASSWORD_RESET_EXPIRE_HOURS', getattr(settings, 'EMAIL_VERIFICATION_EXPIRE_HOURS', 24))} horas.
-
-        Equipo Genomia
-        """
-        inline_images = {}
-        logo_bytes = load_logo_bytes()
-        if logo_bytes:
-            inline_images['logo_cid'] = logo_bytes
-        return send_email(to_email=user_email, subject=subject, html_body=html_content, text_body=text_content, inline_images=inline_images or None)
+        ok = send_email(
+            to_email=user_email,
+            subject=subject,
+            html_body=html_content,
+            text_body=text_content,
+            inline_images=inline_images or None
+        )
+        if ok:
+            logger.info(f"Email de reset enviado a {user_email}")
+        return ok
     except Exception as e:
         logger.error(f"Error enviando email de reset a {user_email}: {str(e)}")
         return False

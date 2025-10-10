@@ -1,0 +1,3 @@
+# Local secrets (Gmail OAuth)
+backend/sequoh/config/credentials.json
+backend/sequoh/config/token.json

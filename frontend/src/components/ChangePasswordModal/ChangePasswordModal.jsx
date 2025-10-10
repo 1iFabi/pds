@@ -178,7 +178,6 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
                           d="M12 5c-5 0-9 4.5-10 7 1 2.5 5 7 10 7s9-4.5 10-7c-1-2.5-5-7-10-7zm0 11a4 4 0 110-8 4 4 0 010 8z"
                           fill="currentColor"
                         />
-                        <path d="M4 4l16 16" stroke="currentColor" strokeWidth="2" />
                       </svg>
                     ) : (
                       <svg viewBox="0 0 24 24" width="18" height="18">
@@ -186,6 +185,7 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
                           d="M12 5c-5 0-9 4.5-10 7 1 2.5 5 7 10 7s9-4.5 10-7c-1-2.5-5-7-10-7zm0 11a4 4 0 110-8 4 4 0 010 8z"
                           fill="currentColor"
                         />
+                        <path d="M4 4l16 16" stroke="currentColor" strokeWidth="2" />
                       </svg>
                     )}
                   </button>
@@ -225,7 +225,6 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
                           d="M12 5c-5 0-9 4.5-10 7 1 2.5 5 7 10 7s9-4.5 10-7c-1-2.5-5-7-10-7zm0 11a4 4 0 110-8 4 4 0 010 8z"
                           fill="currentColor"
                         />
-                        <path d="M4 4l16 16" stroke="currentColor" strokeWidth="2" />
                       </svg>
                     ) : (
                       <svg viewBox="0 0 24 24" width="18" height="18">
@@ -233,6 +232,7 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
                           d="M12 5c-5 0-9 4.5-10 7 1 2.5 5 7 10 7s9-4.5 10-7c-1-2.5-5-7-10-7zm0 11a4 4 0 110-8 4 4 0 010 8z"
                           fill="currentColor"
                         />
+                        <path d="M4 4l16 16" stroke="currentColor" strokeWidth="2" />
                       </svg>
                     )}
                   </button>
@@ -300,7 +300,6 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
                           d="M12 5c-5 0-9 4.5-10 7 1 2.5 5 7 10 7s9-4.5 10-7c-1-2.5-5-7-10-7zm0 11a4 4 0 110-8 4 4 0 010 8z"
                           fill="currentColor"
                         />
-                        <path d="M4 4l16 16" stroke="currentColor" strokeWidth="2" />
                       </svg>
                     ) : (
                       <svg viewBox="0 0 24 24" width="18" height="18">
@@ -308,6 +307,7 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
                           d="M12 5c-5 0-9 4.5-10 7 1 2.5 5 7 10 7s9-4.5 10-7c-1-2.5-5-7-10-7zm0 11a4 4 0 110-8 4 4 0 010 8z"
                           fill="currentColor"
                         />
+                        <path d="M4 4l16 16" stroke="currentColor" strokeWidth="2" />
                       </svg>
                     )}
                   </button>
