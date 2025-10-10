@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { HashLink } from 'react-router-hash-link';
+import { apiRequest, API_ENDPOINTS } from "../../config/api";
 import "./Contacto.css";
 
 export default function Contacto() {
@@ -68,6 +69,42 @@ export default function Contacto() {
     }
   };
 
+  const [form, setForm] = useState({ nombre: "", email: "", mensaje: "" });
+  const [sending, setSending] = useState(false);
+  const [feedback, setFeedback] = useState(null); // { type: 'ok' | 'error', msg: string }
+
+  const onChange = (e) => {
+    const { name, value } = e.target;
+    setForm((f) => ({ ...f, [name]: value }));
+  };
+
+  const onSubmit = async (e) => {
+    e.preventDefault();
+    setFeedback(null);
+    setSending(true);
+    try {
+      const resp = await apiRequest(API_ENDPOINTS.CONTACT, {
+        method: 'POST',
+        body: JSON.stringify({
+          nombre: form.nombre.trim(),
+          email: form.email.trim(),
+          mensaje: form.mensaje.trim(),
+        }),
+      });
+      if (resp.ok) {
+        setFeedback({ type: 'ok', msg: '¡Gracias! Tu mensaje fue enviado.' });
+        setForm({ nombre: "", email: "", mensaje: "" });
+      } else {
+        const err = resp.data?.error || 'No se pudo enviar el mensaje. Inténtalo nuevamente.';
+        setFeedback({ type: 'error', msg: err });
+      }
+    } catch (err) {
+      setFeedback({ type: 'error', msg: 'Error de conexión. Revisa tu red.' });
+    } finally {
+      setSending(false);
+    }
+  };
+
   return (
     <footer className="ft" id="contacto" role="contentinfo" data-nav-theme="light">
       <div className="ft__top">
@@ -126,51 +163,20 @@ export default function Contacto() {
           <section className="ft__col ft__contact" aria-label="Contáctanos">
             <h4 className="ft__title">Contáctanos</h4>
             <p className="ft__muted">¿Tienes alguna duda? Escríbenos.</p>
-            <form className="ft__contact-form" onSubmit={handleSubmit}>
+            <form className="ft__contact-form" onSubmit={onSubmit} noValidate>
               <div className="ft__row">
-                <input 
-                  type="text" 
-                  name="nombre" 
-                  placeholder="Nombre*" 
-                  aria-label="Nombre" 
-                  value={formData.nombre}
-                  onChange={handleInputChange}
-                  disabled={isSubmitting}
-                  required 
-                />
-                <input 
-                  type="email" 
-                  name="email" 
-                  placeholder="Email*" 
-                  aria-label="Email" 
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  disabled={isSubmitting}
-                  required 
-                />
+                <input type="text" name="nombre" value={form.nombre} onChange={onChange} placeholder="Nombre*" aria-label="Nombre" required />
+                <input type="email" name="email" value={form.email} onChange={onChange} placeholder="Email*" aria-label="Email" required />
               </div>
 
-              <textarea 
-                name="mensaje" 
-                rows="4" 
-                placeholder="Tu mensaje...*" 
-                aria-label="Mensaje" 
-                value={formData.mensaje}
-                onChange={handleInputChange}
-                disabled={isSubmitting}
-                required 
-              />
-              
-              {submitMessage.text && (
-                <div className={`ft__message ft__message--${submitMessage.type}`}>
-                  {submitMessage.text}
+              <textarea name="mensaje" rows="4" value={form.mensaje} onChange={onChange} placeholder="Tu mensaje...*" aria-label="Mensaje" required />
+              <button type="submit" className="ft__btn" disabled={sending}>{sending ? 'Enviando...' : 'Enviar'}</button>
+              <small className="ft__fine">Usaremos tu correo solo para responderte.</small>
+              {feedback && (
+                <div role="status" className={`ft__feedback ${feedback.type}`} style={{ marginTop: 8 }}>
+                  {feedback.msg}
                 </div>
               )}
-              
-              <button type="submit" className="ft__btn" disabled={isSubmitting}>
-                {isSubmitting ? 'Enviando...' : 'Enviar'}
-              </button>
-              <small className="ft__fine">Usaremos tu correo solo para responderte.</small>
             </form>
           </section>
         </div>

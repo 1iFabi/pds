@@ -73,24 +73,25 @@ const Register = () => {
   const toast = useToast();
 
   const handleSubmit = async () => {
+    // Validaciones del último paso: si fallan, impedir finalizar devolviendo false
     if (!isPasswordValid) {
       alert('La contraseña no cumple con todos los requisitos');
-      return;
+      return false;
     }
 
     if (!/^\+569\d{8}$/.test((formData.telefono || '').trim())) {
       alert('El teléfono debe tener formato +569XXXXXXXX');
-      return;
+      return false;
     }
     
     if (!passwordsMatch) {
       alert('Las contraseñas no coinciden');
-      return;
+      return false;
     }
     
     if (!formData.terminos) {
       alert('Debes aceptar los términos y condiciones');
-      return;
+      return false;
     }
     
     // No necesitamos limpiar errores porque los toasts se autogestionan
@@ -122,10 +123,12 @@ const Register = () => {
             navigate('/login');
           }, 2000);
         }
+        // Permitir finalizar el stepper
+        return true;
       } else {
         const errorMessage = result.data.error || 'Error en el registro';
         
-        // Detectar si el correo ya existe y mostrar toast con acción
+        // Detectar si el correo ya existe y mostrar toast con acción, sin finalizar el stepper
         if (result.data.email_exists) {
           toast.error(errorMessage, {
             duration: 7000,
@@ -136,16 +139,18 @@ const Register = () => {
               }
             }
           });
+          return false;
         } else {
           // Otros errores sin acción
           toast.error(errorMessage);
+          return false;
         }
       }
     } catch (error) {
       console.error('Error de conexión:', error);
       toast.error('Error de conexión con el servidor. Verifica tu conexión a internet.');
+      return false;
     }
-    // No establecemos isLoading aquí porque el Stepper lo maneja
   };
 
   const handleLoginClick = (e) => {
