@@ -233,24 +233,48 @@ def get_gmail_service():
     cred_path = getattr(settings, 'GMAIL_CREDENTIALS_FILE', os.path.join(settings.BASE_DIR, 'config', 'credentials.json'))
     token_path = getattr(settings, 'GMAIL_TOKEN_FILE', os.path.join(settings.BASE_DIR, 'config', 'token.json'))
 
+    logger.info(f"Gmail: cred_path={cred_path} token_path={token_path}")
+
+    # 1) Cargar token si existe
     if os.path.exists(token_path):
         try:
             creds = Credentials.from_authorized_user_file(token_path, SCOPES)
-        except Exception:
+            logger.info("Gmail: token cargado desde archivo")
+        except Exception as e:
+            logger.error(f"Gmail: error leyendo token: {e}")
             creds = None
+    else:
+        logger.warning("Gmail: token.json no existe en la ruta indicada")
 
+    # 2) Si está expirado pero tiene refresh_token, intentar refrescar
+    if creds and not creds.valid:
+        if creds.expired and creds.refresh_token:
+            try:
+                creds.refresh(Request())
+                logger.info("Gmail: token refrescado correctamente")
+            except Exception as e:
+                logger.error(f"Gmail: error refrescando token: {e}")
+
+    # 3) Si sigue inválido, decidir según entorno
     if not creds or not creds.valid:
-        if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-        else:
+        if getattr(settings, 'DEBUG', False):
+            # Solo en desarrollo intentamos flujo interactivo (abre navegador)
+            logger.info("Gmail: iniciando flujo OAuth local (solo DEBUG)")
             flow = InstalledAppFlow.from_client_secrets_file(cred_path, SCOPES)
             creds = flow.run_local_server(port=0)
-        try:
-            os.makedirs(os.path.dirname(token_path), exist_ok=True)
-            with open(token_path, 'w', encoding='utf-8') as f:
-                f.write(creds.to_json())
-        except Exception:
-            pass
+            try:
+                os.makedirs(os.path.dirname(token_path), exist_ok=True)
+                with open(token_path, 'w', encoding='utf-8') as f:
+                    f.write(creds.to_json())
+                logger.info("Gmail: nuevo token guardado")
+            except Exception as e:
+                logger.warning(f"Gmail: no se pudo guardar el token: {e}")
+        else:
+            # En producción, fallar con mensaje claro (no se puede abrir navegador)
+            raise RuntimeError(
+                "Gmail API: token inválido o ausente en producción. "
+                "Asegura GMAIL_TOKEN_FILE con refresh_token válido o usa variables de entorno para apuntar al token."
+            )
 
     return build('gmail', 'v1', credentials=creds)
 
