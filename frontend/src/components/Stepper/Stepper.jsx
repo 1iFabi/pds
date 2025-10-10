@@ -31,7 +31,8 @@ export default function Stepper({
   const updateStep = newStep => {
     setCurrentStep(newStep);
     if (newStep > totalSteps) {
-      onFinalStepCompleted();
+      // Finalización controlada desde handleComplete
+      // No invocar onFinalStepCompleted aquí para permitir cancelación asíncrona
     } else {
       onStepChange(newStep);
     }
@@ -54,11 +55,20 @@ export default function Stepper({
     }
   };
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
     // Validar el último paso antes de completar
     if (validateStep(currentStep)) {
-      setDirection(1);
-      updateStep(totalSteps + 1);
+      // Permitir que el consumidor cancele la finalización devolviendo false
+      try {
+        const result = onFinalStepCompleted();
+        const proceed = typeof result === 'boolean' ? result : (typeof result?.then === 'function' ? await result : true);
+        if (proceed !== false) {
+          setDirection(1);
+          updateStep(totalSteps + 1);
+        }
+      } catch (e) {
+        // Si hay excepción, no finalizar
+      }
     }
   };
 

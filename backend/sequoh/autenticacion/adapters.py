@@ -3,14 +3,34 @@ from django.utils.translation import gettext_lazy as _
 from .email_utils import send_email
 
 class GmailAPIAccountAdapter(DefaultAccountAdapter):
-    """Adapter de allauth que envía correos vía Gmail API usando email_utils.send_email.
+    """Adapter de allauth que envía correos vía Gmail API usando email_utils.
 
-    Este adapter intercepta TODOS los correos que dispara allauth (confirmación,
-    reset password, etc.) y los reenvía con Gmail API en lugar del backend SMTP.
+    - Para confirmación de correo, genera un correo 100% alineado al branding con
+      send_verification_email (evita textos por defecto como [example.com]).
+    - Para el resto de plantillas, respeta el render de allauth y lo envuelve
+      con el layout de marca.
     """
 
     def send_mail(self, template_prefix, email, context):
-        # Usa el renderizador de allauth para construir asunto/cuerpos
+        # Caso especial: confirmación de correo
+        try:
+            if template_prefix.endswith('account/email/email_confirmation') and 'activate_url' in context:
+                from .email_utils import send_verification_email
+                user_name = (getattr(getattr(context, 'get', lambda k, d=None: None)('user'), 'first_name', None)
+                             or getattr(context.get('user'), 'username', '') if isinstance(context, dict) else '')
+                # Fallback robusto si context no es dict
+                if not user_name and isinstance(context, dict):
+                    u = context.get('user')
+                    if u is not None:
+                        user_name = getattr(u, 'first_name', '') or getattr(u, 'username', '')
+                activate_url = context['activate_url'] if isinstance(context, dict) else ''
+                send_verification_email(email, user_name, activate_url)
+                return
+        except Exception:
+            # Si algo sale mal, caemos al flujo genérico
+            pass
+
+        # Flujo genérico: render de allauth, luego envolvemos con branding
         message = self.render_mail(template_prefix, email, context)
         subject = message.subject
         text_body = message.body or ""
@@ -23,14 +43,11 @@ class GmailAPIAccountAdapter(DefaultAccountAdapter):
                     html_body = content
                     break
         
-        from .email_utils import build_branded_html
+        from .email_utils import build_branded_html, send_email
         if html_body:
-            # Envolver el HTML que genera allauth dentro del layout de Genomia
             html_body = build_branded_html(html_body, title_text=None)
         else:
-            # Si no hay HTML, generamos uno mínimo basado en el texto
             html_body = build_branded_html(f"<pre style=\"white-space:pre-wrap\">{text_body}</pre>")
 
-        # Envía con Gmail API (nuestra utilidad)
         send_email(to_email=email, subject=subject, html_body=html_body, text_body=text_body)
         # No llamamos a message.send() para evitar SMTP
