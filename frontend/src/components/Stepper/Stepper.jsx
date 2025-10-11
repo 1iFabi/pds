@@ -23,6 +23,7 @@ export default function Stepper({
 }) {
   const [currentStep, setCurrentStep] = useState(initialStep);
   const [direction, setDirection] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const stepsArray = Children.toArray(children);
   const totalSteps = stepsArray.length;
   const isCompleted = currentStep > totalSteps;
@@ -128,8 +129,13 @@ export default function Stepper({
                   {backButtonText}
                 </button>
               )}
-              <button onClick={isLastStep ? handleComplete : handleNext} className="next-button" {...nextButtonProps}>
-                {isLastStep ? 'Registrar' : nextButtonText}
+              <button 
+                onClick={isLastStep ? handleComplete : handleNext} 
+                className="next-button" 
+                disabled={isSubmitting}
+                {...nextButtonProps}
+              >
+                {isSubmitting ? 'Procesando...' : (isLastStep ? 'Registrar' : nextButtonText)}
               </button>
             </div>
           </div>

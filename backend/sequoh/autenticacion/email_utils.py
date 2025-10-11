@@ -13,12 +13,14 @@ import base64
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.image import MIMEImage
+from email.utils import parseaddr, formataddr
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from django.conf import settings
 import os
+import json
 import logging
 
 logger = logging.getLogger(__name__)
@@ -58,7 +60,6 @@ def _asset_url(path: str) -> str:
     if not path.startswith('/'):
         path = '/' + path
     return f"{base}{path}"
-
 
 def load_logo_bytes() -> bytes | None:
     """
@@ -230,48 +231,112 @@ def text_block(*lines: str) -> str:
 #   Gmail Service & Send
 # =========================
 def get_gmail_service():
-    """Obtiene el servicio de Gmail usando OAuth2 y rutas configurables."""
     creds = None
     cred_path = getattr(settings, 'GMAIL_CREDENTIALS_FILE', os.path.join(settings.BASE_DIR, 'config', 'credentials.json'))
     token_path = getattr(settings, 'GMAIL_TOKEN_FILE', os.path.join(settings.BASE_DIR, 'config', 'token.json'))
 
-    # Cargar token si existe
-    if os.path.exists(token_path):
+    # Permitir credenciales desde variables de entorno (más cómodo en Railway)
+    token_json_env = os.environ.get('GMAIL_TOKEN_JSON') or getattr(settings, 'GMAIL_TOKEN_JSON', None)
+    cred_json_env = os.environ.get('GMAIL_CREDENTIALS_JSON') or getattr(settings, 'GMAIL_CREDENTIALS_JSON', None)
+
+    logger.info(f"Gmail: cred_path={cred_path} token_path={token_path} token_env={'yes' if token_json_env else 'no'}")
+
+    # 1) Cargar token desde ENV si está presente
+    if token_json_env and not creds:
         try:
-            creds = Credentials.from_authorized_user_file(token_path, SCOPES)
-        except Exception:
+            token_dict = json.loads(token_json_env)
+            creds = Credentials.from_authorized_user_info(token_dict, SCOPES)
+            logger.info("Gmail: token cargado desde variable de entorno")
+        except Exception as e:
+            logger.error(f"Gmail: error leyendo token desde ENV: {e}")
             creds = None
 
-    # Si no hay credenciales válidas, ejecutar flujo OAuth
-    if not creds or not creds.valid:
-        if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
+    # 2) Si no vino por ENV, intentar desde archivo
+    if not creds:
+        if os.path.exists(token_path):
+            try:
+                creds = Credentials.from_authorized_user_file(token_path, SCOPES)
+                logger.info("Gmail: token cargado desde archivo")
+            except Exception as e:
+                logger.error(f"Gmail: error leyendo token: {e}")
+                creds = None
         else:
-            flow = InstalledAppFlow.from_client_secrets_file(cred_path, SCOPES)
-            creds = flow.run_local_server(port=0)
-        # Guardar token en JSON
-        try:
-            os.makedirs(os.path.dirname(token_path), exist_ok=True)
-            with open(token_path, 'w', encoding='utf-8') as f:
-                f.write(creds.to_json())
-        except Exception:
-            pass
+            logger.warning("Gmail: token.json no existe en la ruta indicada")
 
-    service = build('gmail', 'v1', credentials=creds)
-    return service
+    # 3) Si está expirado pero tiene refresh_token, intentar refrescar
+    if creds and not creds.valid:
+        if creds.expired and creds.refresh_token:
+            try:
+                creds.refresh(Request())
+                logger.info("Gmail: token refrescado correctamente")
+                # Guardar token refrescado solo si estamos trabajando con archivo (no sobreescribimos ENV)
+                if not token_json_env:
+                    try:
+                        os.makedirs(os.path.dirname(token_path), exist_ok=True)
+                        with open(token_path, 'w', encoding='utf-8') as f:
+                            f.write(creds.to_json())
+                        logger.info("Gmail: token refrescado guardado en archivo")
+                    except Exception as e:
+                        logger.warning(f"Gmail: no se pudo guardar el token refrescado: {e}")
+            except Exception as e:
+                logger.error(f"Gmail: error refrescando token: {e}")
+
+    # 4) Si sigue inválido, decidir según entorno
+    if not creds or not creds.valid:
+        if getattr(settings, 'DEBUG', False):
+            # Solo en desarrollo intentamos flujo interactivo (abre navegador)
+            logger.info("Gmail: iniciando flujo OAuth local (solo DEBUG)")
+            # Preferir credenciales desde ENV si se proporcionaron
+            if cred_json_env:
+                try:
+                    temp_path = os.path.join(os.path.dirname(token_path), 'credentials_env.json')
+                    os.makedirs(os.path.dirname(temp_path), exist_ok=True)
+                    with open(temp_path, 'w', encoding='utf-8') as f:
+                        f.write(cred_json_env)
+                    flow = InstalledAppFlow.from_client_secrets_file(temp_path, SCOPES)
+                except Exception:
+                    flow = InstalledAppFlow.from_client_secrets_file(cred_path, SCOPES)
+            else:
+                flow = InstalledAppFlow.from_client_secrets_file(cred_path, SCOPES)
+
+            creds = flow.run_local_server(port=0)
+            try:
+                os.makedirs(os.path.dirname(token_path), exist_ok=True)
+                with open(token_path, 'w', encoding='utf-8') as f:
+                    f.write(creds.to_json())
+                logger.info("Gmail: nuevo token guardado")
+            except Exception as e:
+                logger.warning(f"Gmail: no se pudo guardar el token: {e}")
+        else:
+            # En producción, fallar con mensaje claro (no se puede abrir navegador)
+            raise RuntimeError(
+                "Gmail API: token inválido o ausente en producción. "
+                "Provee GMAIL_TOKEN_JSON (ENV) con refresh_token válido o GMAIL_TOKEN_FILE apuntando a token.json."
+            )
+
+    return build('gmail', 'v1', credentials=creds)
 
 
 def send_email(to_email: str,
                subject: str,
                html_body: str | None = None,
                text_body: str = "",
-               inline_images: dict[str, bytes] | None = None) -> bool:
-    """Envía un email genérico usando la API de Gmail (texto y/o HTML)."""
+               inline_images: dict[str, bytes] | None = None,
+               *,
+               from_email: str | None = None,
+               from_name: str | None = None,
+               reply_to: str | None = None) -> bool:
+    """Envía un email genérico usando la API de Gmail (texto y/o HTML).
+
+    Parámetros extra:
+    - from_email: dirección de remitente a usar (por defecto DEFAULT_FROM_EMAIL)
+    - from_name: nombre visible del remitente (se formatea como "Nombre <email>")
+    - reply_to: dirección para responder (Reply-To)
+    """
     try:
         service = get_gmail_service()
 
         if inline_images:
-            # multipart/related -> alternative (text, html)
             msg = MIMEMultipart('related')
             alt = MIMEMultipart('alternative')
             if text_body:
@@ -279,12 +344,10 @@ def send_email(to_email: str,
             if html_body:
                 alt.attach(MIMEText(html_body, 'html', 'utf-8'))
             msg.attach(alt)
-            # Adjuntar imágenes inline por CID
-            for cid, content in inline_images.items():
+            for cid, content in (inline_images or {}).items():
                 try:
                     img = MIMEImage(content)
                 except Exception:
-                    # fallback content-type genérico
                     img = MIMEImage(content, _subtype='png')
                 img.add_header('Content-ID', f'<{cid}>')
                 img.add_header('Content-Disposition', 'inline', filename=f'{cid}.png')
@@ -296,17 +359,25 @@ def send_email(to_email: str,
                 msg.attach(MIMEText(text_body, 'plain', 'utf-8'))
             msg.attach(MIMEText(html_body, 'html', 'utf-8'))
         else:
-            # Solo texto
             msg = MIMEText(text_body or "", 'plain', 'utf-8')
 
-        from_addr = getattr(settings, 'DEFAULT_FROM_EMAIL', 'no-reply@example.com')
+        # Construir encabezados usando parseaddr/formataddr para evitar duplicados
+        default_from = getattr(settings, 'DEFAULT_FROM_EMAIL', 'no-reply@example.com')
+        raw_from = (from_email or default_from or '').strip()
+        name_in_default, email_in_default = parseaddr(raw_from)
+        # Si se pasó from_name, tiene prioridad para el nombre visible
+        display_name = (from_name or name_in_default or '')
+        from_header = formataddr((display_name, email_in_default)) if email_in_default else raw_from
+
         msg['Subject'] = subject
-        msg['From'] = from_addr
+        msg['From'] = from_header
         msg['To'] = to_email
+        if reply_to:
+            msg['Reply-To'] = reply_to
 
         raw = base64.urlsafe_b64encode(msg.as_bytes()).decode('utf-8')
         result = service.users().messages().send(userId='me', body={'raw': raw}).execute()
-        logger.info(f"Email enviado a {to_email} - asunto: {subject} - id: {result.get('id')} ")
+        logger.info(f"Email enviado a {to_email} - asunto: {subject} - id: {result.get('id')}")
         return True
     except Exception as e:
         logger.error(f"Error enviando email a {to_email}: {e}")
@@ -326,6 +397,7 @@ def send_verification_email(user_email: str, user_name: str, verification_url: s
         # Preparar logo inline (CID) si hay archivo disponible
         inline_images = {}
         logo_bytes = load_logo_bytes()
+        logo_src = None
         if logo_bytes:
             inline_images['logo_cid'] = logo_bytes
             logo_src = 'cid:logo_cid'
@@ -367,6 +439,8 @@ def send_verification_email(user_email: str, user_name: str, verification_url: s
             html_body=html_content,
             text_body=text_content,
             inline_images=inline_images or None,
+            from_name="Genomia",
+            from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'proyectogenomia@gmail.com'),
         )
         if ok:
             logger.info(f"Email de verificación enviado a {user_email}")
@@ -388,6 +462,7 @@ def send_welcome_email(user_email: str, user_name: str) -> bool:
 
         inline_images = {}
         logo_bytes = load_logo_bytes()
+        logo_src = None
         if logo_bytes:
             inline_images['logo_cid'] = logo_bytes
             logo_src = 'cid:logo_cid'
@@ -423,6 +498,8 @@ def send_welcome_email(user_email: str, user_name: str) -> bool:
             html_body=html_content,
             text_body=text_content,
             inline_images=inline_images or None,
+            from_name="Genomia",
+            from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'proyectogenomia@gmail.com'),
         )
         if ok:
             logger.info(f"Email de bienvenida enviado a {user_email}")
@@ -431,13 +508,12 @@ def send_welcome_email(user_email: str, user_name: str) -> bool:
         logger.error(f"Error enviando email de bienvenida a {user_email}: {str(e)}")
         return False
 
-
 def send_password_reset_email(user_email: str, user_name: str, reset_url: str) -> bool:
-    """Envía un email de restablecimiento de contraseña con botón al frontend."""
     try:
         subject = 'Restablece tu contraseña'
         inline_images = {}
         logo_bytes = load_logo_bytes()
+        logo_src = None
         if logo_bytes:
             inline_images['logo_cid'] = logo_bytes
             logo_src = 'cid:logo_cid'
@@ -486,4 +562,73 @@ def send_password_reset_email(user_email: str, user_name: str, reset_url: str) -
         return ok
     except Exception as e:
         logger.error(f"Error enviando email de reset a {user_email}: {str(e)}")
+        return False
+
+def send_contact_form_email(nombre: str, email: str, mensaje: str) -> bool:
+    """
+    Envía un email de contacto desde el formulario web a proyectogenomia@gmail.com.
+    - From visible: "Genomia · Contacto <proyectogenomia@gmail.com>"
+    - Reply-To: email del usuario (para responder directo a la persona)
+    """
+    try:
+        contact_email = getattr(settings, 'CONTACT_EMAIL', 'proyectogenomia@gmail.com')
+        subject = f'Nuevo mensaje de contacto de {nombre}'
+
+        inline_images = {}
+        logo_bytes = load_logo_bytes()
+        logo_src = None
+        if logo_bytes:
+            inline_images['logo_cid'] = logo_bytes
+            logo_src = 'cid:logo_cid'
+
+        html_content = build_modern_email(
+            title_text="Contacto",
+            preheader="Nuevo mensaje desde el sitio de Genomia.",
+            logo_src=logo_src,
+            inner_html=f"""
+              <div style="background:#F3F4F6;border-left:4px solid {BRAND_PRIMARY};padding:16px;border-radius:8px;margin-bottom:20px;">
+                <p style="margin:0 0 8px 0;color:#6B7280;font-size:12px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase">Nuevo Mensaje de Contacto</p>
+                <h2 style="margin:0;color:{BRAND_DARK};font-size:18px">De: {nombre}</h2>
+              </div>
+
+              <div style="display:inline-block;background:#F9FAFB;border:1px solid #E5E7EB;border-radius:8px;padding:10px 12px;margin-bottom:16px;">
+                <span style="color:#6B7280;font-size:12px;font-weight:700;letter-spacing:0.5px">Email:</span>
+                <a href="mailto:{email}" style="color:{BRAND_PRIMARY};font-weight:700;margin-left:8px">{email}</a>
+              </div>
+
+              <div style="background:#FFFFFF;border:1px solid #E5E7EB;border-radius:12px;padding:18px 16px;">
+                <p style="margin:0 0 10px 0;color:#6B7280;font-size:12px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase">Mensaje</p>
+                <div style="color:#111827;font-size:15px;line-height:1.7;white-space:pre-wrap">{mensaje}</div>
+              </div>
+
+              <p class="muted" style="color:#6B7280;font-size:12px;line-height:1.6;margin-top:18px">
+                Puedes responder directamente a <a href="mailto:{email}" style="color:{BRAND_PRIMARY};font-weight:700">{email}</a>.
+              </p>
+            """,
+        )
+
+        text_content = f"""Nuevo mensaje de contacto
+
+De: {nombre}
+Email: {email}
+
+Mensaje:
+{mensaje}
+
+---
+Puedes responder directamente a {email}
+"""
+
+        return send_email(
+            to_email=contact_email,
+            subject=subject,
+            html_body=html_content,
+            text_body=text_content,
+            inline_images=inline_images or None,
+            from_name="Genomia · Contacto",  # <- evita "me"
+            from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'proyectogenomia@gmail.com'),
+            reply_to=email,  # <- responde directo al usuario
+        )
+    except Exception as e:
+        logger.error(f"Error enviando email de contacto: {str(e)}")
         return False

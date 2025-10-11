@@ -35,11 +35,18 @@ export default function Login() {
 // Detectar si hay un token de reset en la URL
   useEffect(() => {
     const token = searchParams.get('token');
+    const forgot = searchParams.get('forgot');
+    
     if (token) {
       // Mostrar SOLO el modal de restablecer contraseña, sin modales intermedios
       setResetToken(token);
       setShowResetPassword(true);
       // Limpiar la URL después de obtener el token
+      window.history.replaceState({}, document.title, '/login');
+    } else if (forgot === 'true') {
+      // Abrir modal de "Olvidé mi contraseña"
+      setShowForgotPassword(true);
+      // Limpiar la URL
       window.history.replaceState({}, document.title, '/login');
     }
   }, [searchParams]);
