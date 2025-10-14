@@ -24,32 +24,30 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-isazy3kl)20lf!i%30g4xj1$s8mjz+an9pq6smoa=$!1-eqzty')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('RAILWAY_ENVIRONMENT') != 'production'
+DEBUG = os.environ.get('ENVIRONMENT', 'development') != 'production'
 
 # Hosts permitidos (sin cadenas vacías)
 ALLOWED_HOSTS = [h for h in [
-    os.getenv("RAILWAY_PUBLIC_DOMAIN", ""),
+    os.getenv("RENDER_EXTERNAL_HOSTNAME", ""),
     os.getenv("APP_DOMAIN", ""),
-    "pdsgenomia.up.railway.app",
-    ".railway.app",
     "localhost",
     "127.0.0.1",
 ] if h]
 
-# Obtener la URL de Railway dinámicamente
-RAILWAY_PUBLIC_DOMAIN = os.getenv("RAILWAY_PUBLIC_DOMAIN")
+# Obtener el hostname de Render dinámicamente
+RENDER_EXTERNAL_HOSTNAME = os.getenv("RENDER_EXTERNAL_HOSTNAME")
 
 # ORÍGENES DE CONFIANZA CSRF (única definición)
 CSRF_TRUSTED_ORIGINS = [
     "https://pds-kappa.vercel.app",
     "http://localhost:5173",
     "http://127.0.0.1:5173",
-    "https://pdsgenomia.up.railway.app",
+    "https://pds-7idd.onrender.com",
 ]
-if RAILWAY_PUBLIC_DOMAIN:
+if RENDER_EXTERNAL_HOSTNAME:
     CSRF_TRUSTED_ORIGINS += [
-        f"https://{RAILWAY_PUBLIC_DOMAIN}",
-        f"http://{RAILWAY_PUBLIC_DOMAIN}",
+        f"https://{RENDER_EXTERNAL_HOSTNAME}",
+        f"http://{RENDER_EXTERNAL_HOSTNAME}",
     ]
 
 # CORS (única definición)
@@ -59,12 +57,12 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:5173",
     "http://localhost:3000",
     "http://127.0.0.1:3000",
-    "https://pdsgenomia.up.railway.app",
+    "https://pds-7idd.onrender.com",
 ]
-if RAILWAY_PUBLIC_DOMAIN:
+if RENDER_EXTERNAL_HOSTNAME:
     CORS_ALLOWED_ORIGINS += [
-        f"https://{RAILWAY_PUBLIC_DOMAIN}",
-        f"http://{RAILWAY_PUBLIC_DOMAIN}",
+        f"https://{RENDER_EXTERNAL_HOSTNAME}",
+        f"http://{RENDER_EXTERNAL_HOSTNAME}",
     ]
 
 
@@ -129,11 +127,11 @@ WSGI_APPLICATION = 'sequoh.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-# Database - PostgreSQL en producción (Railway), SQLite en local
+# Database - PostgreSQL en producción (Render), SQLite en local
 import dj_database_url
 
 if os.environ.get('DATABASE_URL'):
-    # Producción: PostgreSQL desde Railway
+    # Producción: PostgreSQL desde Render
     DATABASES = {
         'default': dj_database_url.config(
             default=os.environ.get('DATABASE_URL'),
@@ -189,7 +187,7 @@ STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# Seguridad tras proxy (Railway/Reverse Proxy)
+# Seguridad tras proxy (Render/Reverse Proxy)
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 CSRF_COOKIE_SECURE = not DEBUG
 SESSION_COOKIE_SECURE = not DEBUG
@@ -259,7 +257,7 @@ CORS_ALLOW_HEADERS = [
     'x-requested-with',
 ]
 
-# Cookies de sesión/CSRF. En producción con dominios distintos (Vercel/Railway)
+# Cookies de sesión/CSRF. En producción con dominios distintos (Vercel/Render)
 # puede requerirse SameSite=None + Secure=True para que el navegador acepte cookies cross-site.
 SESSION_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_SAMESITE = 'Lax'

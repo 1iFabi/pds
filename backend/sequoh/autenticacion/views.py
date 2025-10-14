@@ -69,7 +69,7 @@ class LoginAPIView(APIView):
                             "requires_verification": True
                         }, status=400)
 
-                # Generar JWT (stateless) para Vercel/Railway
+                # Generar JWT (stateless) para Vercel/Render
                 token = encode_jwt({
                     "sub": str(user.id),
                     "email": user.email,
