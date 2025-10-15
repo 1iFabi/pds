@@ -235,7 +235,7 @@ def get_gmail_service():
     cred_path = getattr(settings, 'GMAIL_CREDENTIALS_FILE', os.path.join(settings.BASE_DIR, 'config', 'credentials.json'))
     token_path = getattr(settings, 'GMAIL_TOKEN_FILE', os.path.join(settings.BASE_DIR, 'config', 'token.json'))
 
-    # Permitir credenciales desde variables de entorno (más cómodo en Railway)
+    # Permitir credenciales desde variables de entorno (más cómodo en producción)
     token_json_env = os.environ.get('GMAIL_TOKEN_JSON') or getattr(settings, 'GMAIL_TOKEN_JSON', None)
     cred_json_env = os.environ.get('GMAIL_CREDENTIALS_JSON') or getattr(settings, 'GMAIL_CREDENTIALS_JSON', None)
 
