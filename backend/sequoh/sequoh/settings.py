@@ -217,10 +217,14 @@ ACCOUNT_ADAPTER = 'autenticacion.adapters.GmailAPIAccountAdapter'
 # Verificación obligatoria y URLs de redirección tras confirmar
 REQUIRE_EMAIL_VERIFICATION = True
 EMAIL_VERIFICATION_EXPIRE_HOURS = 24
-# Dominio del FRONTEND: local en DEBUG, Vercel en producción (ajustable por env)
+
+# Dominio del FRONTEND: detecta automáticamente el entorno
+# En Render, usa DATABASE_URL como indicador de producción
+is_production = os.environ.get('DATABASE_URL') is not None or os.environ.get('RENDER') is not None
+
 FRONTEND_DOMAIN = os.environ.get(
     'FRONTEND_DOMAIN',
-    'http://localhost:5173' if DEBUG else 'https://pds-kappa.vercel.app'
+    'https://pds-kappa.vercel.app' if is_production else 'http://localhost:5173'
 )
 # URL absoluta de redirección al login del FRONTEND
 FRONTEND_LOGIN_REDIRECT = os.environ.get(
