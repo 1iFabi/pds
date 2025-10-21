@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import User
-from .models import Profile, EmailVerification, WelcomeStatus, PasswordResetToken
+from .models import Profile, EmailVerification, WelcomeStatus, PasswordResetToken, ServiceStatus
 
 
 class ProfileInline(admin.StackedInline):
@@ -10,7 +10,7 @@ class ProfileInline(admin.StackedInline):
     can_delete = False
     verbose_name = 'Perfil'
     verbose_name_plural = 'Perfil'
-    fields = ('phone',)
+    fields = ('phone', 'service_status')
 
 
 class CustomUserAdmin(BaseUserAdmin):
@@ -18,8 +18,11 @@ class CustomUserAdmin(BaseUserAdmin):
     inlines = (ProfileInline,)
     
     # Columnas mostradas en la lista
-    list_display = ('username', 'email', 'first_name', 'last_name', 'get_phone', 'is_staff', 'is_active', 'date_joined')
-    list_filter = ('is_staff', 'is_active', 'date_joined')
+    list_display = (
+        'username', 'email', 'first_name', 'last_name',
+        'get_phone', 'get_service_status', 'is_staff', 'is_active', 'date_joined'
+    )
+    list_filter = ('is_staff', 'is_active', 'date_joined',)
     search_fields = ('username', 'email', 'first_name', 'last_name')
     ordering = ('-date_joined',)
     
@@ -39,6 +42,13 @@ class CustomUserAdmin(BaseUserAdmin):
             return '-'
     get_phone.short_description = 'Teléfono'
 
+    def get_service_status(self, obj):
+        try:
+            return obj.profile.service_status or ServiceStatus.NO_PURCHASED
+        except Profile.DoesNotExist:
+            return ServiceStatus.NO_PURCHASED
+    get_service_status.short_description = 'Estado servicio'
+
 
 # Desregistrar el UserAdmin por defecto y registrar el personalizado
 admin.site.unregister(User)
@@ -48,9 +58,9 @@ admin.site.register(User, CustomUserAdmin)
 # Registrar otros modelos
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
-    list_display = ('user', 'phone')
+    list_display = ('user', 'phone', 'service_status', 'service_updated_at')
     search_fields = ('user__username', 'user__email', 'phone')
-    list_filter = ('user__date_joined',)
+    list_filter = ('user__date_joined', 'service_status')
 
 
 @admin.register(EmailVerification)

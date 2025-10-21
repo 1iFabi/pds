@@ -1,7 +1,8 @@
 import React, { useMemo, useState, useEffect } from 'react'
-import { LogOut, Dna, Activity, Heart, Globe, Pill, TestTube, User, ChevronDown, ChevronUp, KeyRound, UserX, Bot, MessageCircle, Grid3x3, Menu, X } from 'lucide-react'
+import { LogOut, Dna, Activity, Heart, Globe, Pill, TestTube, User, ChevronDown, ChevronUp, KeyRound, UserX, Bot, MessageCircle, Grid3x3, Menu, X, Settings, Upload } from 'lucide-react'
 import ChangePasswordModal from '../ChangePasswordModal/ChangePasswordModal.jsx'
 import DeleteAccountModal from '../DeleteAccountModal/DeleteAccountModal.jsx'
+import UploadFileModal from '../UploadFileModal/UploadFileModal.jsx'
 import './Sidebar.css'
 
 const defaultIcons = [Dna, Activity, Heart, Globe, Pill, TestTube]
@@ -11,8 +12,10 @@ const Sidebar = ({ items = [], onLogout, user, isMobileMenuOpen = false, setIsMo
   const [isProfileExpanded, setIsProfileExpanded] = useState(false)
   const [isCategoriesExpanded, setIsCategoriesExpanded] = useState(false)
   const [isAIExpanded, setIsAIExpanded] = useState(false)
+  const [isAdminExpanded, setIsAdminExpanded] = useState(false)
   const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false)
   const [isDeleteAccountModalOpen, setIsDeleteAccountModalOpen] = useState(false)
+  const [isUploadFileModalOpen, setIsUploadFileModalOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
 
   useEffect(() => {
@@ -67,6 +70,11 @@ const Sidebar = ({ items = [], onLogout, user, isMobileMenuOpen = false, setIsMo
   const toggleAI = (e) => {
     e.preventDefault()
     setIsAIExpanded(!isAIExpanded)
+  }
+
+  const toggleAdmin = (e) => {
+    e.preventDefault()
+    setIsAdminExpanded(!isAdminExpanded)
   }
 
   const closeMenuAndNavigate = (href) => (e) => {
@@ -229,6 +237,51 @@ const Sidebar = ({ items = [], onLogout, user, isMobileMenuOpen = false, setIsMo
             </div>
           )}
         </div>
+
+        {/* Sección de Administrador - Solo visible para staff */}
+        {user?.is_staff && (
+          <>
+            {(isExpanded || isMobile) && <div className="sidebar__divider" />}
+            
+            <div className="sidebar__admin-section">
+              <button 
+                type="button" 
+                className="sidebar__nav-item sidebar__admin-toggle"
+                onClick={toggleAdmin}
+                title={!isExpanded && !isMobile ? 'Administrador' : undefined}
+              >
+                <Settings size={20} className="sidebar__nav-icon" />
+                {(isExpanded || isMobile) && (
+                  <>
+                    <span className="sidebar__nav-label">Administrador</span>
+                    {isAdminExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                  </>
+                )}
+              </button>
+
+              {isAdminExpanded && (isExpanded || isMobile) && (
+                <div className="sidebar__admin-content">
+                  <ul className="sidebar__admin-menu">
+                    <li>
+                      <button
+                        type="button"
+                        className="sidebar__admin-item sidebar__admin-button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setIsUploadFileModalOpen(true);
+                          if (isMobile) setIsMobileMenuOpen(false);
+                        }}
+                      >
+                        <Upload size={18} className="sidebar__admin-icon" />
+                        <span>Subir Archivo</span>
+                      </button>
+                    </li>
+                  </ul>
+                </div>
+              )}
+            </div>
+          </>
+        )}
       </nav>
 
       <div className="sidebar__footer">
@@ -259,6 +312,10 @@ const Sidebar = ({ items = [], onLogout, user, isMobileMenuOpen = false, setIsMo
           setIsProfileExpanded(false)
         }}
         userName={displayName}
+      />
+      <UploadFileModal
+        isOpen={isUploadFileModalOpen}
+        onClose={() => setIsUploadFileModalOpen(false)}
       />
       </aside>
     </>

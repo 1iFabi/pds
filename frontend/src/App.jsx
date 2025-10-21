@@ -7,6 +7,8 @@ import Conoce from "./pages/Conoce/Conoce";
 import Login from "./pages/Login/Login";
 import Register from "./pages/Register/Register";
 import Postlogin from "./pages/Postlogin/Postlogin";
+import NoPurchased from "./pages/NoPurchased/NoPurchased";
+import Pending from "./pages/Pending/Pending";
 import ProtectedRoute from "./components/ProtectedRoute";
 import GenomaPricing from "./pages/GenomaPricing/GenomaPricing";
 import SobreNosotros from "./pages/SobreNosotros/SobreNosotros";
@@ -18,6 +20,8 @@ export default function App() {
   const hideNavbar =
     pathname === "/login" ||
     pathname === "/register" ||
+    pathname === "/no-purchased" ||
+    pathname === "/pending" ||
     pathname.startsWith("/dashboard");
 
   return (
@@ -40,6 +44,8 @@ export default function App() {
         />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/no-purchased" element={<ProtectedRoute requireService={false}><NoPurchased /></ProtectedRoute>} />
+        <Route path="/pending" element={<ProtectedRoute requireService={false}><Pending /></ProtectedRoute>} />
         <Route path="/dashboard" element={<ProtectedRoute><Postlogin /></ProtectedRoute>} />
         {/* Catch-all: redirige cualquier ruta desconocida a la página de inicio */}
         <Route path="*" element={<Navigate to="/" replace />} />
