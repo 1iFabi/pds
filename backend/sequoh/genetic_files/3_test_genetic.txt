@@ -1,9 +1,0 @@
-USER_12345
-
-#Enfermedades
-rs334
-rs1815739
-#Rasgos
-rs1800497
-#Farmacogenetica
-rs4680

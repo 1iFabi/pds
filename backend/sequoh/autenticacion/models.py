@@ -87,3 +87,58 @@ class PasswordResetToken(models.Model):
     @property
     def is_expired(self) -> bool:
         return timezone.now() > self.expires_at or self.used
+
+
+class SNP(models.Model):
+    """
+    Modelo para almacenar información de SNPs (Single Nucleotide Polymorphisms)
+    """
+    rsid = models.CharField(max_length=20, verbose_name="rsID")
+    genotipo = models.CharField(max_length=10, verbose_name="Genotipo")
+    fenotipo = models.TextField(verbose_name="Fenotipo")
+    categoria = models.CharField(max_length=50, blank=True, null=True, verbose_name="Categoría")
+    importancia = models.IntegerField(blank=True, null=True, verbose_name="Nivel de importancia")
+
+    class Meta:
+        db_table = 'snps'
+        verbose_name = 'SNP'
+        verbose_name_plural = 'SNPs'
+        unique_together = [('rsid', 'genotipo')]
+        indexes = [
+            models.Index(fields=['rsid']),
+            models.Index(fields=['categoria']),
+        ]
+
+    def __str__(self):
+        return f"SNP({self.rsid}, {self.genotipo})"
+
+
+class UserSNP(models.Model):
+    """
+    Modelo de relación entre usuarios y sus SNPs
+    """
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='user_snps',
+        verbose_name="Usuario"
+    )
+    snp = models.ForeignKey(
+        SNP,
+        on_delete=models.CASCADE,
+        related_name='user_associations',
+        verbose_name="SNP"
+    )
+
+    class Meta:
+        db_table = 'user_snps'
+        verbose_name = 'SNP de Usuario'
+        verbose_name_plural = 'SNPs de Usuarios'
+        unique_together = [('user', 'snp')]
+        indexes = [
+            models.Index(fields=['user']),
+            models.Index(fields=['snp']),
+        ]
+
+    def __str__(self):
+        return f"UserSNP(user={self.user_id}, snp={self.snp_id})"
