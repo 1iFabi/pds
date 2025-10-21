@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import User
-from .models import Profile, EmailVerification, WelcomeStatus, PasswordResetToken, ServiceStatus
+from .models import Profile, EmailVerification, WelcomeStatus, PasswordResetToken, ServiceStatus, SNP, UserSNP
 
 
 class ProfileInline(admin.StackedInline):
@@ -96,3 +96,36 @@ class PasswordResetTokenAdmin(admin.ModelAdmin):
         return obj.is_expired
     is_expired.boolean = True
     is_expired.short_description = 'Expirado'
+
+
+@admin.register(SNP)
+class SNPAdmin(admin.ModelAdmin):
+    list_display = ('rsid', 'genotipo', 'categoria', 'importancia', 'fenotipo_preview')
+    list_filter = ('categoria', 'importancia')
+    search_fields = ('rsid', 'genotipo', 'fenotipo')
+    ordering = ('rsid', 'genotipo')
+    
+    def fenotipo_preview(self, obj):
+        """Muestra un preview del fenotipo"""
+        return obj.fenotipo[:50] + '...' if len(obj.fenotipo) > 50 else obj.fenotipo
+    fenotipo_preview.short_description = 'Fenotipo (preview)'
+
+
+@admin.register(UserSNP)
+class UserSNPAdmin(admin.ModelAdmin):
+    list_display = ('user', 'get_rsid', 'get_genotipo', 'get_categoria')
+    list_filter = ('snp__categoria',)
+    search_fields = ('user__username', 'user__email', 'snp__rsid')
+    raw_id_fields = ('user', 'snp')
+    
+    def get_rsid(self, obj):
+        return obj.snp.rsid
+    get_rsid.short_description = 'rsID'
+    
+    def get_genotipo(self, obj):
+        return obj.snp.genotipo
+    get_genotipo.short_description = 'Genotipo'
+    
+    def get_categoria(self, obj):
+        return obj.snp.categoria or '-'
+    get_categoria.short_description = 'Categoría'

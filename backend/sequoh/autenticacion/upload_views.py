@@ -6,8 +6,13 @@ from django.contrib.auth.models import User
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from .authentication import JWTAuthentication
+from .models import Profile, ServiceStatus
+from .email_utils import send_results_ready_email
 import os
+import logging
 from django.conf import settings
+
+logger = logging.getLogger(__name__)
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -81,15 +86,36 @@ class UploadGeneticFileAPIView(APIView):
                 for chunk in uploaded_file.chunks():
                     destination.write(chunk)
 
-            # TODO: Aquí puedes agregar lógica para procesar el archivo
-            # Por ejemplo: insertar registro en base de datos, iniciar procesamiento, etc.
+            # Actualizar el service_status del usuario a COMPLETED
+            try:
+                profile, created = Profile.objects.get_or_create(user=target_user)
+                profile.service_status = ServiceStatus.COMPLETED
+                profile.save()
+                logger.info(f"Service status actualizado a COMPLETED para usuario {target_user.email}")
+            except Exception as e:
+                logger.error(f"Error actualizando service_status: {str(e)}")
+                # Continuar aunque falle esta parte
+
+            # Enviar email de notificación al usuario
+            user_name = target_user.first_name or target_user.username or target_user.email.split('@')[0]
+            try:
+                email_sent = send_results_ready_email(target_user.email, user_name)
+                if email_sent:
+                    logger.info(f"Email de resultados listos enviado a {target_user.email}")
+                else:
+                    logger.warning(f"No se pudo enviar email de notificación a {target_user.email}")
+            except Exception as e:
+                logger.error(f"Error enviando email de notificación: {str(e)}")
+                # Continuar aunque falle el envío de email
 
             return Response({
                 "success": True,
-                "message": "Archivo subido correctamente",
+                "message": "Archivo subido correctamente. Usuario notificado por email.",
                 "user_email": user_email,
                 "file_name": file_name,
-                "file_size": uploaded_file.size
+                "file_size": uploaded_file.size,
+                "status_updated": True,
+                "email_sent": email_sent if 'email_sent' in locals() else False
             }, status=status.HTTP_201_CREATED)
 
         except Exception as e:
