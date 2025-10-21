@@ -20,8 +20,62 @@ from allauth.account.models import EmailAddress
 from .email_utils import send_welcome_email, send_password_reset_email, send_email, build_branded_html
 from .jwt_utils import encode_jwt
 from .authentication import JWTAuthentication
+from .models import ServiceStatus
 import json
 import re
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class UserServiceStatusAPIView(APIView):
+    """Permite consultar tu estado y a admin/staff actualizar el estado de otro usuario."""
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        """Devuelve el estado del usuario autenticado."""
+        u = request.user
+        from .models import Profile, ServiceStatus
+        try:
+            status_value = u.profile.service_status
+            updated_at = u.profile.service_updated_at
+        except Profile.DoesNotExist:
+            status_value = ServiceStatus.NO_PURCHASED
+            updated_at = None
+        return Response({
+            "user_id": u.id,
+            "service_status": status_value,
+            "can_view_results": status_value == ServiceStatus.COMPLETED,
+            "updated_at": updated_at,
+        })
+
+    def post(self, request):
+        """Actualiza el estado de servicio de un usuario (solo staff). Body: {userId, status} """
+        if not request.user.is_staff:
+            return Response({"error": "No tienes permisos"}, status=status.HTTP_403_FORBIDDEN)
+        try:
+            data = json.loads(request.body or '{}')
+        except json.JSONDecodeError:
+            data = request.data or {}
+        user_id = data.get('userId')
+        status_str = data.get('status')
+        if not user_id or not status_str:
+            return Response({"error": "userId y status son obligatorios"}, status=status.HTTP_400_BAD_REQUEST)
+        if status_str not in {s.value for s in ServiceStatus}:
+            return Response({"error": f"status inválido. Usa uno de: {[s.value for s in ServiceStatus]}"}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            target = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response({"error": "Usuario no encontrado"}, status=status.HTTP_404_NOT_FOUND)
+        # Asegurar que el profile exista
+        from .models import Profile
+        profile, _ = Profile.objects.get_or_create(user=target)
+        profile.service_status = status_str
+        profile.save(update_fields=["service_status", "service_updated_at"])
+        return Response({
+            "user_id": target.id,
+            "service_status": profile.service_status,
+            "updated_at": profile.service_updated_at,
+        })
 
 
 def normalize_cl_phone(raw: str):
@@ -133,11 +187,23 @@ class MeAPIView(APIView):
 
     def get(self, request):
         u = request.user
+        # Cargar estado de servicio desde Profile
+        from .models import Profile, ServiceStatus
+        try:
+            p = u.profile
+            service_status = p.service_status
+        except Profile.DoesNotExist:
+            service_status = ServiceStatus.NO_PURCHASED
         data = {
             "id": u.id,
             "email": u.email,
             "first_name": u.first_name,
             "last_name": u.last_name,
+            "is_staff": u.is_staff,
+            "is_superuser": u.is_superuser,
+            "user_type": "admin" if u.is_staff else "user",
+            "service_status": service_status,
+            "can_view_results": service_status == ServiceStatus.COMPLETED,
         }
         # Evitar cacheo del perfil actual
         resp = Response({"user": data})
@@ -285,9 +351,10 @@ class DashboardAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        from .models import Profile
+        from .models import Profile, ServiceStatus
         u = request.user
         profile = getattr(u, 'profile', None)
+        service_status = getattr(profile, 'service_status', ServiceStatus.NO_PURCHASED)
         payload = {
             "user": {
                 "id": u.id,
@@ -297,6 +364,8 @@ class DashboardAPIView(APIView):
             },
             "profile": {
                 "phone": getattr(profile, 'phone', None),
+                "service_status": service_status,
+                "can_view_results": service_status == ServiceStatus.COMPLETED,
             }
         }
         resp = Response(payload)
@@ -422,6 +491,7 @@ class RegisterAPIView(APIView):
             from .models import Profile
             profile, _ = Profile.objects.get_or_create(user=user)
             profile.phone = telefono_norm
+            # El estado por defecto queda en NO_PURCHASED
             profile.save()
 
             # Enviar confirmación de email via allauth (usa nuestro adapter Gmail API)

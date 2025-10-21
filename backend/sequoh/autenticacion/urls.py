@@ -11,7 +11,9 @@ from .views import (
     DashboardAPIView,
     DeleteAccountAPIView,
     ContactAPIView,
+    UserServiceStatusAPIView,
 )
+from .upload_views import UploadGeneticFileAPIView
 
 urlpatterns = [
     path('login/', LoginAPIView.as_view(), name='api_login'),
@@ -29,4 +31,10 @@ urlpatterns = [
     path('me/delete-account/', DeleteAccountAPIView.as_view(), name='api_delete_account'),
     path('logout/', LogoutAPIView.as_view(), name='api_logout'),
     path('dashboard/', DashboardAPIView.as_view(), name='api_dashboard'),
+
+    # Estado de servicio
+    path('service/status/', UserServiceStatusAPIView.as_view(), name='api_service_status'),
+
+    # Endpoint para administradores
+    path('upload-genetic-file/', UploadGeneticFileAPIView.as_view(), name='api_upload_genetic_file'),
 ]
