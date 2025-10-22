@@ -443,12 +443,13 @@ class RegisterAPIView(APIView):
             apellido = data.get('apellido', '').strip()
             correo = data.get('correo', '').strip().lower()
             telefono = data.get('telefono', '').strip()
+            rut = data.get('rut', '').strip().upper()  # Normalizar a mayúsculas para la K
             contraseña = data.get('contraseña', '')
             repetir_contraseña = data.get('repetirContraseña', '')
             terminos = data.get('terminos', False)
             
             # Validaciones básicas
-            if not all([nombre, apellido, correo, telefono, contraseña, repetir_contraseña]):
+            if not all([nombre, apellido, correo, telefono, rut, contraseña, repetir_contraseña]):
                 return Response({"error": "Todos los campos son obligatorios"}, status=status.HTTP_400_BAD_REQUEST)
             
             if not terminos:
@@ -471,6 +472,19 @@ class RegisterAPIView(APIView):
             if not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', correo):
                 return Response({"error": "El formato del correo electrónico no es válido"}, status=status.HTTP_400_BAD_REQUEST)
             
+            # Validación de RUT
+            rut_pattern = r'^\d{7,8}-[0-9K]$'
+            if not re.match(rut_pattern, rut):
+                return Response({"error": "El RUT debe tener el formato XXXXXXX-R (ejemplo: 12345678-9 o 1234567-K)"}, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Verificar si el RUT ya existe
+            from .models import Profile
+            if Profile.objects.filter(rut=rut).exists():
+                return Response({
+                    "error": "Este RUT ya está registrado",
+                    "rut_exists": True
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
             # Verificar si el usuario ya existe
             if User.objects.filter(username=correo).exists() or User.objects.filter(email=correo).exists():
                 return Response({
@@ -487,10 +501,11 @@ class RegisterAPIView(APIView):
                 last_name=apellido,
             )
             
-            # Guardamos el teléfono en Profile
+            # Guardamos el teléfono y RUT en Profile
             from .models import Profile
             profile, _ = Profile.objects.get_or_create(user=user)
             profile.phone = telefono_norm
+            profile.rut = rut
             # El estado por defecto queda en NO_PURCHASED
             profile.save()
 

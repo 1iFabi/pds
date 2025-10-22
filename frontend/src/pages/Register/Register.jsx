@@ -19,12 +19,14 @@ const Register = () => {
     contraseña: "",
     repetirContraseña: "",
     correo: "",
+    rut: "",
     telefono: "",
     terminos: false,
   });
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [showPasswordValidation, setShowPasswordValidation] = useState(false);
   const [showPhoneValidation, setShowPhoneValidation] = useState(false);
+  const [showRutValidation, setShowRutValidation] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [focusedField, setFocusedField] = useState(null);
@@ -53,6 +55,15 @@ const Register = () => {
   }, [formData.telefono]);
 
   const isPhoneValid = phoneValidation.format || formData.telefono.length === 0;
+
+  const rutValidation = useMemo(() => {
+    const rut = (formData.rut || "").trim();
+    return {
+      format: /^\d{8}-[0-9Kk]$/.test(rut),
+    };
+  }, [formData.rut]);
+
+  const isRutValid = rutValidation.format || formData.rut.length === 0;
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -83,6 +94,11 @@ const Register = () => {
       alert('El teléfono debe tener formato +569XXXXXXXX');
       return false;
     }
+
+    if (!/^\d{8}-[0-9Kk]$/.test((formData.rut || '').trim())) {
+      alert('El RUT debe tener formato 12345678-9 (8 dígitos, guión y dígito verificador 0-9 o K)');
+      return false;
+    }
     
     if (!passwordsMatch) {
       alert('Las contraseñas no coinciden');
@@ -103,6 +119,7 @@ const Register = () => {
           nombre: formData.nombre,
           apellido: formData.apellido,
           correo: formData.correo,
+          rut: formData.rut.toUpperCase(),
           telefono: formData.telefono,
           contraseña: formData.contraseña,
           repetirContraseña: formData.repetirContraseña,
@@ -138,6 +155,12 @@ const Register = () => {
                 navigate('/login?forgot=true');
               }
             }
+          });
+          return false;
+        } else if (result.data.rut_exists) {
+          // Si el RUT ya existe, mostrar error
+          toast.error(errorMessage, {
+            duration: 7000
           });
           return false;
         } else {
@@ -201,6 +224,11 @@ const Register = () => {
           errors.correo = 'El correo es requerido';
         } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.correo)) {
           errors.correo = 'El correo no es válido';
+        }
+        if (!formData.rut.trim()) {
+          errors.rut = 'El RUT es requerido';
+        } else if (!/^\d{8}-[0-9Kk]$/.test(formData.rut)) {
+          errors.rut = 'El formato debe ser 12345678-9';
         }
         if (!formData.telefono.trim()) {
           errors.telefono = 'El teléfono es requerido';
@@ -352,7 +380,7 @@ const Register = () => {
                 </p>
               </Step>
 
-              {/* PASO 2: Correo y Teléfono */}
+              {/* PASO 2: Correo, RUT y Teléfono */}
               <Step>
                 <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem', color: '#333' }}>Información de Contacto</h2>
                 
@@ -383,7 +411,66 @@ const Register = () => {
                   )}
                 </div>
 
-                <div className="phone-wrapper">
+<div className="rut-wrapper" style={{ marginBottom: '1.5rem' }}>
+                  <div className={`uv-field ${fieldErrors.rut ? 'uv-field-error' : ''}`}>
+                    <span className="uv-icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" width="20" height="20">
+                        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" fill="currentColor" />
+                        <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="white" strokeWidth="1" fill="none" />
+                      </svg>
+                    </span>
+                    <input
+                      className="uv-input"
+                      type="text"
+                      name="rut"
+                      value={formData.rut}
+                      inputMode="text"
+                      pattern="^\\d{8}-[0-9Kk]$"
+                      onChange={(e) => {
+                        const value = e.target.value.toUpperCase();
+                        // Permitir solo dígitos, guión y K (máximo 10 caracteres: 8 dígitos + guión + 1 verificador)
+                        if (/^[\d\-K]*$/.test(value) && value.length <= 10) {
+                          handleInputChange({ target: { name: 'rut', value, type: 'text' } });
+                        }
+                      }}
+                      onFocus={() => {
+                        setFocusedField('rut');
+                        setShowRutValidation(true);
+                      }}
+                      onBlur={() => {
+                        setFocusedField(null);
+                        setShowRutValidation(false);
+                      }}
+                      placeholder=" "
+                      required
+                      aria-describedby="rut-hint"
+                    />
+                    <label className="uv-label">RUT *</label>
+                    <span className="uv-focus-bg" />
+                    {focusedField === 'rut' && !formData.rut && (
+                      <div className="input-hint">12345678-K</div>
+                    )}
+                    {fieldErrors.rut && (
+                      <div className="field-error-message">{fieldErrors.rut}</div>
+                    )}
+                  </div>
+                  
+                  {showRutValidation && (
+                    <div className="phone-validator">
+                      <div className="validator-header">
+                        <span className="validator-title">Formato:</span>
+                      </div>
+                      <div className="validator-rules">
+                        <div className={`validator-rule ${/^\d{8}-[0-9Kk]$/.test(formData.rut) ? 'valid' : 'invalid'}`}>
+                          <span className="validator-icon">{/^\d{8}-[0-9Kk]$/.test(formData.rut) ? '✓' : '×'}</span>
+                          <span className="validator-text">Formato: 12345678-K</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+<div className="phone-wrapper">
                   <div className={`uv-field ${fieldErrors.telefono ? 'uv-field-error' : ''}`}>
                     <span className="uv-icon" aria-hidden="true">
                       <svg viewBox="0 0 24 24" width="20" height="20">
@@ -409,7 +496,7 @@ const Register = () => {
                       }}
                       onBlur={() => {
                         setFocusedField(null);
-                        setTimeout(() => setShowPhoneValidation(false), 150);
+                        setShowPhoneValidation(false);
                       }}
                       placeholder=" "
                       required
@@ -590,6 +677,8 @@ const Register = () => {
                 {fieldErrors.terminos && (
                   <div className="field-error-message" style={{ marginTop: '6px' }}>{fieldErrors.terminos}</div>
                 )}
+                
+                <div className="step-spacer"></div>
               </Step>
             </Stepper>
           </div>
