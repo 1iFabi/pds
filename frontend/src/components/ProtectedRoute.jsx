@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { API_ENDPOINTS, apiRequest, getToken } from '../config/api';
 
-export default function ProtectedRoute({ children, requireService = true }) {
+export default function ProtectedRoute({ children, requireService = true, requireAdmin = false }) {
   const [ok, setOk] = useState(false);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -21,6 +21,15 @@ export default function ProtectedRoute({ children, requireService = true }) {
       if (!res.ok) {
         navigate('/login', { replace: true });
       } else {
+        // Verificar si el usuario es staff (administrador)
+        const isStaff = res.data?.user?.is_staff === true;
+        
+        // Si la ruta requiere admin y el usuario no es staff, redirigir a dashboard
+        if (requireAdmin && !isStaff) {
+          navigate('/dashboard', { replace: true });
+          return;
+        }
+        
         // Verificar el estado del servicio
         const serviceStatus = res.data?.user?.service_status;
         

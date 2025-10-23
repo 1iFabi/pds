@@ -49,6 +49,10 @@ class Profile(models.Model):
         db_index=True,
     )
     service_updated_at = models.DateTimeField(auto_now=True)
+    # Nombre del archivo de reporte genético
+    report_filename = models.CharField(max_length=255, blank=True, null=True)
+    # Fecha de carga del reporte
+    report_uploaded_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return f"Profile(user={self.user_id}, rut={self.rut}, phone={self.phone})"

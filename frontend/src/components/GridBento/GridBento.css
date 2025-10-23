@@ -323,36 +323,3 @@
   }
 }
 
-/* Para zoom-in o pantallas pequeñas entre 1024-1199 */
-@media (min-width: 900px) and (max-width: 1199px) {
-  .card-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
-    grid-auto-rows: minmax(220px, auto) !important;
-    height: auto !important;
-    grid-template-areas: none !important;
-  }
-  
-  .card--ancestria,
-  .card--rasgos,
-  .card--farmacogenetica,
-  .card--biomarcadores,
-  .card--biometricas,
-  .card--enfermedades {
-    grid-area: auto !important;
-    min-height: 220px !important;
-  }
-}
-
-/* Para pantallas muy pequeñas o zoom muy grande */
-@media (max-width: 899px) {
-  .card-grid {
-    grid-template-columns: 1fr !important;
-    grid-auto-rows: minmax(240px, auto) !important;
-    height: auto !important;
-    gap: 1rem;
-  }
-  
-  .card {
-    min-height: 240px;
-  }
-}

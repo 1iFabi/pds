@@ -159,7 +159,7 @@ const Dashboard = ({ user, onLogout, onDownload }) => {
           'Analiza tu gen\u00e9tica para conocer predisposiciones y mutaciones que pueden influir en tu salud y bienestar.',
         cta: {
           label: 'Explorar ahora',
-          href: '#postlogin-enfermedades',
+          href: '/dashboard/enfermedades',
           ariaLabel: 'Explorar Enfermedades'
         },
         className: 'card--enfermedades',
@@ -220,7 +220,7 @@ const Dashboard = ({ user, onLogout, onDownload }) => {
       <main className="dashboard__main">
         <header className="dashboard__header">
           <div className="dashboard__headline">
-            <h1 className="dashboard__welcome">Bienvenido {displayName}!</h1>
+            <h1 className="dashboard__welcome">Bienvenido/a {displayName}!</h1>
             <p className="dashboard__subtitle">
               Explora cómo tu información genética se relaciona con distintos aspectos de ti, y descubre análisis personalizados en cada categoría.
             </p>

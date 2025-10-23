@@ -11,6 +11,11 @@ export const API_ENDPOINTS = {
   LOGOUT: `${API_BASE_URL}/logout/`,
   DASHBOARD: `${API_BASE_URL}/dashboard/`,
   CONTACT: `${API_BASE_URL}/contact/`,
+  GET_USERS: `${API_BASE_URL}/users/`,
+  UPLOAD_GENETIC_FILE: `${API_BASE_URL}/upload-genetic-file/`,
+  DELETE_GENETIC_FILE: `${API_BASE_URL}/delete-genetic-file/`,
+  UPDATE_SERVICE_STATUS: `${API_BASE_URL}/service/status/`,
+  DISEASES: `${API_BASE_URL}/diseases/`,
 };
 
 export const getToken = () => localStorage.getItem('token');
