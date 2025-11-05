@@ -12,7 +12,7 @@ from collections import defaultdict
 class DiseasesAPIView(APIView):
     """
     Retorna las enfermedades y sus SNPs asociados al usuario autenticado.
-    Agrupa por enfermedad y prioriza por nivel de importancia.
+    Agrupa por enfermedad y prioriza por nivel de riesgo.
     """
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
@@ -21,59 +21,60 @@ class DiseasesAPIView(APIView):
         user = request.user
         
         # Obtener todos los SNPs de enfermedades del usuario
+        # La categoría en BD es "enfermedades" en minúsculas
         user_snps = UserSNP.objects.filter(
             user=user,
             snp__categoria='enfermedades'
         ).select_related('snp')
         
-        # Organizar SNPs por prioridad
+        # Organizar SNPs por prioridad basado en nivel_riesgo
+        # Clasificación simple: Alto, Intermedio, Bajo
         snps_by_priority = {
-            'alta': [],
-            'media': [],
-            'baja': []
+            'alta': [],      # Alto
+            'media': [],     # Intermedio
+            'baja': []       # Bajo
         }
         
         for user_snp in user_snps:
             snp = user_snp.snp
-            importancia = snp.importancia or 1
+            
+            # Usar nivel_riesgo y magnitud_efecto
+            nivel_riesgo = snp.nivel_riesgo or 'Bajo'
+            magnitud_efecto = float(snp.magnitud_efecto) if snp.magnitud_efecto else 0.0
             
             snp_obj = {
                 'rsid': snp.rsid,
                 'genotipo': snp.genotipo,
                 'fenotipo': snp.fenotipo,
-                'importancia': importancia,
-                'nivel_riesgo': self._get_risk_level(importancia)
+                'cromosoma': snp.cromosoma,
+                'nivel_riesgo': nivel_riesgo,
+                'magnitud_efecto': magnitud_efecto,
+                'fuente': snp.fuente_base_datos,
+                'tipo_evidencia': snp.tipo_evidencia
             }
             
-            # Clasificar por prioridad
-            # Alta: 4 y 5, Media: 3, Baja: 1 y 2
-            if importancia >= 4:
+            # Clasificar por prioridad basado en nivel_riesgo
+            # Solo considerar: Alto, Intermedio, Bajo
+            nivel_lower = nivel_riesgo.lower()
+            
+            if 'alto' in nivel_lower:
                 snps_by_priority['alta'].append(snp_obj)
-            elif importancia == 3:
+            elif 'intermedi' in nivel_lower:
                 snps_by_priority['media'].append(snp_obj)
             else:
+                # Bajo y cualquier otro
                 snps_by_priority['baja'].append(snp_obj)
         
-        # Ordenar cada categoría por importancia descendente
+        # Ordenar cada categoría por magnitud de efecto descendente
         for priority in snps_by_priority:
             snps_by_priority[priority].sort(
-                key=lambda x: x['importancia'],
+                key=lambda x: x['magnitud_efecto'],
                 reverse=True
             )
         
         return Response({
             'success': True,
-            'data': snps_by_priority
+            'data': snps_by_priority,
+            'total_snps': len(user_snps)
         })
     
-    def _get_risk_level(self, importancia):
-        """
-        Determina el nivel de riesgo basado en la importancia.
-        Alta: 4 y 5, Media: 3, Baja: 1 y 2
-        """
-        if importancia >= 4:
-            return 'Moderado-Alto'
-        elif importancia == 3:
-            return 'Moderado'
-        else:
-            return 'Bajo'

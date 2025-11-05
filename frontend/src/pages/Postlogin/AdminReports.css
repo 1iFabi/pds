@@ -81,24 +81,37 @@
 /* ===== HEADER ===== */
 .admin-reports__header {
   display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
+  justify-content: space-between;
+  align-items: flex-start;
+  background: linear-gradient(135deg, #0b7ad0 0%, #0a5fa3 100%);
+  border-radius: 16px;
+  padding: 32px;
+  color: white;
+  box-shadow: 0 4px 12px rgba(15, 35, 65, 0.12);
+  margin-bottom: 0px;
+  gap: 5px;
+}
+
+.admin-reports__headline {
+  flex: 1;
+  min-width: 0;
 }
 
 .admin-reports__title {
-  font-size: 1.875rem;
+  font-size: 28px;
   font-weight: 700;
-  color: #0b7ad0;
+  color: white;
   margin: 0;
   line-height: 1.2;
+  letter-spacing: -0.5px;
 }
 
 .admin-reports__subtitle {
-  font-size: 0.9rem;
-  color: #4f637c;
-  margin: 0;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+  margin: 8px 0 0;
   line-height: 1.5;
+  font-weight: 400;
 }
 
 /* ===== CONTAINER ===== */
@@ -110,21 +123,24 @@
 
 /* ===== SEARCH CARD ===== */
 .admin-reports__search-card {
-  background: #ffffff;
+  background: linear-gradient(135deg, #ffffff 0%, #f9fbfd 100%);
   border-radius: 16px;
-  padding: 1.5rem;
-  box-shadow: 0 4px 12px rgba(15, 35, 65, 0.08);
+  padding: 2rem;
+  box-shadow: 0 4px 12px rgba(11, 122, 208, 0.08);
+  border: 1px solid #e8eef7;
 }
 
-.admin-reports__search-wrapper {
+.admin-reports__search-top {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  margin-bottom: 2rem;
 }
 
 .admin-reports__search-input-container {
   position: relative;
-  max-width: 400px;
+  max-width: 100%;
+  flex: 1;
 }
 
 .admin-reports__search-icon {
@@ -138,12 +154,14 @@
 
 .admin-reports__search-input {
   width: 100%;
-  padding: 0.75rem 0.75rem 0.75rem 2.5rem;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  font-size: 0.9rem;
+  padding: 0.875rem 0.875rem 0.875rem 2.75rem;
+  border: 1px solid #e0e7f1;
+  border-radius: 10px;
+  font-size: 0.95rem;
   font-family: inherit;
   transition: all 0.2s ease;
+  background: white;
+  box-shadow: 0 2px 4px rgba(15, 35, 65, 0.04);
 }
 
 .admin-reports__search-input:focus {
@@ -152,10 +170,51 @@
   box-shadow: 0 0 0 3px rgba(11, 122, 208, 0.1);
 }
 
+.admin-reports__status-filter-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 200px;
+}
+
+.admin-reports__filter-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #0b7ad0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.admin-reports__status-filter {
+  padding: 0.875rem 0.875rem 0.875rem 1rem;
+  border: 1px solid #e0e7f1;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  color: #1a202c;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(15, 35, 65, 0.04);
+}
+
+.admin-reports__status-filter:hover {
+  border-color: #0b7ad0;
+}
+
+.admin-reports__status-filter:focus {
+  outline: none;
+  border-color: #0b7ad0;
+  box-shadow: 0 0 0 3px rgba(11, 122, 208, 0.1);
+}
+
 .admin-reports__stats {
   display: flex;
-  gap: 1.5rem;
+  gap: 2rem;
   align-items: center;
+  justify-content: flex-start;
+  padding-top: 1rem;
+  border-top: 1px solid #e8eef7;
   flex-wrap: wrap;
 }
 
@@ -163,25 +222,46 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  text-align: center;
+}
+
+.admin-reports__stat-item--with-icon {
+  flex-direction: column;
+  align-items: center;
   gap: 0.25rem;
 }
 
+.admin-reports__stat-icon {
+  display: none;
+}
+
+.admin-reports__stat-icon--success {
+  display: none;
+}
+
+.admin-reports__stat-icon--warning {
+  display: none;
+}
+
+.admin-reports__stat-icon--info {
+  display: none;
+}
+
 .admin-reports__stat-number {
-  font-size: 1.75rem;
+  font-size: 1.5rem;
   font-weight: 700;
-  color: #0f2341;
+  color: #0b7ad0;
+  line-height: 1;
 }
 
 .admin-reports__stat-label {
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   color: #6b7a90;
   font-weight: 500;
-}
-
-.admin-reports__stat-divider {
-  width: 1px;
-  height: 40px;
-  background: #e5e7eb;
+  text-transform: capitalize;
+  letter-spacing: 0.3px;
 }
 
 /* ===== TABLE CARD ===== */
@@ -381,6 +461,27 @@
   background: #dc2626;
   color: #ffffff;
   transform: translateY(-1px);
+}
+
+/* ===== PATIENT NAME BUTTON ===== */
+.admin-reports__patient-name-btn {
+  background: none;
+  border: none;
+  color: #0b7ad0;
+  font-size: inherit;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+  padding: 0;
+  transition: all 0.2s ease;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+}
+
+.admin-reports__patient-name-btn:hover {
+  color: #0962b0;
+  text-decoration-color: #0962b0;
 }
 
 /* ===== OVERLAY & DIALOG ===== */
@@ -597,37 +698,30 @@
   }
 
   .admin-reports__search-card {
-    padding: 1rem;
+    padding: 1.5rem;
   }
 
-  .admin-reports__search-wrapper {
+  .admin-reports__search-top {
+    flex-direction: column;
     gap: 1rem;
+    margin-bottom: 1.5rem;
   }
 
-  .admin-reports__search-input-container {
-    max-width: 100%;
+  .admin-reports__status-filter-container {
+    min-width: auto;
   }
 
   .admin-reports__stats {
-    gap: 1rem;
-    justify-content: space-between;
-  }
-
-  .admin-reports__stat-divider {
-    display: none;
-  }
-
-  .admin-reports__stat-item {
-    flex: 1;
-    text-align: center;
+    gap: 1.5rem;
+    padding-top: 0.75rem;
   }
 
   .admin-reports__stat-number {
-    font-size: 1.5rem;
+    font-size: 1.25rem;
   }
 
   .admin-reports__stat-label {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
   }
 
   .admin-reports__table-wrapper {
@@ -684,15 +778,25 @@
   }
 
   .admin-reports__search-card {
-    padding: 0.75rem;
+    padding: 1rem;
+  }
+
+  .admin-reports__search-top {
+    gap: 0.75rem;
+    margin-bottom: 1rem;
   }
 
   .admin-reports__stats {
-    flex-direction: column;
+    gap: 1rem;
+    padding-top: 0.5rem;
   }
 
-  .admin-reports__stat-item {
-    width: 100%;
+  .admin-reports__stat-number {
+    font-size: 1.1rem;
+  }
+
+  .admin-reports__stat-label {
+    font-size: 0.65rem;
   }
 
   .admin-reports__table {

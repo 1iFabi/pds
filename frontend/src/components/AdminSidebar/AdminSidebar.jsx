@@ -88,7 +88,7 @@ const AdminSidebar = ({ onLogout, user, isMobileMenuOpen = false, setIsMobileMen
             href="#ver-variantes"
             className="admin-sidebar__nav-item"
             title={!isExpanded && !isMobile ? 'Ver variantes en base de datos' : undefined}
-            onClick={closeMenuAndNavigate('#ver-variantes')}
+            onClick={closeMenuAndNavigate('/dashboard/admin/variants')}
           >
             <Database size={20} className="admin-sidebar__nav-icon" />
             {(isExpanded || isMobile) && (

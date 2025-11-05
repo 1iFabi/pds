@@ -4,6 +4,7 @@ import { API_ENDPOINTS, apiRequest } from '../../config/api';
 import PostloginUser from './PostloginUser';
 import PostloginAdmin from './PostloginAdmin';
 import AdminReports from './AdminReports';
+import AdminVariantsDatabase from './AdminVariantsDatabase';
 
 const PostloginRouter = () => {
   const [user, setUser] = useState(null);
@@ -43,6 +44,7 @@ const PostloginRouter = () => {
       <Routes>
         <Route path="/" element={<PostloginAdmin user={user} />} />
         <Route path="admin/reports" element={<AdminReports user={user} />} />
+        <Route path="admin/variants" element={<AdminVariantsDatabase user={user} />} />
       </Routes>
     );
   }

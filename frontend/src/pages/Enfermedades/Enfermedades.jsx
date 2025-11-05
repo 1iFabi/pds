@@ -1,9 +1,10 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, TestTube } from 'lucide-react';
 import { API_ENDPOINTS, apiRequest, clearToken } from '../../config/api';
 import Sidebar from '../../components/Sidebar/Sidebar';
 import PriorityCard from '../../components/PriorityCard/PriorityCard';
+import SectionHeader from '../../components/SectionHeader/SectionHeader';
 import './Enfermedades.css';
 
 const Enfermedades = () => {
@@ -100,7 +101,7 @@ const Enfermedades = () => {
   const getPrioritiesData = () => {
     const mapPriority = (priority) => {
       const priorityMap = { alta: 'high', media: 'medium', baja: 'low' };
-      const titleMap = { alta: 'Alta Prioridad', media: 'Prioridad Media', baja: 'Prioridad Baja' };
+      const titleMap = { alta: 'Prioridad Alta', media: 'Prioridad Media', baja: 'Prioridad Baja' };
       return { level: priorityMap[priority], title: titleMap[priority] };
     };
 
@@ -191,14 +192,11 @@ const Enfermedades = () => {
 
       <main className="enfermedades-dashboard__main">
         <div className="enfermedades-page">
-          <header className="enfermedades-page__header">
-            <div className="enfermedades-page__title-section">
-              <h1 className="enfermedades-page__title">Enfermedades</h1>
-              <p className="enfermedades-page__subtitle">
-                Aquí podrás explorar tu predisposición genética a distintas enfermedades. Descubre qué mutaciones y variantes están presentes en tu ADN y cómo pueden influir en tu salud.
-              </p>
-            </div>
-          </header>
+          <SectionHeader
+            title="Enfermedades"
+            subtitle="Aquí podrás explorar tu predisposición genética a distintas enfermedades. Descubre qué mutaciones y variantes están presentes en tu ADN y cómo pueden influir en tu salud."
+            icon={TestTube}
+          />
 
           <div className="enfermedades-page__content">
             <div className="enfermedades-page__priorities-container">

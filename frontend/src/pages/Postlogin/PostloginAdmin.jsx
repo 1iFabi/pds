@@ -144,7 +144,14 @@ const PostloginAdmin = ({ user }) => {
                 <p className="postlogin-admin__card-description">
                   Explora, revisa y gestiona las variantes genéticas almacenadas en la base de datos del sistema.
                 </p>
-                <a href="#ver-variantes" className="postlogin-admin__card-link">
+                <a
+                  onClick={(e) => {
+                    e.preventDefault();
+                    navigate('/dashboard/admin/variants');
+                  }}
+                  href="#"
+                  className="postlogin-admin__card-link"
+                >
                   Ver variantes
                 </a>
               </div>

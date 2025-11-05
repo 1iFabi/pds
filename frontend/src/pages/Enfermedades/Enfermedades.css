@@ -71,64 +71,9 @@
 /* Page Content */
 .enfermedades-page {
   width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
+  padding: 0 1rem;
 }
 
-/* Header */
-.enfermedades-page__header {
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-  margin: 0 0 2.5rem;
-}
-
-.enfermedades-page__back-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  background: linear-gradient(135deg, #0c8cf0 0%, #0a6ed8 100%);
-  color: #ffffff;
-  border: none;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 12px rgba(12, 140, 240, 0.25);
-  flex-shrink: 0;
-}
-
-.enfermedades-page__back-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(12, 140, 240, 0.35);
-}
-
-.enfermedades-page__back-btn:active {
-  transform: translateY(0);
-}
-
-.enfermedades-page__title-section {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.enfermedades-page__title {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #0b7ad0;
-  margin: 0;
-  line-height: 1.2;
-}
-
-.enfermedades-page__subtitle {
-  font-size: 0.95rem;
-  line-height: 1.5;
-  color: #4f637c;
-  margin: 0;
-  max-width: 700px;
-}
 
 /* Content */
 .enfermedades-page__content {
