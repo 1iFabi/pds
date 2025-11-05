@@ -49,7 +49,6 @@ export default function App() {
         <Route path="/no-purchased" element={<ProtectedRoute requireService={false}><NoPurchased /></ProtectedRoute>} />
         <Route path="/pending" element={<ProtectedRoute requireService={false}><Pending /></ProtectedRoute>} />
         <Route path="/dashboard/*" element={<ProtectedRoute><PostloginRouter /></ProtectedRoute>} />
-        <Route path="/dashboard/enfermedades" element={<ProtectedRoute><Enfermedades /></ProtectedRoute>} />
         {/* Catch-all: redirige cualquier ruta desconocida a la página de inicio */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

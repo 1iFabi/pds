@@ -85,42 +85,39 @@ class Command(BaseCommand):
                 with transaction.atomic():
                     for row_num, row in enumerate(reader, start=2):
                         try:
-                            # Parsear fila manualmente debido al formato especial
-                            if len(row) == 1:
-                                # Formato con comillas escapadas: "value1,""value2"",""value3""..."
-                                parts = row[0].split(',')
-                                # Limpiar comillas extras
-                                clean_parts = []
-                                for part in parts:
-                                    clean = part.strip().strip('"').strip()
-                                    # Reemplazar comillas dobles escapadas
-                                    clean = clean.replace('""', '"')
-                                    clean_parts.append(clean)
-                                
-                                if len(clean_parts) < 13:
-                                    raise ValueError(f'Formato inválido: esperados 13 campos, encontrados {len(clean_parts)}')
-                                
-                                rsid = clean_parts[0]
-                                cromosoma = clean_parts[1]
-                                posicion_str = clean_parts[2]
-                                alelo_ref = clean_parts[3]
-                                alelo_alt = clean_parts[4]
-                                genotipo = clean_parts[5]
-                                fenotipo = clean_parts[6]
-                                nivel_riesgo = clean_parts[7]
-                                categoria = clean_parts[8]
-                                magnitud_efecto_str = clean_parts[9]
-                                fuente = clean_parts[10]
-                                tipo_evidencia = clean_parts[11]
-                                fecha = clean_parts[12]
-                            else:
-                                # Formato estándar CSV
-                                if len(row) < 13:
-                                    raise ValueError(f'Formato inválido: esperados 13 campos, encontrados {len(row)}')
-                                
-                                rsid, cromosoma, posicion_str, alelo_ref, alelo_alt, genotipo, \
-                                fenotipo, nivel_riesgo, categoria, magnitud_efecto_str, \
-                                fuente, tipo_evidencia, fecha = row[:13]
+                            # Nuevo formato CSV con todas las columnas:
+                            # id, rs_id, genotipo, fenotipo, categoria, alelo_alternativo, alelo_referencia,
+                            # cromosoma, posicion, fecha_actualizacion, fuente_base_datos, magnitud_efecto,
+                            # nivel_riesgo, tipo_evidencia, continente, af_continente, fuente_continente,
+                            # poblacion_continente, pais, af_pais, fuente_pais, poblacion_pais
+                            
+                            if len(row) < 14:
+                                raise ValueError(f'Formato inválido: esperados 14+ campos, encontrados {len(row)}')
+                            
+                            # Mapear las columnas del nuevo CSV
+                            rsid = row[1]              # rs_id
+                            genotipo = row[2]         # genotipo
+                            fenotipo = row[3]         # fenotipo
+                            categoria = row[4]        # categoria
+                            alelo_alt = row[5]        # alelo_alternativo
+                            alelo_ref = row[6]        # alelo_referencia
+                            cromosoma = row[7]        # cromosoma
+                            posicion_str = row[8]     # posicion
+                            fecha = row[9]            # fecha_actualizacion
+                            fuente = row[10]          # fuente_base_datos
+                            magnitud_efecto_str = row[11]  # magnitud_efecto
+                            nivel_riesgo = row[12]    # nivel_riesgo
+                            tipo_evidencia = row[13]  # tipo_evidencia
+                            
+                            # Datos opcionales de ancestría
+                            continente = row[14] if len(row) > 14 else None
+                            af_continente_str = row[15] if len(row) > 15 else None
+                            fuente_continente = row[16] if len(row) > 16 else None
+                            poblacion_continente = row[17] if len(row) > 17 else None
+                            pais = row[18] if len(row) > 18 else None
+                            af_pais_str = row[19] if len(row) > 19 else None
+                            fuente_pais = row[20] if len(row) > 20 else None
+                            poblacion_pais = row[21] if len(row) > 21 else None
 
                             # Convertir tipos
                             try:
@@ -132,6 +129,17 @@ class Command(BaseCommand):
                                 magnitud_efecto = Decimal(magnitud_efecto_str) if magnitud_efecto_str and magnitud_efecto_str.strip() else None
                             except (ValueError, InvalidOperation):
                                 magnitud_efecto = None
+                            
+                            # Convertir datos de ancestría
+                            try:
+                                af_continente = Decimal(af_continente_str) if af_continente_str and af_continente_str.strip() else None
+                            except (ValueError, InvalidOperation):
+                                af_continente = None
+                            
+                            try:
+                                af_pais = Decimal(af_pais_str) if af_pais_str and af_pais_str.strip() else None
+                            except (ValueError, InvalidOperation):
+                                af_pais = None
 
                             # Crear o actualizar SNP
                             if not dry_run:
@@ -150,6 +158,14 @@ class Command(BaseCommand):
                                         'fuente_base_datos': fuente,
                                         'tipo_evidencia': tipo_evidencia,
                                         'fecha_actualizacion': fecha,
+                                        'continente': continente,
+                                        'af_continente': af_continente,
+                                        'fuente_continente': fuente_continente,
+                                        'poblacion_continente': poblacion_continente,
+                                        'pais': pais,
+                                        'af_pais': af_pais,
+                                        'fuente_pais': fuente_pais,
+                                        'poblacion_pais': poblacion_pais,
                                     }
                                 )
                                 

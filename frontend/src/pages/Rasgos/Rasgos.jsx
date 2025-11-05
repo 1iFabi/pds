@@ -79,11 +79,11 @@ const Rasgos = () => {
   };
 
   const sidebarItems = useMemo(() => [
-    { label: 'Ancestría', href: '#postlogin-ancestria' },
+    { label: 'Ancestría', href: '/dashboard/ancestria' },
     { label: 'Rasgos', href: '/dashboard/rasgos' },
-    { label: 'Farmacogenética', href: '#postlogin-farmacogenetica' },
-    { label: 'Biomarcadores', href: '#postlogin-biomarcadores' },
-    { label: 'Biométricas', href: '#postlogin-biometricas' },
+    { label: 'Farmacogenética', href: '/dashboard/farmacogenetica' },
+    { label: 'Biomarcadores', href: '/dashboard/biomarcadores' },
+    { label: 'Biométricas', href: '/dashboard/biometricas' },
     { label: 'Enfermedades', href: '/dashboard/enfermedades' },
   ], []);
 

@@ -43,8 +43,8 @@ const Dashboard = ({ user, onLogout, onDownload }) => {
           'Descubre tus or\u00edgenes gen\u00e9ticos y c\u00f3mo las conexiones con distintas poblaciones han influido en tu historia ancestral.',
         cta: {
           label: 'Explorar ahora',
-          href: '#postlogin-ancestria',
-          ariaLabel: 'Explorar Ancestr\u00eda'
+          href: '/dashboard/ancestria',
+          ariaLabel: 'Explorar Ancestría'
         },
         className: 'card--ancestria',
         contentJustify: 'start',
@@ -67,7 +67,7 @@ const Dashboard = ({ user, onLogout, onDownload }) => {
           'Conoce los rasgos gen\u00e9ticos que influyen en tu apariencia, comportamiento y habilidades \u00fanicas.',
         cta: {
           label: 'Explorar ahora',
-          href: '#postlogin-rasgos',
+          href: '/dashboard/rasgos',
           ariaLabel: 'Explorar Rasgos'
         },
         className: 'card--rasgos',
@@ -90,8 +90,8 @@ const Dashboard = ({ user, onLogout, onDownload }) => {
           'Descubre cómo tu genética influye en los medicamentos para optimizar tus tratamientos.',
         cta: {
           label: 'Explorar ahora',
-          href: '#postlogin-farmacogenetica',
-          ariaLabel: 'Explorar Farmacogen\u00e9tica'
+          href: '/dashboard/farmacogenetica',
+          ariaLabel: 'Explorar Farmacogenética'
         },
         className: 'card--farmacogenetica',
         textColor: '#3E3A37',
@@ -113,7 +113,7 @@ const Dashboard = ({ user, onLogout, onDownload }) => {
           'Identifica biomarcadores gen\u00e9ticos que revelan factores clave de tu salud, bienestar y predisposici\u00f3n.',
         cta: {
           label: 'Explorar ahora',
-          href: '#postlogin-biomarcadores',
+          href: '/dashboard/biomarcadores',
           ariaLabel: 'Explorar Biomarcadores'
         },
         className: 'card--biomarcadores',
@@ -136,8 +136,8 @@ const Dashboard = ({ user, onLogout, onDownload }) => {
           'Analiza tus datos biom\u00e9tricos para entender c\u00f3mo tus caracter\u00edsticas f\u00edsicas influyen en tu salud general.',
         cta: {
           label: 'Explorar ahora',
-          href: '#postlogin-biometricas',
-          ariaLabel: 'Explorar Biom\u00e9tricas'
+          href: '/dashboard/biometricas',
+          ariaLabel: 'Explorar Biométricas'
         },
         className: 'card--biometricas',
         textColor: '#5F1C3E',
