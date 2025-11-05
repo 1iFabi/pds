@@ -1,3 +1,9 @@
 # Local secrets (Gmail OAuth)
 backend/sequoh/config/credentials.json
 backend/sequoh/config/token.json
+
+# Test files
+test_files/
+
+# SNP database folder
+backend/snps/

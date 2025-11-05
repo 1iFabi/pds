@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Upload, Edit, Trash2, FileText, Menu, X } from 'lucide-react';
 import AdminSidebar from '../../components/AdminSidebar/AdminSidebar';
+import PatientVariantsModal from '../../components/PatientVariantsModal/PatientVariantsModal';
 import { API_ENDPOINTS, apiRequest, clearToken } from '../../config/api';
 import { useNavigate } from 'react-router-dom';
 import './AdminReports.css';
@@ -29,6 +30,15 @@ export default function AdminReports({ user }) {
   const [loading, setLoading] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [variantsModalOpen, setVariantsModalOpen] = useState(false);
+  const [selectedPatientForVariants, setSelectedPatientForVariants] = useState(null);
+  const [reportStatusFilter, setReportStatusFilter] = useState('todos');
+
+  // Función para capitalizar primera letra
+  const capitalize = (str) => {
+    if (!str) return '';
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  };
 
   useEffect(() => {
     const checkMobile = () => {
@@ -113,12 +123,26 @@ export default function AdminReports({ user }) {
     navigate('/');
   };
 
-  const filteredPatients = patients.filter(
-    (patient) =>
+  const filteredPatients = patients.filter((patient) => {
+    // Filtro de búsqueda
+    const matchesSearch =
       patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       patient.rut.includes(searchTerm) ||
-      patient.id.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+      patient.id.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    // Filtro de estado de reporte
+    let matchesStatus = true;
+    if (reportStatusFilter === 'sin_reporte') {
+      matchesStatus = !patient.hasReport;
+    } else if (reportStatusFilter === 'pendiente') {
+      matchesStatus = !patient.hasReport && patient.serviceStatus === 'PENDING';
+    } else if (reportStatusFilter === 'subido') {
+      matchesStatus = patient.hasReport;
+    }
+    // 'todos' siempre es true
+
+    return matchesSearch && matchesStatus;
+  });
 
   const handleUpload = (patient) => {
     setSelectedPatient(patient);
@@ -351,6 +375,13 @@ export default function AdminReports({ user }) {
   const withReportCount = patients.filter((p) => p.hasReport).length;
   const withoutReportCount = patients.filter((p) => !p.hasReport).length;
 
+  const handleViewVariants = (patient) => {
+    if (patient.hasReport) {
+      setSelectedPatientForVariants(patient);
+      setVariantsModalOpen(true);
+    }
+  };
+
   if (loading) return <div></div>;
 
   return (
@@ -377,12 +408,17 @@ export default function AdminReports({ user }) {
 
       <main className="admin-reports">
         <div className="admin-reports__header">
-          <h1 className="admin-reports__title">Administrar Reportes Genéticos</h1>
+          <div className="admin-reports__headline">
+            <h1 className="admin-reports__title">Administrar Reportes Genéticos</h1>
+            <p className="admin-reports__subtitle">
+              Gestiona y visualiza todos los reportes genéticos de los pacientes
+            </p>
+          </div>
         </div>
 
         <div className="admin-reports__container">
           <div className="admin-reports__search-card">
-            <div className="admin-reports__search-wrapper">
+            <div className="admin-reports__search-top">
               <div className="admin-reports__search-input-container">
                 <Search size={18} className="admin-reports__search-icon" />
                 <input
@@ -393,22 +429,36 @@ export default function AdminReports({ user }) {
                   className="admin-reports__search-input"
                 />
               </div>
+              <div className="admin-reports__status-filter-container">
+                <label className="admin-reports__filter-label">Estado del Reporte</label>
+                <select
+                  value={reportStatusFilter}
+                  onChange={(e) => setReportStatusFilter(e.target.value)}
+                  className="admin-reports__status-filter"
+                >
+                  <option value="todos">Todos</option>
+                  <option value="sin_reporte">Sin Reporte</option>
+                  <option value="pendiente">Pendiente</option>
+                  <option value="subido">Subido</option>
+                </select>
+              </div>
+            </div>
 
-              <div className="admin-reports__stats">
-                <div className="admin-reports__stat-item">
-                  <div className="admin-reports__stat-number">{withReportCount}</div>
-                  <div className="admin-reports__stat-label">Con reporte</div>
-                </div>
-                <div className="admin-reports__stat-divider"></div>
-                <div className="admin-reports__stat-item">
-                  <div className="admin-reports__stat-number">{withoutReportCount}</div>
-                  <div className="admin-reports__stat-label">Sin reporte</div>
-                </div>
-                <div className="admin-reports__stat-divider"></div>
-                <div className="admin-reports__stat-item">
-                  <div className="admin-reports__stat-number">{patients.length}</div>
-                  <div className="admin-reports__stat-label">Total pacientes</div>
-                </div>
+            <div className="admin-reports__stats">
+              <div className="admin-reports__stat-item admin-reports__stat-item--with-icon" title="Reportes completados y subidos">
+                <div className="admin-reports__stat-icon admin-reports__stat-icon--success">✓</div>
+                <div className="admin-reports__stat-number">{withReportCount}</div>
+                <div className="admin-reports__stat-label">Con Reporte</div>
+              </div>
+              <div className="admin-reports__stat-item admin-reports__stat-item--with-icon" title="Reportes pendientes de subir o procesar">
+                <div className="admin-reports__stat-icon admin-reports__stat-icon--warning">!</div>
+                <div className="admin-reports__stat-number">{withoutReportCount}</div>
+                <div className="admin-reports__stat-label">Sin Reporte</div>
+              </div>
+              <div className="admin-reports__stat-item admin-reports__stat-item--with-icon" title="Total de pacientes en el sistema">
+                <div className="admin-reports__stat-icon admin-reports__stat-icon--info">👥</div>
+                <div className="admin-reports__stat-number">{patients.length}</div>
+                <div className="admin-reports__stat-label">Total Pacientes</div>
               </div>
             </div>
           </div>
@@ -450,7 +500,19 @@ export default function AdminReports({ user }) {
                         <td className="admin-reports__table-cell admin-reports__table-cell--bold">
                           {patient.id}
                         </td>
-                        <td className="admin-reports__table-cell">{patient.name}</td>
+                        <td className="admin-reports__table-cell">
+                          {patient.hasReport ? (
+                            <button
+                              className="admin-reports__patient-name-btn"
+                              onClick={() => handleViewVariants(patient)}
+                              title="Ver variantes genéticas"
+                            >
+                              {patient.name}
+                            </button>
+                          ) : (
+                            patient.name
+                          )}
+                        </td>
                         <td className="admin-reports__table-cell">{patient.rut}</td>
                         <td className="admin-reports__table-cell admin-reports__table-cell--muted">
                           {patient.email}
@@ -634,6 +696,13 @@ export default function AdminReports({ user }) {
             </div>
           </div>
         )}
+
+        {/* Patient Variants Modal */}
+        <PatientVariantsModal
+          isOpen={variantsModalOpen}
+          onClose={() => setVariantsModalOpen(false)}
+          patient={selectedPatientForVariants}
+        />
       </main>
     </div>
   );

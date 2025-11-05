@@ -2,6 +2,7 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api/auth';
 
 export const API_ENDPOINTS = {
+  BASE_URL: API_BASE_URL.replace('/api/auth', ''),
   LOGIN: `${API_BASE_URL}/login/`,
   REGISTER: `${API_BASE_URL}/register/`,
   PASSWORD_RESET: `${API_BASE_URL}/password-reset/`,
@@ -16,6 +17,8 @@ export const API_ENDPOINTS = {
   DELETE_GENETIC_FILE: `${API_BASE_URL}/delete-genetic-file/`,
   UPDATE_SERVICE_STATUS: `${API_BASE_URL}/service/status/`,
   DISEASES: `${API_BASE_URL}/diseases/`,
+  PATIENT_VARIANTS: (userId) => `${API_BASE_URL}/patient-variants/${userId}/`,
+  VARIANTS: `${API_BASE_URL}/variantes/`,
 };
 
 export const getToken = () => localStorage.getItem('token');

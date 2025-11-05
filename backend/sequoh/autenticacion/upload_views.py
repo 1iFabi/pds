@@ -142,9 +142,9 @@ class UploadGeneticFileAPIView(APIView):
         Procesa el contenido del archivo genético y crea asociaciones user-snp.
         
         Formato esperado (líneas):
-        rsid, genotipo
-        rs6060369, A/G
-        rs713598, C/C
+        cromosoma, rsid, genotipo
+        1, rs6060369, A/G
+        15, rs713598, C/C
         """
         try:
             lines = file_content.strip().split('\n')
@@ -156,6 +156,7 @@ class UploadGeneticFileAPIView(APIView):
 
             snps_added = 0
             snps_skipped = 0
+            snps_matched = 0
 
             for idx, line in enumerate(lines):
                 # Saltar líneas vacías
@@ -165,36 +166,38 @@ class UploadGeneticFileAPIView(APIView):
                 # Parsear línea (separado por coma)
                 parts = line.strip().split(',')
                 
-                if len(parts) < 2:
+                if len(parts) < 3:
                     # Formato incompleto, saltar
                     logger.warning(f"Línea {idx}: formato incompleto (partes={len(parts)}): {line[:100]}")
                     snps_skipped += 1
                     continue
 
-                rsid = parts[0].strip()
-                genotipo = parts[1].strip()
-                # Usar genotipo como fenotipo ya que no viene en el archivo
-                fenotipo = f"Genotipo: {genotipo}"
-                categoria = None
-                importancia = None
+                cromosoma = parts[0].strip()
+                rsid = parts[1].strip()
+                genotipo = parts[2].strip()
 
-                # Validar que tenga al menos rsid y genotipo
-                if not rsid or not genotipo:
-                    logger.warning(f"Línea {idx}: rsid o genotipo vacío (rsid='{rsid}', genotipo='{genotipo}')")
+                # Validar campos obligatorios
+                if not cromosoma or not rsid or not genotipo:
+                    logger.warning(f"Línea {idx}: campos vacíos (cromosoma='{cromosoma}', rsid='{rsid}', genotipo='{genotipo}')")
                     snps_skipped += 1
                     continue
 
                 try:
-                    # Crear o obtener SNP
-                    snp, created = SNP.objects.get_or_create(
-                        rsid=rsid,
-                        genotipo=genotipo,
-                        defaults={
-                            'fenotipo': fenotipo,
-                            'categoria': categoria,
-                            'importancia': importancia
-                        }
-                    )
+                    # Buscar SNP en la base de datos por rsid y genotipo
+                    try:
+                        snp = SNP.objects.get(rsid=rsid, genotipo=genotipo)
+                        snps_matched += 1
+                        logger.debug(f"SNP encontrado en BD: rsid={rsid}, genotipo={genotipo}, cromosoma={snp.cromosoma}")
+                    except SNP.DoesNotExist:
+                        # Si no existe, crear uno básico (aunque lo ideal es que exista en la BD)
+                        logger.warning(f"SNP no encontrado en BD, creando básico: rsid={rsid}, genotipo={genotipo}")
+                        snp = SNP.objects.create(
+                            rsid=rsid,
+                            genotipo=genotipo,
+                            fenotipo=f"Variante genética {rsid}",
+                            cromosoma=cromosoma,
+                            categoria=None
+                        )
 
                     # Crear asociación user-snp si no existe
                     user_snp, created = UserSNP.objects.get_or_create(
@@ -204,12 +207,13 @@ class UploadGeneticFileAPIView(APIView):
 
                     if created:
                         snps_added += 1
-                        logger.debug(f"SNP agregado: rsid={rsid}, genotipo={genotipo}")
+                        logger.debug(f"Asociación user-snp creada: rsid={rsid}, genotipo={genotipo}")
+                        
                 except Exception as snp_error:
-                    logger.error(f"Error creando SNP en línea {idx}: {str(snp_error)}")
+                    logger.error(f"Error procesando SNP en línea {idx}: {str(snp_error)}")
                     snps_skipped += 1
 
-            logger.info(f"Procesamiento completado: {snps_added} SNPs agregados, {snps_skipped} saltados")
+            logger.info(f"Procesamiento completado: {snps_added} SNPs agregados, {snps_matched} encontrados en BD, {snps_skipped} saltados")
             return snps_added
 
         except Exception as e:

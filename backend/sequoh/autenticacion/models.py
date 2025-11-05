@@ -125,20 +125,49 @@ class SNP(models.Model):
     """
     Modelo para almacenar información de SNPs (Single Nucleotide Polymorphisms)
     """
+    # Campos básicos
     rsid = models.CharField(max_length=20, verbose_name="rsID")
     genotipo = models.CharField(max_length=10, verbose_name="Genotipo")
     fenotipo = models.TextField(verbose_name="Fenotipo")
     categoria = models.CharField(max_length=50, blank=True, null=True, verbose_name="Categoría")
-    importancia = models.IntegerField(blank=True, null=True, verbose_name="Nivel de importancia")
+    
+    # Campos genómicos
+    cromosoma = models.CharField(max_length=5, blank=True, null=True, verbose_name="Cromosoma")
+    posicion = models.BigIntegerField(blank=True, null=True, verbose_name="Posición genómica")
+    alelo_referencia = models.CharField(max_length=50, blank=True, null=True, verbose_name="Alelo de referencia")
+    alelo_alternativo = models.CharField(max_length=50, blank=True, null=True, verbose_name="Alelo alternativo")
+    
+    # Campos clínicos
+    nivel_riesgo = models.CharField(max_length=50, blank=True, null=True, verbose_name="Nivel de riesgo")
+    magnitud_efecto = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True, verbose_name="Magnitud del efecto")
+    
+    # Metadata
+    fuente_base_datos = models.CharField(max_length=100, blank=True, null=True, verbose_name="Fuente de base de datos")
+    tipo_evidencia = models.CharField(max_length=50, blank=True, null=True, verbose_name="Tipo de evidencia")
+    fecha_actualizacion = models.CharField(max_length=10, blank=True, null=True, verbose_name="Fecha de actualización")
+    
+    # Datos de Ancestría - Continente
+    continente = models.CharField(max_length=50, blank=True, null=True, verbose_name="Continente")
+    af_continente = models.DecimalField(max_digits=5, decimal_places=4, blank=True, null=True, verbose_name="Frecuencia Alélica - Continente")
+    fuente_continente = models.CharField(max_length=100, blank=True, null=True, verbose_name="Fuente - Continente")
+    poblacion_continente = models.CharField(max_length=50, blank=True, null=True, verbose_name="Población - Continente")
+    
+    # Datos de Ancestría - País
+    pais = models.CharField(max_length=50, blank=True, null=True, verbose_name="País")
+    af_pais = models.DecimalField(max_digits=5, decimal_places=4, blank=True, null=True, verbose_name="Frecuencia Alélica - País")
+    fuente_pais = models.CharField(max_length=100, blank=True, null=True, verbose_name="Fuente - País")
+    poblacion_pais = models.CharField(max_length=50, blank=True, null=True, verbose_name="Población - País")
 
     class Meta:
         db_table = 'snps'
         verbose_name = 'SNP'
         verbose_name_plural = 'SNPs'
-        unique_together = [('rsid', 'genotipo')]
+        unique_together = [('rsid', 'genotipo', 'fenotipo', 'categoria')]
         indexes = [
             models.Index(fields=['rsid']),
             models.Index(fields=['categoria']),
+            models.Index(fields=['cromosoma']),
+            models.Index(fields=['nivel_riesgo']),
         ]
 
     def __str__(self):
