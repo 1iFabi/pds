@@ -160,9 +160,10 @@ export default function AdminReports({ user }) {
   };
 
   const extractRutFromFilename = (filename) => {
-    // Formato esperado: nombre_rut.txt -> fayala_205165851.txt
+    // Formato esperado: nombre_rut.txt -> fayala_205165851.txt o fayala_2051658519K.txt
     // Extrae todo después del último underscore y antes del .txt
-    const match = filename.match(/_([0-9]+)\.txt$/);
+    // Permite números y opcionalmente K como último carácter
+    const match = filename.match(/_([0-9]+[Kk]?)\.txt$/);
     return match ? match[1] : null;
   };
 
@@ -173,14 +174,15 @@ export default function AdminReports({ user }) {
         const rutFromFile = extractRutFromFilename(selectedFile.name);
         
         if (!rutFromFile) {
-          alert('El nombre del archivo debe tener formato: nombre_rut.txt (ej: fayala_205165851.txt)');
+          alert('El nombre del archivo debe tener formato: nombre_rut.txt (ej: napellido_12345689)');
           return;
         }
         
         // Validar que el RUT del archivo coincida con el RUT del paciente
         if (selectedPatient.rut !== 'N/A') {
-          const rutClean = selectedPatient.rut.replace('-', '').replace('.', '');
-          if (rutFromFile !== rutClean) {
+          const rutClean = selectedPatient.rut.replace(/[-.]\s*/g, '').toUpperCase();
+          const rutFileClean = rutFromFile.toUpperCase();
+          if (rutFileClean !== rutClean) {
             alert(`El RUT del archivo (${rutFromFile}) no coincide con el RUT del paciente (${selectedPatient.rut}). Por favor, verifica el archivo.`);
             return;
           }
@@ -239,14 +241,15 @@ export default function AdminReports({ user }) {
         const rutFromFile = extractRutFromFilename(selectedFile.name);
         
         if (!rutFromFile) {
-          alert('El nombre del archivo debe tener formato: nombre_rut.txt (ej: fayala_205165851.txt)');
+          alert('El nombre del archivo debe tener formato: nombre_rut.txt (ej: fayala_205165851.txt o fayala_2051658519K.txt)');
           return;
         }
         
         // Validar que el RUT del archivo coincida con el RUT del paciente
         if (selectedPatient.rut !== 'N/A') {
-          const rutClean = selectedPatient.rut.replace('-', '').replace('.', '');
-          if (rutFromFile !== rutClean) {
+          const rutClean = selectedPatient.rut.replace(/[-.]\s*/g, '').toUpperCase();
+          const rutFileClean = rutFromFile.toUpperCase();
+          if (rutFileClean !== rutClean) {
             alert(`El RUT del archivo (${rutFromFile}) no coincide con el RUT del paciente (${selectedPatient.rut}). Por favor, verifica el archivo.`);
             return;
           }

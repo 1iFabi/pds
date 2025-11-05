@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Routes, Route } from 'react-router-dom';
 import Dashboard from './Dashboard';
 import { API_ENDPOINTS, apiRequest, clearToken } from '../../config/api';
+import Ancestria from '../Ancestria/Ancestria';
+import Rasgos from '../Rasgos/Rasgos';
+import Enfermedades from '../Enfermedades/Enfermedades';
 
 const PostloginUser = ({ user: initialUser }) => {
   const [user, setUser] = useState(initialUser);
@@ -21,7 +24,17 @@ const PostloginUser = ({ user: initialUser }) => {
     // TODO: Integrar descarga cuando el endpoint este disponible.
   };
 
-  return <Dashboard user={user} onLogout={handleLogout} onDownload={handleDownload} />;
+  return (
+    <Routes>
+      <Route path="/" element={<Dashboard user={user} onLogout={handleLogout} onDownload={handleDownload} />} />
+      <Route path="ancestria" element={<Ancestria />} />
+      <Route path="rasgos" element={<Rasgos />} />
+      <Route path="enfermedades" element={<Enfermedades />} />
+      <Route path="farmacogenetica" element={<div>Farmacogenética - Coming Soon</div>} />
+      <Route path="biomarcadores" element={<div>Biomarcadores - Coming Soon</div>} />
+      <Route path="biometricas" element={<div>Biométricas - Coming Soon</div>} />
+    </Routes>
+  );
 };
 
 export default PostloginUser;

@@ -1,4 +1,5 @@
 import { useRef, useEffect, useCallback, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { gsap } from 'gsap';
 import './GridBento.css';
 
@@ -487,10 +488,63 @@ const MagicBento = ({
     cards = cardData
   }) => {
   const gridRef = useRef(null);
+  const navigate = useNavigate();
   const isMobile = useMobileDetection();
   const shouldDisableAnimations = disableAnimations || isMobile;
 
-  const renderCardContent = card => {
+  const renderCta = useCallback((cta) => {
+    if (!cta || !cta.label) {
+      return null;
+    }
+
+    if (cta.href) {
+      const isInternalRoute = cta.href.startsWith('/');
+      const rel = cta.rel ?? (cta.target === '_blank' ? 'noopener noreferrer' : undefined);
+      
+      if (isInternalRoute) {
+        return (
+          <button
+            type="button"
+            className="card__cta"
+            onClick={(e) => {
+              e.preventDefault();
+              navigate(cta.href);
+              if (cta.onClick) cta.onClick(e);
+            }}
+            aria-label={cta.ariaLabel}
+          >
+            {cta.label}
+          </button>
+        );
+      }
+      
+      return (
+        <a
+          className="card__cta"
+          href={cta.href}
+          target={cta.target}
+          rel={rel}
+          onClick={cta.onClick}
+          aria-label={cta.ariaLabel}
+        >
+          {cta.label}
+        </a>
+      );
+    }
+
+    return (
+      <button
+        type="button"
+        className="card__cta card__cta--button"
+        onClick={cta.onClick}
+        aria-label={cta.ariaLabel}
+      >
+        {cta.label}
+      </button>
+    );
+  }, [navigate]);
+
+  const renderCardContent = useCallback((card) => {
     const contentClasses = ['card__content'];
     if (card.contentAlign) {
       contentClasses.push(`card__content--${card.contentAlign}`);
@@ -517,40 +571,6 @@ const MagicBento = ({
       return <div className="card__description card__description--rich">{card.description}</div>;
     };
 
-    const renderCta = () => {
-      const cta = card.cta;
-      if (!cta || !cta.label) {
-        return null;
-      }
-
-      if (cta.href) {
-        const rel = cta.rel ?? (cta.target === '_blank' ? 'noopener noreferrer' : undefined);
-        return (
-          <a
-            className="card__cta"
-            href={cta.href}
-            target={cta.target}
-            rel={rel}
-            onClick={cta.onClick}
-            aria-label={cta.ariaLabel}
-          >
-            {cta.label}
-          </a>
-        );
-      }
-
-      return (
-        <button
-          type="button"
-          className="card__cta card__cta--button"
-          onClick={cta.onClick}
-          aria-label={cta.ariaLabel}
-        >
-          {cta.label}
-        </button>
-      );
-    };
-
     return (
       <>
         {card.label ? (
@@ -562,11 +582,11 @@ const MagicBento = ({
         <div className={contentClasses.join(' ')}>
           {card.title ? <TitleTag className="card__title">{card.title}</TitleTag> : null}
           {renderDescription()}
-          {renderCta()}
+          {renderCta(card.cta)}
         </div>
       </>
     );
-  };
+  }, [renderCta]);
 
   return (
     <>

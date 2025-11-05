@@ -19,6 +19,7 @@ export const API_ENDPOINTS = {
   DISEASES: `${API_BASE_URL}/diseases/`,
   PATIENT_VARIANTS: (userId) => `${API_BASE_URL}/patient-variants/${userId}/`,
   VARIANTS: `${API_BASE_URL}/variantes/`,
+  ANCESTRY: `${API_BASE_URL}/ancestry/`,
 };
 
 export const getToken = () => localStorage.getItem('token');

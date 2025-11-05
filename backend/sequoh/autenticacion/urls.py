@@ -19,6 +19,7 @@ from .upload_views import UploadGeneticFileAPIView, DeleteGeneticFileAPIView, Ge
 from .diseases_views import DiseasesAPIView
 from .patient_variants_views import PatientVariantsAPIView
 from .snp_views import VariantesAPIView
+from .ancestry_views import AncestryAPIView
 
 urlpatterns = [
     path('login/', LoginAPIView.as_view(), name='api_login'),
@@ -49,4 +50,5 @@ urlpatterns = [
     path('diseases/', DiseasesAPIView.as_view(), name='api_diseases'),
     path('patient-variants/<int:user_id>/', PatientVariantsAPIView.as_view(), name='api_patient_variants'),
     path('variantes/', VariantesAPIView.as_view(), name='api_variantes'),
+    path('ancestry/', AncestryAPIView.as_view(), name='api_ancestry'),
 ]

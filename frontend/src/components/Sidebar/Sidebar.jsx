@@ -81,9 +81,11 @@ const Sidebar = ({ items = [], onLogout, user, isMobileMenuOpen = false, setIsMo
   }
 
   const closeMenuAndNavigate = (href) => (e) => {
+    e.preventDefault();
     if (isMobile) {
       setIsMobileMenuOpen(false)
     }
+    navigate(href)
   }
 
   const isExpanded = isHovered;
@@ -200,14 +202,14 @@ const Sidebar = ({ items = [], onLogout, user, isMobileMenuOpen = false, setIsMo
               <ul className="sidebar__categories-menu">
                 {navItems.map((nav) => (
                   <li key={nav.label}>
-                    <a 
-                      href={nav.href} 
+                    <button
+                      type="button"
                       className="sidebar__categories-item"
                       onClick={closeMenuAndNavigate(nav.href)}
                     >
                       <nav.Icon size={18} className="sidebar__categories-icon" />
                       <span>{nav.label}</span>
-                    </a>
+                    </button>
                   </li>
                 ))}
               </ul>
