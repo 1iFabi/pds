@@ -6,6 +6,7 @@ from django.utils.decorators import method_decorator
 from .authentication import JWTAuthentication
 from .models import UserSNP, SNP
 from collections import defaultdict
+import re
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -16,6 +17,22 @@ class DiseasesAPIView(APIView):
     """
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
+
+    def _extract_gene_name(self, fenotipo):
+        """
+        Extrae el nombre del gen del campo fenotipo.
+        Busca patrones como 'GENE_NAME increased' o 'GENE_NAME decreased'
+        """
+        if not fenotipo:
+            return 'Unknown'
+        
+        # Buscar palabras en mayúsculas al principio (típico nombre de gen)
+        match = re.match(r'^([A-Z][A-Z0-9\-]*)', fenotipo.strip())
+        if match:
+            return match.group(1)
+        
+        # Si no encuentra patrón, devolver Unknown
+        return 'Unknown'
 
     def get(self, request):
         user = request.user
@@ -42,11 +59,15 @@ class DiseasesAPIView(APIView):
             nivel_riesgo = snp.nivel_riesgo or 'Bajo'
             magnitud_efecto = float(snp.magnitud_efecto) if snp.magnitud_efecto else 0.0
             
+            # Extraer nombre del gen del fenotipo
+            gen_name = self._extract_gene_name(snp.fenotipo)
+            
             snp_obj = {
                 'rsid': snp.rsid,
                 'genotipo': snp.genotipo,
                 'fenotipo': snp.fenotipo,
                 'cromosoma': snp.cromosoma,
+                'gen': gen_name,
                 'nivel_riesgo': nivel_riesgo,
                 'magnitud_efecto': magnitud_efecto,
                 'fuente': snp.fuente_base_datos,
