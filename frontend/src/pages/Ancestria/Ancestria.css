@@ -467,9 +467,23 @@
 :global(.google-visualization-geochart path) {
   stroke: #000000 !important;
   stroke-width: 0.2px !important;
+  transition: stroke-width 0.2s ease, stroke 0.2s ease !important;
+}
+
+:global(.google-visualization-geochart path:hover) {
+  stroke: #0b7ad0 !important;
+  stroke-width: 2.5px !important;
+  cursor: pointer !important;
 }
 
 :global(.google-visualization-geochart-container path) {
   stroke: #000000 !important;
   stroke-width: 0.2px !important;
+  transition: stroke-width 0.2s ease, stroke 0.2s ease !important;
+}
+
+:global(.google-visualization-geochart-container path:hover) {
+  stroke: #0b7ad0 !important;
+  stroke-width: 2.5px !important;
+  cursor: pointer !important;
 }

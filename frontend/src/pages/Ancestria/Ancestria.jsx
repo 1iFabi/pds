@@ -4,6 +4,7 @@ import { Menu, X, Globe, Dna } from 'lucide-react';
 import { API_ENDPOINTS, apiRequest, clearToken } from '../../config/api';
 import Sidebar from '../../components/Sidebar/Sidebar';
 import SectionHeader from '../../components/SectionHeader/SectionHeader';
+import IndigenousRadarChart from '../../components/IndigenousRadarChart/IndigenousRadarChart';
 import compassRose from '../../assets/compass-rose.svg';
 import './Ancestria.css';
 
@@ -112,12 +113,11 @@ const drawChart = (element, data, options, onCountryClick) => {
   
   const dataTable = google.visualization.arrayToDataTable(dataArray);
   
-  // Configurar el tooltip con formato personalizado
+  // Configurar opciones sin tooltip
   const finalOptions = {
     ...options,
     tooltip: {
-      isHtml: true,
-      trigger: 'focus'
+      trigger: 'none'
     }
   };
   
@@ -445,14 +445,8 @@ const Ancestria = () => {
     width: '100%',
     legend: 'none',
     enableRegionInteractivity: true,
-    tooltip: {
-      isHtml: true,
-      textStyle: {
-        color: '#000000',
-        fontSize: 14,
-        bold: true
-      }
-    }
+    tooltip: { trigger: 'none' },
+    focusTarget: 'none'
   }), [isMobile]);
 
   // Cargar Google Charts y dibujar el gráfico
@@ -955,6 +949,11 @@ const Ancestria = () => {
                   </div>
                 </div>
               )}
+            </div>
+
+            {/* Radar Chart de Pueblos Indígenas */}
+            <div className="ancestria-page__indigenous-card" style={{ gridColumn: '1 / -1', marginTop: '2rem' }}>
+              <IndigenousRadarChart />
             </div>
           </div>
         </div>
