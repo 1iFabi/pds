@@ -20,8 +20,62 @@ from allauth.account.models import EmailAddress
 from .email_utils import send_welcome_email, send_password_reset_email, send_email, build_branded_html
 from .jwt_utils import encode_jwt
 from .authentication import JWTAuthentication
+from .models import ServiceStatus, Profile, SNP
 import json
 import re
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class UserServiceStatusAPIView(APIView):
+    """Permite consultar tu estado y a admin/staff actualizar el estado de otro usuario."""
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        """Devuelve el estado del usuario autenticado."""
+        u = request.user
+        from .models import Profile, ServiceStatus
+        try:
+            status_value = u.profile.service_status
+            updated_at = u.profile.service_updated_at
+        except Profile.DoesNotExist:
+            status_value = ServiceStatus.NO_PURCHASED
+            updated_at = None
+        return Response({
+            "user_id": u.id,
+            "service_status": status_value,
+            "can_view_results": status_value == ServiceStatus.COMPLETED,
+            "updated_at": updated_at,
+        })
+
+    def post(self, request):
+        """Actualiza el estado de servicio de un usuario (solo staff). Body: {userId, status} """
+        if not request.user.is_staff:
+            return Response({"error": "No tienes permisos"}, status=status.HTTP_403_FORBIDDEN)
+        try:
+            data = json.loads(request.body or '{}')
+        except json.JSONDecodeError:
+            data = request.data or {}
+        user_id = data.get('userId')
+        status_str = data.get('status')
+        if not user_id or not status_str:
+            return Response({"error": "userId y status son obligatorios"}, status=status.HTTP_400_BAD_REQUEST)
+        if status_str not in {s.value for s in ServiceStatus}:
+            return Response({"error": f"status inválido. Usa uno de: {[s.value for s in ServiceStatus]}"}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            target = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response({"error": "Usuario no encontrado"}, status=status.HTTP_404_NOT_FOUND)
+        # Asegurar que el profile exista
+        from .models import Profile
+        profile, _ = Profile.objects.get_or_create(user=target)
+        profile.service_status = status_str
+        profile.save(update_fields=["service_status", "service_updated_at"])
+        return Response({
+            "user_id": target.id,
+            "service_status": profile.service_status,
+            "updated_at": profile.service_updated_at,
+        })
 
 
 def normalize_cl_phone(raw: str):
@@ -133,11 +187,23 @@ class MeAPIView(APIView):
 
     def get(self, request):
         u = request.user
+        # Cargar estado de servicio desde Profile
+        from .models import Profile, ServiceStatus
+        try:
+            p = u.profile
+            service_status = p.service_status
+        except Profile.DoesNotExist:
+            service_status = ServiceStatus.NO_PURCHASED
         data = {
             "id": u.id,
             "email": u.email,
             "first_name": u.first_name,
             "last_name": u.last_name,
+            "is_staff": u.is_staff,
+            "is_superuser": u.is_superuser,
+            "user_type": "admin" if u.is_staff else "user",
+            "service_status": service_status,
+            "can_view_results": service_status == ServiceStatus.COMPLETED,
         }
         # Evitar cacheo del perfil actual
         resp = Response({"user": data})
@@ -285,9 +351,10 @@ class DashboardAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        from .models import Profile
+        from .models import Profile, ServiceStatus
         u = request.user
         profile = getattr(u, 'profile', None)
+        service_status = getattr(profile, 'service_status', ServiceStatus.NO_PURCHASED)
         payload = {
             "user": {
                 "id": u.id,
@@ -297,7 +364,18 @@ class DashboardAPIView(APIView):
             },
             "profile": {
                 "phone": getattr(profile, 'phone', None),
-            }
+                "service_status": service_status,
+                "can_view_results": service_status == ServiceStatus.COMPLETED,
+            },
+            # Estadísticas para el dashboard de admin
+            "total_users": User.objects.filter(is_active=True).count(),
+            "processed_reports": UserSNP.objects.values('user').distinct().count() if UserSNP.objects.exists() else 0,
+            "variants_count": SNP.objects.count() if SNP.objects.exists() else 0,
+            "analysis_count": User.objects.filter(profile__service_status=ServiceStatus.COMPLETED).count(),
+            "user_growth": "+12%",
+            "report_growth": "+8%",
+            "analysis_growth": "+18%",
+            "last_update": timezone.now().strftime("%d/%m/%Y")  # Formato más legible
         }
         resp = Response(payload)
         resp["Cache-Control"] = "no-store"
@@ -374,12 +452,13 @@ class RegisterAPIView(APIView):
             apellido = data.get('apellido', '').strip()
             correo = data.get('correo', '').strip().lower()
             telefono = data.get('telefono', '').strip()
+            rut = data.get('rut', '').strip().upper()  # Normalizar a mayúsculas para la K
             contraseña = data.get('contraseña', '')
             repetir_contraseña = data.get('repetirContraseña', '')
             terminos = data.get('terminos', False)
             
             # Validaciones básicas
-            if not all([nombre, apellido, correo, telefono, contraseña, repetir_contraseña]):
+            if not all([nombre, apellido, correo, telefono, rut, contraseña, repetir_contraseña]):
                 return Response({"error": "Todos los campos son obligatorios"}, status=status.HTTP_400_BAD_REQUEST)
             
             if not terminos:
@@ -402,6 +481,19 @@ class RegisterAPIView(APIView):
             if not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', correo):
                 return Response({"error": "El formato del correo electrónico no es válido"}, status=status.HTTP_400_BAD_REQUEST)
             
+            # Validación de RUT
+            rut_pattern = r'^\d{7,8}-[0-9K]$'
+            if not re.match(rut_pattern, rut):
+                return Response({"error": "El RUT debe tener el formato XXXXXXX-R (ejemplo: 12345678-9 o 1234567-K)"}, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Verificar si el RUT ya existe
+            from .models import Profile
+            if Profile.objects.filter(rut=rut).exists():
+                return Response({
+                    "error": "Este RUT ya está registrado",
+                    "rut_exists": True
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
             # Verificar si el usuario ya existe
             if User.objects.filter(username=correo).exists() or User.objects.filter(email=correo).exists():
                 return Response({
@@ -418,10 +510,12 @@ class RegisterAPIView(APIView):
                 last_name=apellido,
             )
             
-            # Guardamos el teléfono en Profile
+            # Guardamos el teléfono y RUT en Profile
             from .models import Profile
             profile, _ = Profile.objects.get_or_create(user=user)
             profile.phone = telefono_norm
+            profile.rut = rut
+            # El estado por defecto queda en NO_PURCHASED
             profile.save()
 
             # Enviar confirmación de email via allauth (usa nuestro adapter Gmail API)
@@ -669,6 +763,94 @@ class VerifyEmailView(APIView):
                 secure=not settings.DEBUG, samesite='Lax'
             )
             return resp
+
+
+class GetUsersAPIView(APIView):
+    """Endpoint para obtener lista de usuarios (solo staff)."""
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        # Verificar que sea staff
+        if not request.user.is_staff:
+            return Response({"error": "No tienes permisos"}, status=status.HTTP_403_FORBIDDEN)
+        
+        users = User.objects.filter(is_active=True).values(
+            'id', 'username', 'email', 'first_name', 'last_name', 'is_staff', 'is_superuser'
+        )
+        
+        # Agregar campo rut si existe en el profile
+        from .models import Profile
+        users_list = []
+        for user in users:
+            user_dict = dict(user)
+            try:
+                profile = Profile.objects.get(user_id=user['id'])
+                user_dict['rut'] = getattr(profile, 'rut', None)
+            except Profile.DoesNotExist:
+                user_dict['rut'] = None
+            users_list.append(user_dict)
+        
+        return Response(users_list)
+
+
+class AdminStatsAPIView(APIView):
+    """Endpoint para obtener estadísticas del sistema (solo staff)."""
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        # Verificar que sea staff
+        if not request.user.is_staff:
+            return Response({"error": "No tienes permisos"}, status=status.HTTP_403_FORBIDDEN)
+        
+        from django.db import connection
+        from .models import Profile, ServiceStatus
+        
+        try:
+            # Contar usuarios activos (excluyendo staff y superusers)
+            total_users = User.objects.filter(is_active=True, is_staff=False, is_superuser=False).count()
+            
+            # Análisis completados (solo usuarios regulares)
+            analysis_count = User.objects.filter(
+                is_active=True,
+                is_staff=False,
+                is_superuser=False,
+                profile__service_status=ServiceStatus.COMPLETED
+            ).count()
+            
+            # Contar reportes pendientes
+            pending_reports = Profile.objects.filter(service_status=ServiceStatus.PENDING).count()
+            
+            # Contar variantes en la BD
+            variants_count = SNP.objects.count()
+            
+            payload = {
+                "total_users": total_users,
+                "pending_reports": pending_reports,
+                "variants_count": variants_count,
+                "analysis_count": analysis_count,
+                "user_growth": "+12%",
+                "report_growth": "+8%",
+                "analysis_growth": "+18%",
+                "last_update": timezone.now().strftime("%d/%m/%Y"),
+            }
+            resp = Response(payload)
+            resp["Cache-Control"] = "no-store"
+            return resp
+        except Exception as e:
+            print(f"Error en AdminStatsAPIView: {e}")
+            # Devolver al menos los usuarios que podemos contar
+            return Response({
+                "total_users": User.objects.filter(is_active=True, is_staff=False, is_superuser=False).count(),
+                "processed_reports": 0,
+                "variants_count": 0,
+                "analysis_count": 0,
+                "user_growth": "+0%",
+                "report_growth": "+0%",
+                "analysis_growth": "+0%",
+                "last_update": timezone.now().strftime("%d/%m/%Y"),
+            })
 
 
 @method_decorator(csrf_exempt, name='dispatch')

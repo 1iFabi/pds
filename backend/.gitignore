@@ -20,16 +20,23 @@ db.sqlite3-journal
 /static
 /staticfiles
 
-# Environment variables
+# Environment variables (CRÍTICO - NO VERSIONAR)
 .env
 .env.local
 .env.production
+.env.*.local
 
 # IDE
 .vscode/
 .idea/
 *.swp
 *.swo
+
+# Gmail API credentials (NO VERSIONAR)
+config/credentials.json
+config/token.json
+*.pem
+*.key
 
 # OS
 .DS_Store

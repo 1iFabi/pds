@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import User
-from .models import Profile, EmailVerification, WelcomeStatus, PasswordResetToken
+from .models import Profile, EmailVerification, WelcomeStatus, PasswordResetToken, ServiceStatus, SNP, UserSNP
 
 
 class ProfileInline(admin.StackedInline):
@@ -10,7 +10,7 @@ class ProfileInline(admin.StackedInline):
     can_delete = False
     verbose_name = 'Perfil'
     verbose_name_plural = 'Perfil'
-    fields = ('phone',)
+    fields = ('phone', 'service_status')
 
 
 class CustomUserAdmin(BaseUserAdmin):
@@ -18,8 +18,11 @@ class CustomUserAdmin(BaseUserAdmin):
     inlines = (ProfileInline,)
     
     # Columnas mostradas en la lista
-    list_display = ('username', 'email', 'first_name', 'last_name', 'get_phone', 'is_staff', 'is_active', 'date_joined')
-    list_filter = ('is_staff', 'is_active', 'date_joined')
+    list_display = (
+        'username', 'email', 'first_name', 'last_name',
+        'get_phone', 'get_service_status', 'is_staff', 'is_active', 'date_joined'
+    )
+    list_filter = ('is_staff', 'is_active', 'date_joined',)
     search_fields = ('username', 'email', 'first_name', 'last_name')
     ordering = ('-date_joined',)
     
@@ -39,6 +42,13 @@ class CustomUserAdmin(BaseUserAdmin):
             return '-'
     get_phone.short_description = 'Teléfono'
 
+    def get_service_status(self, obj):
+        try:
+            return obj.profile.service_status or ServiceStatus.NO_PURCHASED
+        except Profile.DoesNotExist:
+            return ServiceStatus.NO_PURCHASED
+    get_service_status.short_description = 'Estado servicio'
+
 
 # Desregistrar el UserAdmin por defecto y registrar el personalizado
 admin.site.unregister(User)
@@ -48,9 +58,9 @@ admin.site.register(User, CustomUserAdmin)
 # Registrar otros modelos
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
-    list_display = ('user', 'phone')
+    list_display = ('user', 'phone', 'service_status', 'service_updated_at')
     search_fields = ('user__username', 'user__email', 'phone')
-    list_filter = ('user__date_joined',)
+    list_filter = ('user__date_joined', 'service_status')
 
 
 @admin.register(EmailVerification)
@@ -86,3 +96,68 @@ class PasswordResetTokenAdmin(admin.ModelAdmin):
         return obj.is_expired
     is_expired.boolean = True
     is_expired.short_description = 'Expirado'
+
+
+@admin.register(SNP)
+class SNPAdmin(admin.ModelAdmin):
+    list_display = (
+        'rsid', 'genotipo', 'cromosoma', 'posicion', 
+        'nivel_riesgo', 'magnitud_efecto', 'categoria', 
+        'continente', 'pais', 'af_continente', 'af_pais',
+        'fuente_base_datos', 'fenotipo_preview'
+    )
+    list_filter = (
+        'categoria', 'nivel_riesgo', 'cromosoma', 
+        'fuente_base_datos', 'tipo_evidencia'
+    )
+    search_fields = (
+        'rsid', 'genotipo', 'fenotipo', 'cromosoma', 
+        'alelo_referencia', 'alelo_alternativo'
+    )
+    ordering = ('rsid', 'genotipo')
+    
+    fieldsets = (
+        ('Identificación', {
+            'fields': ('rsid', 'genotipo', 'cromosoma', 'posicion')
+        }),
+        ('Alelos', {
+            'fields': ('alelo_referencia', 'alelo_alternativo')
+        }),
+        ('Información Clínica', {
+            'fields': ('fenotipo', 'nivel_riesgo', 'magnitud_efecto', 'categoria')
+        }),
+        ('Datos de Ancestría - Continente', {
+            'fields': ('continente', 'af_continente', 'fuente_continente', 'poblacion_continente')
+        }),
+        ('Datos de Ancestría - País', {
+            'fields': ('pais', 'af_pais', 'fuente_pais', 'poblacion_pais')
+        }),
+        ('Metadata', {
+            'fields': ('fuente_base_datos', 'tipo_evidencia', 'fecha_actualizacion')
+        }),
+    )
+    
+    def fenotipo_preview(self, obj):
+        """Muestra un preview del fenotipo"""
+        return obj.fenotipo[:50] + '...' if len(obj.fenotipo) > 50 else obj.fenotipo
+    fenotipo_preview.short_description = 'Fenotipo (preview)'
+
+
+@admin.register(UserSNP)
+class UserSNPAdmin(admin.ModelAdmin):
+    list_display = ('user', 'get_rsid', 'get_genotipo', 'get_categoria')
+    list_filter = ('snp__categoria',)
+    search_fields = ('user__username', 'user__email', 'snp__rsid')
+    raw_id_fields = ('user', 'snp')
+    
+    def get_rsid(self, obj):
+        return obj.snp.rsid
+    get_rsid.short_description = 'rsID'
+    
+    def get_genotipo(self, obj):
+        return obj.snp.genotipo
+    get_genotipo.short_description = 'Genotipo'
+    
+    def get_categoria(self, obj):
+        return obj.snp.categoria or '-'
+    get_categoria.short_description = 'Categoría'
