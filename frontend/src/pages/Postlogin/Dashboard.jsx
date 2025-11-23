@@ -37,14 +37,14 @@ const Dashboard = ({ user, onLogout, onDownload }) => {
     () => [
       {
         id: 'postlogin-ancestria',
-        navLabel: 'Ancestr\u00eda',
-        title: 'Ancestr\u00eda',
+        navLabel: 'Ancestría',
+        title: 'Ancestría',
         description:
-          'Descubre tus or\u00edgenes gen\u00e9ticos y c\u00f3mo las conexiones con distintas poblaciones han influido en tu historia ancestral.',
+          'Descubre tus orígenes genéticos y cómo las conexiones con distintas poblaciones han influido en tu historia ancestral.',
         cta: {
           label: 'Explorar ahora',
-          href: '#postlogin-ancestria',
-          ariaLabel: 'Explorar Ancestr\u00eda'
+          href: '/dashboard/ancestria',
+          ariaLabel: 'Explorar Ancestría'
         },
         className: 'card--ancestria',
         contentJustify: 'start',
@@ -64,10 +64,10 @@ const Dashboard = ({ user, onLogout, onDownload }) => {
         navLabel: 'Rasgos',
         title: 'Rasgos',
         description:
-          'Conoce los rasgos gen\u00e9ticos que influyen en tu apariencia, comportamiento y habilidades \u00fanicas.',
+          'Conoce los rasgos genéticos que influyen en tu apariencia, comportamiento y habilidades únicas.',
         cta: {
           label: 'Explorar ahora',
-          href: '#postlogin-rasgos',
+          href: '/dashboard/rasgos',
           ariaLabel: 'Explorar Rasgos'
         },
         className: 'card--rasgos',
@@ -84,14 +84,14 @@ const Dashboard = ({ user, onLogout, onDownload }) => {
       },
       {
         id: 'postlogin-farmacogenetica',
-        navLabel: 'Farmacogen\u00e9tica',
-        title: 'Farmacogen\u00e9tica',
+        navLabel: 'Farmacogenética',
+        title: 'Farmacogenética',
         description:
           'Descubre cómo tu genética influye en los medicamentos para optimizar tus tratamientos.',
         cta: {
           label: 'Explorar ahora',
-          href: '#postlogin-farmacogenetica',
-          ariaLabel: 'Explorar Farmacogen\u00e9tica'
+          href: '/dashboard/farmacogenetica',
+          ariaLabel: 'Explorar Farmacogenética'
         },
         className: 'card--farmacogenetica',
         textColor: '#3E3A37',
@@ -110,10 +110,10 @@ const Dashboard = ({ user, onLogout, onDownload }) => {
         navLabel: 'Biomarcadores',
         title: 'Biomarcadores',
         description:
-          'Identifica biomarcadores gen\u00e9ticos que revelan factores clave de tu salud, bienestar y predisposici\u00f3n.',
+          'Identifica biomarcadores genéticos que revelan factores clave de tu salud, bienestar y predisposición.',
         cta: {
           label: 'Explorar ahora',
-          href: '#postlogin-biomarcadores',
+          href: '/dashboard/biomarcadores',
           ariaLabel: 'Explorar Biomarcadores'
         },
         className: 'card--biomarcadores',
@@ -130,14 +130,14 @@ const Dashboard = ({ user, onLogout, onDownload }) => {
       },
       {
         id: 'postlogin-biometricas',
-        navLabel: 'Biom\u00e9tricas',
-        title: 'Biom\u00e9tricas',
+        navLabel: 'Biométricas',
+        title: 'Biométricas',
         description:
-          'Analiza tus datos biom\u00e9tricos para entender c\u00f3mo tus caracter\u00edsticas f\u00edsicas influyen en tu salud general.',
+          'Analiza tus datos biométricos para entender cómo tus características físicas influyen en tu salud general.',
         cta: {
           label: 'Explorar ahora',
-          href: '#postlogin-biometricas',
-          ariaLabel: 'Explorar Biom\u00e9tricas'
+          href: '/dashboard/biometricas',
+          ariaLabel: 'Explorar Biométricas'
         },
         className: 'card--biometricas',
         textColor: '#5F1C3E',
@@ -156,10 +156,10 @@ const Dashboard = ({ user, onLogout, onDownload }) => {
         navLabel: 'Enfermedades',
         title: 'Enfermedades',
         description:
-          'Analiza tu gen\u00e9tica para conocer predisposiciones y mutaciones que pueden influir en tu salud y bienestar.',
+          'Analiza tu genética para conocer predisposiciones y mutaciones que pueden influir en tu salud y bienestar.',
         cta: {
           label: 'Explorar ahora',
-          href: '#postlogin-enfermedades',
+          href: '/dashboard/enfermedades',
           ariaLabel: 'Explorar Enfermedades'
         },
         className: 'card--enfermedades',
@@ -220,7 +220,7 @@ const Dashboard = ({ user, onLogout, onDownload }) => {
       <main className="dashboard__main">
         <header className="dashboard__header">
           <div className="dashboard__headline">
-            <h1 className="dashboard__welcome">Bienvenido {displayName}!</h1>
+            <h1 className="dashboard__welcome">Bienvenido/a {displayName}!</h1>
             <p className="dashboard__subtitle">
               Explora cómo tu información genética se relaciona con distintos aspectos de ti, y descubre análisis personalizados en cada categoría.
             </p>

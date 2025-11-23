@@ -1,18 +1,24 @@
 import React, { useMemo, useState, useEffect } from 'react'
-import { LogOut, Dna, Activity, Heart, Globe, Pill, TestTube, User, ChevronDown, ChevronUp, KeyRound, UserX, Bot, MessageCircle, Grid3x3, Menu, X } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { createPortal } from 'react-dom'
+import { LogOut, Dna, Activity, Heart, Globe, Pill, TestTube, User, ChevronDown, ChevronUp, KeyRound, UserX, Bot, MessageCircle, Grid3x3, Menu, X, Settings, Upload } from 'lucide-react'
 import ChangePasswordModal from '../ChangePasswordModal/ChangePasswordModal.jsx'
 import DeleteAccountModal from '../DeleteAccountModal/DeleteAccountModal.jsx'
+import UploadFileModal from '../UploadFileModal/UploadFileModal.jsx'
 import './Sidebar.css'
 
 const defaultIcons = [Dna, Activity, Heart, Globe, Pill, TestTube]
 
 const Sidebar = ({ items = [], onLogout, user, isMobileMenuOpen = false, setIsMobileMenuOpen = () => {} }) => {
+  const navigate = useNavigate()
   const [isHovered, setIsHovered] = useState(false)
   const [isProfileExpanded, setIsProfileExpanded] = useState(false)
   const [isCategoriesExpanded, setIsCategoriesExpanded] = useState(false)
   const [isAIExpanded, setIsAIExpanded] = useState(false)
+  const [isAdminExpanded, setIsAdminExpanded] = useState(false)
   const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false)
   const [isDeleteAccountModalOpen, setIsDeleteAccountModalOpen] = useState(false)
+  const [isUploadFileModalOpen, setIsUploadFileModalOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
 
   useEffect(() => {
@@ -69,10 +75,17 @@ const Sidebar = ({ items = [], onLogout, user, isMobileMenuOpen = false, setIsMo
     setIsAIExpanded(!isAIExpanded)
   }
 
+  const toggleAdmin = (e) => {
+    e.preventDefault()
+    setIsAdminExpanded(!isAdminExpanded)
+  }
+
   const closeMenuAndNavigate = (href) => (e) => {
+    e.preventDefault();
     if (isMobile) {
       setIsMobileMenuOpen(false)
     }
+    navigate(href)
   }
 
   const isExpanded = isHovered;
@@ -96,10 +109,18 @@ const Sidebar = ({ items = [], onLogout, user, isMobileMenuOpen = false, setIsMo
         onMouseLeave={() => !isMobile && setIsHovered(false)}
       >
       <div className="sidebar__header">
-        <div className="sidebar__brand">
+        <button
+          type="button"
+          className="sidebar__brand"
+          onClick={() => {
+            if (isMobile) setIsMobileMenuOpen(false)
+            navigate('/dashboard')
+          }}
+          aria-label="Ir al dashboard"
+        >
           <img src="/cSolido.png" alt="GenomIA Logo" className="sidebar__logo" />
           {isExpanded && !isMobile && <span className="sidebar__brand-text">Genom<span className="sidebar__brand-highlight">IA</span>.</span>}
-        </div>
+        </button>
       </div>
 
       <nav className="sidebar__nav">
@@ -131,6 +152,7 @@ const Sidebar = ({ items = [], onLogout, user, isMobileMenuOpen = false, setIsMo
                     onClick={(e) => {
                       e.preventDefault();
                       setIsChangePasswordModalOpen(true);
+                      if (isMobile) setIsMobileMenuOpen(false);
                     }}
                     className="sidebar__profile-item sidebar__profile-button"
                   >
@@ -144,6 +166,7 @@ const Sidebar = ({ items = [], onLogout, user, isMobileMenuOpen = false, setIsMo
                     onClick={(e) => {
                       e.preventDefault()
                       setIsDeleteAccountModalOpen(true)
+                      if (isMobile) setIsMobileMenuOpen(false);
                     }}
                     className="sidebar__profile-item sidebar__profile-item--danger sidebar__profile-button"
                   >
@@ -179,14 +202,14 @@ const Sidebar = ({ items = [], onLogout, user, isMobileMenuOpen = false, setIsMo
               <ul className="sidebar__categories-menu">
                 {navItems.map((nav) => (
                   <li key={nav.label}>
-                    <a 
-                      href={nav.href} 
+                    <button
+                      type="button"
                       className="sidebar__categories-item"
                       onClick={closeMenuAndNavigate(nav.href)}
                     >
                       <nav.Icon size={18} className="sidebar__categories-icon" />
                       <span>{nav.label}</span>
-                    </a>
+                    </button>
                   </li>
                 ))}
               </ul>
@@ -229,6 +252,51 @@ const Sidebar = ({ items = [], onLogout, user, isMobileMenuOpen = false, setIsMo
             </div>
           )}
         </div>
+
+        {/* Sección de Administrador - Solo visible para staff */}
+        {user?.is_staff && (
+          <>
+            {(isExpanded || isMobile) && <div className="sidebar__divider" />}
+            
+            <div className="sidebar__admin-section">
+              <button 
+                type="button" 
+                className="sidebar__nav-item sidebar__admin-toggle"
+                onClick={toggleAdmin}
+                title={!isExpanded && !isMobile ? 'Administrador' : undefined}
+              >
+                <Settings size={20} className="sidebar__nav-icon" />
+                {(isExpanded || isMobile) && (
+                  <>
+                    <span className="sidebar__nav-label">Administrador</span>
+                    {isAdminExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                  </>
+                )}
+              </button>
+
+              {isAdminExpanded && (isExpanded || isMobile) && (
+                <div className="sidebar__admin-content">
+                  <ul className="sidebar__admin-menu">
+                    <li>
+                      <button
+                        type="button"
+                        className="sidebar__admin-item sidebar__admin-button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setIsUploadFileModalOpen(true);
+                          if (isMobile) setIsMobileMenuOpen(false);
+                        }}
+                      >
+                        <Upload size={18} className="sidebar__admin-icon" />
+                        <span>Subir Archivo</span>
+                      </button>
+                    </li>
+                  </ul>
+                </div>
+              )}
+            </div>
+          </>
+        )}
       </nav>
 
       <div className="sidebar__footer">
@@ -248,19 +316,29 @@ const Sidebar = ({ items = [], onLogout, user, isMobileMenuOpen = false, setIsMo
         )}
       </div>
 
-      <ChangePasswordModal 
-        isOpen={isChangePasswordModalOpen}
-        onClose={() => setIsChangePasswordModalOpen(false)}
-      />
-      <DeleteAccountModal
-        isOpen={isDeleteAccountModalOpen}
-        onClose={() => {
-          setIsDeleteAccountModalOpen(false)
-          setIsProfileExpanded(false)
-        }}
-        userName={displayName}
-      />
       </aside>
+
+      {createPortal(
+        <>
+          <ChangePasswordModal 
+            isOpen={isChangePasswordModalOpen}
+            onClose={() => setIsChangePasswordModalOpen(false)}
+          />
+          <DeleteAccountModal
+            isOpen={isDeleteAccountModalOpen}
+            onClose={() => {
+              setIsDeleteAccountModalOpen(false)
+              setIsProfileExpanded(false)
+            }}
+            userName={displayName}
+          />
+          <UploadFileModal
+            isOpen={isUploadFileModalOpen}
+            onClose={() => setIsUploadFileModalOpen(false)}
+          />
+        </>,
+        document.body
+      )}
     </>
   )
 }

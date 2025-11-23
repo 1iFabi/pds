@@ -6,18 +6,24 @@ import Descubre from "./pages/Descubre/Descubre";
 import Conoce from "./pages/Conoce/Conoce";
 import Login from "./pages/Login/Login";
 import Register from "./pages/Register/Register";
-import Postlogin from "./pages/Postlogin/Postlogin";
+import PostloginRouter from "./pages/Postlogin/PostloginRouter";
+import NoPurchased from "./pages/NoPurchased/NoPurchased";
+import Pending from "./pages/Pending/Pending";
 import ProtectedRoute from "./components/ProtectedRoute";
 import GenomaPricing from "./pages/GenomaPricing/GenomaPricing";
 import SobreNosotros from "./pages/SobreNosotros/SobreNosotros";
 import Contacto from "./pages/Contacto/Contacto";
 import Preguntas from "./pages/Preguntas/Preguntas";
+import Enfermedades from "./pages/Enfermedades/Enfermedades";
+import AdminReports from "./pages/Postlogin/AdminReports";
 
 export default function App() {
   const { pathname } = useLocation();
   const hideNavbar =
     pathname === "/login" ||
     pathname === "/register" ||
+    pathname === "/no-purchased" ||
+    pathname === "/pending" ||
     pathname.startsWith("/dashboard");
 
   return (
@@ -40,7 +46,9 @@ export default function App() {
         />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/dashboard" element={<ProtectedRoute><Postlogin /></ProtectedRoute>} />
+        <Route path="/no-purchased" element={<ProtectedRoute requireService={false}><NoPurchased /></ProtectedRoute>} />
+        <Route path="/pending" element={<ProtectedRoute requireService={false}><Pending /></ProtectedRoute>} />
+        <Route path="/dashboard/*" element={<ProtectedRoute><PostloginRouter /></ProtectedRoute>} />
         {/* Catch-all: redirige cualquier ruta desconocida a la página de inicio */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
