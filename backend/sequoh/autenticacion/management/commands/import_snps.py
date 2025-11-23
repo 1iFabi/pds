@@ -39,10 +39,16 @@ class Command(BaseCommand):
                 
                 for row_num, row in enumerate(reader, start=2):  # Comenzar en 2 porque fila 1 es headers
                     try:
+                        genotipo_raw = row.get('genotipo', '').strip()
+                        genotipo_normalizado = genotipo_raw
+                        if '/' in genotipo_normalizado:
+                            alelos = sorted([a.strip() for a in genotipo_normalizado.split('/') if a.strip()])
+                            genotipo_normalizado = "/".join(alelos)
+
                         # Mapear campos CSV a modelo
                         snp = SNP(
                             rsid=row.get('rs_id', '').strip(),
-                            genotipo=row.get('genotipo', '').strip(),
+                            genotipo=genotipo_normalizado,
                             fenotipo=row.get('fenotipo', '').strip(),
                             categoria=row.get('categoria', '').strip() or None,
                             cromosoma=row.get('cromosoma', '').strip() or None,

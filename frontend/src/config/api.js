@@ -21,6 +21,7 @@ export const API_ENDPOINTS = {
   VARIANTS: `${API_BASE_URL}/variantes/`,
   ANCESTRY: `${API_BASE_URL}/ancestry/`,
   INDIGENOUS: `${API_BASE_URL}/indigenous/`,
+  TRAITS: `${API_BASE_URL}/traits/`,
 };
 
 export const getToken = () => localStorage.getItem('token');

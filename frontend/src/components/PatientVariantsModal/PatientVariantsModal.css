@@ -381,6 +381,7 @@
   letter-spacing: 0.2px;
 }
 
+.patient-variants-modal__risk-badge--alto,
 .patient-variants-modal__risk-badge--elevado,
 .patient-variants-modal__risk-badge--elevada,
 .patient-variants-modal__risk-badge--deficiente,

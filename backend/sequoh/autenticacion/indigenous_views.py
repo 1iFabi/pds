@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
-from django.db.models import Count, Sum, Q, F, Case, When, DecimalField
+from django.db.models import Count, Sum
 from .authentication import JWTAuthentication
 from .models import UserSNP, SNP
 from decimal import Decimal
@@ -38,44 +38,40 @@ class IndigenousPeoplesAPIView(APIView):
                 }
             })
         
-        # List of indigenous peoples to filter
-        indigenous_peoples = ['Aimara', 'Atacameño', 'Diaguita', 'Mapuche', 'Rapa Nui']
-        
-        # Aggregate data by indigenous population
-        indigenous_data = []
-        total_count = 0
-        
-        for people in indigenous_peoples:
-            people_snps = user_snps.filter(
-                snp__poblacion_pais__iexact=people
-            )
-            
-            count = people_snps.count()
-            if count > 0:
-                avg_freq = people_snps.aggregate(
-                    avg=Sum('snp__af_pais') / Count('snp')
-                )['avg'] or Decimal('0')
-                
-                indigenous_data.append({
-                    'name': people,
-                    'count': count,
-                    'avg_allele_frequency': float(avg_freq)
-                })
-                total_count += count
-        
-        # Calculate percentages
+        # Aggregate data by indigenous population dynamically using what exists in the SNP catalog
+        aggregates = user_snps.values('snp__poblacion_pais').annotate(
+            count=Count('snp'),
+            avg_frequency=Sum('snp__af_pais') / Count('snp')
+        ).order_by('-count')
+
+        def normalize_name(raw_name):
+            """Fix encoding/underscore issues and standardize names for display."""
+            if not raw_name:
+                return 'Desconocido'
+            name = raw_name.replace('_', ' ').strip()
+            fixes = {
+                'Aimara': 'Aymara',
+                'Aymara': 'Aymara',
+                'Atacameño': 'Atacameño',
+                'Diaguita': 'Diaguita',
+                'Mapuche': 'Mapuche',
+                'Rapa Nui': 'Rapa Nui',
+                'Chileno_general': 'Chileno general',
+            }
+            return fixes.get(name, name)
+
+        total_count = sum(item['count'] for item in aggregates)
         results = []
-        for item in indigenous_data:
+        for item in aggregates:
+            name = normalize_name(item['snp__poblacion_pais'])
+            avg_freq = item['avg_frequency'] or Decimal('0')
             percentage = round(float((item['count'] / total_count * 100) if total_count > 0 else 0), 2)
             results.append({
-                'name': item['name'],
+                'name': name,
                 'percentage': percentage,
                 'variant_count': item['count'],
-                'avg_allele_frequency': item['avg_allele_frequency']
+                'avg_allele_frequency': float(avg_freq)
             })
-        
-        # Sort by percentage descending
-        results.sort(key=lambda x: x['percentage'], reverse=True)
         
         # Get total unique SNPs
         total_variants = user_snps.count()

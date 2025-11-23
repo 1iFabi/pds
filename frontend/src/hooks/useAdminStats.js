@@ -4,7 +4,7 @@ import { apiRequest, API_ENDPOINTS } from '../config/api';
 export const useAdminStats = () => {
   const [stats, setStats] = useState({
     totalUsers: 0,
-    processedReports: 0,
+    pendingReports: 0,
     variantsInDB: 0,
     completedAnalysis: 0,
     userGrowth: '+12%',
@@ -30,7 +30,7 @@ export const useAdminStats = () => {
           // Extraer datos del dashboard - se envían en el payload raíz
           setStats({
             totalUsers: data.total_users || 0,
-            processedReports: data.processed_reports || 0,
+            pendingReports: data.pending_reports || 0,
             variantsInDB: data.variants_count || 0,
             completedAnalysis: data.analysis_count || 0,
             userGrowth: data.user_growth || '+0%',

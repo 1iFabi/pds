@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from rest_framework.status import HTTP_200_OK, HTTP_403_FORBIDDEN
 from .models import SNP
-from django.db.models import Q
+from django.db.models import Case, When, IntegerField
 
 
 class VariantesAPIView(APIView):
@@ -18,8 +18,20 @@ class VariantesAPIView(APIView):
         Retorna todas las variantes SNP de la base de datos.
         """
         try:
-            # Obtener todos los SNPs
-            snps = SNP.objects.all().values(
+            # Priorizar registros de Chile y luego de América
+            priority_order = Case(
+                When(pais__iexact='Chile', then=0),
+                When(continente__icontains='america', then=1),
+                When(poblacion_pais__isnull=False, then=2),
+                When(pais__isnull=False, then=3),
+                default=4,
+                output_field=IntegerField()
+            )
+
+            # Anotar con la prioridad y ordenar
+            snps = SNP.objects.annotate(
+                priority=priority_order
+            ).order_by('rsid', 'priority').values(
                 'id',
                 'rsid',
                 'cromosoma',
@@ -44,7 +56,8 @@ class VariantesAPIView(APIView):
                 'af_pais',
                 'fuente_pais',
                 'poblacion_pais',
-            ).order_by('id')
+            )
+
 
             # Convertir a lista para serialización
             variantes_list = list(snps)

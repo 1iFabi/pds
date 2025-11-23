@@ -21,6 +21,7 @@ from .patient_variants_views import PatientVariantsAPIView
 from .snp_views import VariantesAPIView
 from .ancestry_views import AncestryAPIView
 from .indigenous_views import IndigenousPeoplesAPIView
+from .traits_views import TraitsAPIView
 
 urlpatterns = [
     path('login/', LoginAPIView.as_view(), name='api_login'),
@@ -53,4 +54,5 @@ urlpatterns = [
     path('variantes/', VariantesAPIView.as_view(), name='api_variantes'),
     path('ancestry/', AncestryAPIView.as_view(), name='api_ancestry'),
     path('indigenous/', IndigenousPeoplesAPIView.as_view(), name='api_indigenous'),
+    path('traits/', TraitsAPIView.as_view(), name='api_traits'),
 ]

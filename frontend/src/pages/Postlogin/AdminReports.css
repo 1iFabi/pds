@@ -1,7 +1,7 @@
 /* ===== BASE ===== */
 .admin-reports-wrapper {
   display: flex;
-  min-height: 100vh;
+  height: 100vh;
   background: #ffffff;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   position: relative;
@@ -10,9 +10,6 @@
 .admin-reports {
   flex: 1;
   padding: 2rem;
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
   overflow-y: auto;
   overflow-x: hidden;
   background: linear-gradient(135deg, #f3f7ff 0%, #ffffff 60%);
@@ -70,7 +67,8 @@
   display: flex;
   transition: all 0.3s ease;
   flex-shrink: 0;
-  position: relative;
+  position: sticky;
+  top: 0;
 }
 
 .admin-reports__sidebar:has(.admin-sidebar--folded) {
@@ -88,7 +86,7 @@
   padding: 32px;
   color: white;
   box-shadow: 0 4px 12px rgba(15, 35, 65, 0.12);
-  margin-bottom: 0px;
+  margin-bottom: 2rem;
   gap: 5px;
 }
 
@@ -119,6 +117,7 @@
   display: flex;
   flex-direction: column;
   gap: 2rem;
+  margin-bottom: 2rem;
 }
 
 /* ===== SEARCH CARD ===== */

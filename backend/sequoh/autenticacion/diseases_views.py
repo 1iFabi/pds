@@ -67,6 +67,7 @@ class DiseasesAPIView(APIView):
                 'genotipo': snp.genotipo,
                 'fenotipo': snp.fenotipo,
                 'cromosoma': snp.cromosoma,
+                'posicion': snp.posicion,
                 'gen': gen_name,
                 'nivel_riesgo': nivel_riesgo,
                 'magnitud_efecto': magnitud_efecto,

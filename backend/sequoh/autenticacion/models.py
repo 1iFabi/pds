@@ -130,6 +130,7 @@ class SNP(models.Model):
     genotipo = models.CharField(max_length=10, verbose_name="Genotipo")
     fenotipo = models.TextField(verbose_name="Fenotipo")
     categoria = models.CharField(max_length=50, blank=True, null=True, verbose_name="Categoría")
+    grupo = models.CharField(max_length=100, blank=True, null=True, verbose_name="Grupo del Rasgo")
     
     # Campos genómicos
     cromosoma = models.CharField(max_length=5, blank=True, null=True, verbose_name="Cromosoma")

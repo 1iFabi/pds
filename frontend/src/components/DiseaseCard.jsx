@@ -77,28 +77,13 @@ const DiseaseCard = ({ disease, level }) => {
               </div>
             </div>
 
-            {/* Alelos */}
-            <div className="pb-3 border-b border-gray-100">
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Alelos</p>
-              <div className="space-y-1">
-                <div className="flex justify-between items-start">
-                  <span className="text-sm font-medium text-gray-600">Referencia:</span>
-                  <span className={cn("text-sm font-mono text-gray-900 font-semibold bg-blue-100 px-2 py-1 rounded", disease.alelo_referencia === 'N/A' && 'text-gray-400')}>{disease.alelo_referencia || 'N/A'}</span>
-                </div>
-                <div className="flex justify-between items-start">
-                  <span className="text-sm font-medium text-gray-600">Alternativo:</span>
-                  <span className={cn("text-sm font-mono text-gray-900 font-semibold bg-green-100 px-2 py-1 rounded", disease.alelo_alternativo === 'N/A' && 'text-gray-400')}>{disease.alelo_alternativo || 'N/A'}</span>
-                </div>
-              </div>
-            </div>
-
             {/* Magnitud de Efecto */}
             <div className="pb-3 border-b border-gray-100">
               <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Análisis de Riesgo</p>
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs text-gray-600 mb-1">Magnitud de Efecto</p>
-                  <p className="text-2xl font-bold text-gray-900">{magnitude} <span className="text-sm text-gray-500 font-normal">/5.0</span></p>
+                  <p className="text-2xl font-bold text-gray-900">{magnitude}</p>
                 </div>
                 {isHighRisk && (
                   <div className={cn("flex items-center gap-2 px-3 py-2 rounded-lg", config.badgeBg)}>
@@ -114,7 +99,7 @@ const DiseaseCard = ({ disease, level }) => {
                     magnitude !== 'N/A' && magnitude >= 3 ? 'bg-yellow-500' :
                     magnitude !== 'N/A' && magnitude >= 2 ? 'bg-blue-500' : 'bg-green-500'
                   )}
-                  style={{ width: magnitude !== 'N/A' ? `${(parseFloat(magnitude) / 5) * 100}%` : '0%' }}
+                  style={{ width: magnitude !== 'N/A' ? `${Math.min(1, parseFloat(magnitude) / 5) * 100}%` : '0%' }}
                 />
               </div>
             </div>
