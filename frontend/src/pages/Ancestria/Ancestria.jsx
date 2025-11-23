@@ -394,18 +394,8 @@ const Ancestria = () => {
   // Datos para el GeoChart - códigos ISO-2 válidos
   const getChartData = useCallback(() => {
     if (!ancestryData || !ancestryData.countries || ancestryData.countries.length === 0) {
-      // Return default data if no ancestry data
-      return [
-        ['País', 'Porcentaje'],
-        ['CL', 42],
-        ['IT', 18],
-        ['ES', 12],
-        ['AR', 8],
-        ['DE', 6],
-        ['CN', 5],
-        ['FR', 4],
-        ['PE', 3]
-      ];
+      // Return empty data if no ancestry data
+      return [['País', 'Porcentaje']];
     }
 
     const chartData = [['País', 'Porcentaje']];
@@ -416,13 +406,7 @@ const Ancestria = () => {
       }
     });
 
-    // Return at least some data for the chart
-    return chartData.length > 1 ? chartData : [
-      ['País', 'Porcentaje'],
-      ['CL', 42],
-      ['IT', 18],
-      ['ES', 12]
-    ];
+    return chartData;
   }, [ancestryData, getCountryCode]);
 
   const handleBackFromDrillDown = () => {
@@ -437,7 +421,7 @@ const Ancestria = () => {
       colors: ['#E3F2FD', '#BBDEFB', '#90CAF9', '#64B5F6', '#42A5F5', '#2196F3', '#1E88E5', '#1976D2', '#1565C0', '#0D47A1']
     },
     backgroundColor: '#ffffff',
-    datalessRegionColor: '#f0f0f0',
+    datalessRegionColor: '#fafafcff',
     defaultColor: '#f5f5f5',
     region: 'world',
     displayMode: 'regions',
@@ -789,16 +773,7 @@ const Ancestria = () => {
                       gridTemplateColumns: '1fr 1fr',
                       gap: '0.4rem'
                     }}>
-                    {(ancestryData?.countries || [
-                      { name: 'Chile', percentage: 42 },
-                      { name: 'Italia', percentage: 18 },
-                      { name: 'España', percentage: 12 },
-                      { name: 'Argentina', percentage: 8 },
-                      { name: 'Alemania', percentage: 6 },
-                      { name: 'China', percentage: 5 },
-                      { name: 'Francia', percentage: 4 },
-                      { name: 'Perú', percentage: 3 }
-                    ]).slice(0, 8).map((item, idx) => {
+                    {(ancestryData?.countries || []).slice(0, 8).map((item, idx) => {
                       const colors = ['#0D47A1', '#1565C0', '#1976D2', '#1E88E5', '#2196F3', '#42A5F5', '#64B5F6', '#90CAF9'];
                       const code = getCountryCode(item.name) || '';
                       return {
@@ -890,16 +865,7 @@ const Ancestria = () => {
                     gridTemplateColumns: '1fr 1fr',
                     gap: '0.5rem'
                   }}>
-                    {(ancestryData?.countries || [
-                      { name: 'Chile', percentage: 42 },
-                      { name: 'Italia', percentage: 18 },
-                      { name: 'España', percentage: 12 },
-                      { name: 'Argentina', percentage: 8 },
-                      { name: 'Alemania', percentage: 6 },
-                      { name: 'China', percentage: 5 },
-                      { name: 'Francia', percentage: 4 },
-                      { name: 'Perú', percentage: 3 }
-                    ]).slice(0, 8).map((item, idx) => {
+                    {(ancestryData?.countries || []).slice(0, 8).map((item, idx) => {
                       const colors = ['#0D47A1', '#1565C0', '#1976D2', '#1E88E5', '#2196F3', '#42A5F5', '#64B5F6', '#90CAF9'];
                       const code = getCountryCode(item.name) || '';
                       return {

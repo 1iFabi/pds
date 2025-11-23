@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
-from django.db.models import Count, Sum, Q, F, Case, When, DecimalField
+from django.db.models import Count, Sum, F
 from .authentication import JWTAuthentication
 from .models import UserSNP, SNP
 from decimal import Decimal
@@ -36,17 +36,21 @@ class AncestryAPIView(APIView):
                 }
             })
         
-        # Aggregate continental ancestry data
+        # Aggregate continental ancestry data, excluding null and empty strings
         continental_data = user_snps.filter(
             snp__continente__isnull=False
+        ).exclude(
+            snp__continente__exact=''
         ).values('snp__continente').annotate(
             count=Count('snp'),
             avg_frequency=Sum('snp__af_continente') / Count('snp')
         ).order_by('-count')
         
-        # Aggregate country ancestry data
+        # Aggregate country ancestry data, excluding null and empty strings
         country_data = user_snps.filter(
             snp__pais__isnull=False
+        ).exclude(
+            snp__pais__exact=''
         ).values('snp__pais').annotate(
             count=Count('snp'),
             avg_frequency=Sum('snp__af_pais') / Count('snp'),
@@ -55,13 +59,13 @@ class AncestryAPIView(APIView):
         
         # Process continental data
         continents = []
-        total_continental = continental_data.count()
+        total_continental_sum = sum(item['count'] for item in continental_data)
         
         for item in continental_data:
             continent_name = item['snp__continente'] or 'Unknown'
             count = item['count']
             avg_freq = item['avg_frequency'] or Decimal('0')
-            percentage = round(float((count / total_continental * 100) if total_continental > 0 else 0), 2)
+            percentage = round(float((count / total_continental_sum * 100) if total_continental_sum > 0 else 0), 2)
             
             continents.append({
                 'name': continent_name,
@@ -75,7 +79,7 @@ class AncestryAPIView(APIView):
         
         # Process country data
         countries = []
-        total_count_sum = sum(item['count'] for item in country_data)
+        total_country_sum = sum(item['count'] for item in country_data)
         
         for item in country_data:
             country_name = item['snp__pais'] or 'Unknown'
@@ -83,7 +87,7 @@ class AncestryAPIView(APIView):
             avg_freq = item['avg_frequency'] or Decimal('0')
             continent = item['continente'] or 'Unknown'
             # Calculate percentage based on count proportion to ensure 100% total
-            percentage = round(float((count / total_count_sum * 100) if total_count_sum > 0 else 0), 2)
+            percentage = round(float((count / total_country_sum * 100) if total_country_sum > 0 else 0), 2)
             
             countries.append({
                 'name': country_name,
@@ -102,7 +106,8 @@ class AncestryAPIView(APIView):
             if current_total > 0 and abs(current_total - 100.0) > 0.01:
                 # Adjust the largest percentage to make total exactly 100%
                 adjustment = 100.0 - current_total
-                countries[0]['percentage'] = round(countries[0]['percentage'] + adjustment, 2)
+                if countries[0]['percentage'] + adjustment > 0:
+                    countries[0]['percentage'] = round(countries[0]['percentage'] + adjustment, 2)
         
         # Get total unique SNPs
         total_variants = user_snps.count()
