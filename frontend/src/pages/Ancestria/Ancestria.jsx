@@ -169,8 +169,13 @@ const Ancestria = () => {
 
   useEffect(() => {
     fetchUser();
-    fetchAncestryData();
-  }, []);
+  }, []); // Fetch user on mount
+
+  useEffect(() => {
+    if (user) { // Only fetch ancestry data when the user object is available
+      fetchAncestryData();
+    }
+  }, [user]); // Re-run this effect when the user object changes
 
   useEffect(() => {
     const checkMobile = () => {
