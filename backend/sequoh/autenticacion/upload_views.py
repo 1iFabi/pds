@@ -5,13 +5,12 @@ from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth.models import User
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
+from django.db.models import Case, When, IntegerField
 from .authentication import JWTAuthentication
 from .models import Profile, ServiceStatus, SNP, UserSNP
 from .email_utils import send_results_ready_email
-import os
 import logging
 import json
-from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
@@ -79,7 +78,12 @@ class UploadGeneticFileAPIView(APIView):
                 user_rut_clean = user_rut.replace('-', '').replace('.', '')
                 if rut_from_file != user_rut_clean:
                     return Response(
-                        {"error": f"El RUT del archivo ({rut_from_file}) no coincide con el RUT del usuario ({user_rut}) en la base de datos."},
+                        {
+                            "error": (
+                                f"El RUT del archivo ({rut_from_file}) no coincide con el "
+                                f"RUT del usuario ({user_rut}) en la base de datos."
+                            )
+                        },
                         status=status.HTTP_400_BAD_REQUEST
                     )
             except Profile.DoesNotExist:
@@ -89,9 +93,9 @@ class UploadGeneticFileAPIView(APIView):
                 )
 
             # Procesar archivo genético
-            snps_count = self._process_genetic_file(target_user, file_content)
+            processing_result = self._process_genetic_file(target_user, file_content)
 
-            if snps_count < 0:
+            if not isinstance(processing_result, dict):
                 return Response(
                     {"error": "Error al procesar el archivo genético"},
                     status=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -105,33 +109,51 @@ class UploadGeneticFileAPIView(APIView):
                 profile.report_filename = filename
                 profile.report_uploaded_at = timezone.now()
                 profile.save()
-                logger.info(f"Service status actualizado a COMPLETED para usuario {target_user.email}. Archivo: {filename}")
+                logger.info(
+                    f"Service status actualizado a COMPLETED para usuario {target_user.email}. "
+                    f"Archivo: {filename}"
+                )
             except Exception as e:
                 logger.error(f"Error actualizando service_status: {str(e)}")
 
             # Enviar email de notificación al usuario
-            user_name = target_user.first_name or target_user.username or target_user.email.split('@')[0]
+            user_name = (
+                target_user.first_name
+                or target_user.username
+                or target_user.email.split('@')[0]
+            )
             email_sent = False
             try:
                 email_sent = send_results_ready_email(target_user.email, user_name)
                 if email_sent:
                     logger.info(f"Email de resultados listos enviado a {target_user.email}")
                 else:
-                    logger.warning(f"No se pudo enviar email de notificación a {target_user.email}")
+                    logger.warning(
+                        f"No se pudo enviar email de notificación a {target_user.email}"
+                    )
             except Exception as e:
                 logger.error(f"Error enviando email de notificación: {str(e)}")
 
             return Response({
                 "success": True,
-                "message": f"Archivo procesado correctamente. {snps_count} variantes genéticas agregadas.",
+                "message": (
+                    f"Archivo procesado. {processing_result['snps_added']} nuevas variantes "
+                    f"genéticas agregadas."
+                ),
                 "user_id": user_id,
-                "snps_count": snps_count,
+                "snps_count": processing_result['snps_added'],
                 "status_updated": True,
-                "email_sent": email_sent
+                "email_sent": email_sent,
+                "details": {
+                    "total_lines": processing_result['total_lines'],
+                    "processed_rsids": processing_result['processed_rsids'],
+                    "unprocessed_lines": processing_result['unprocessed_lines'],
+                    "skipped_lines": processing_result['snps_skipped'],
+                }
             }, status=status.HTTP_201_CREATED)
 
         except Exception as e:
-            logger.error(f"Error en UploadGeneticFileAPIView: {str(e)}")
+            logger.error(f"Error en UploadGeneticFileAPIView: {str(e)}", exc_info=True)
             return Response(
                 {"error": f"Error interno del servidor: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -140,35 +162,43 @@ class UploadGeneticFileAPIView(APIView):
     def _process_genetic_file(self, user, file_content):
         """
         Procesa el contenido del archivo genético y crea asociaciones user-snp.
-        
-        Formato esperado (líneas):
-        cromosoma, rsid, genotipo
-        1, rs6060369, A/G
-        15, rs713598, C/C
+        - Normaliza genotipos (p.ej. T/C -> C/T).
+        - Maneja SNPs duplicados usando filter().first() en vez de get().
         """
         try:
             lines = file_content.strip().split('\n')
             logger.info(f"Total de líneas en archivo: {len(lines)}")
-            
+
             if not lines:
                 logger.warning("Archivo vacío")
-                return 0
+                return {
+                    'snps_added': 0,
+                    'snps_skipped': 0,
+                    'total_lines': 0,
+                    'processed_rsids': [],
+                    'unprocessed_lines': []
+                }
 
             snps_added = 0
             snps_skipped = 0
-            snps_matched = 0
+            processed_rsids = []
+            unprocessed_lines = []
 
             for idx, line in enumerate(lines):
-                # Saltar líneas vacías
                 if not line.strip():
                     continue
 
-                # Parsear línea (separado por coma)
                 parts = line.strip().split(',')
-                
+
                 if len(parts) < 3:
-                    # Formato incompleto, saltar
-                    logger.warning(f"Línea {idx}: formato incompleto (partes={len(parts)}): {line[:100]}")
+                    logger.warning(
+                        f"Línea {idx+1}: formato incompleto. Contenido: {line}"
+                    )
+                    unprocessed_lines.append({
+                        "line": idx + 1,
+                        "content": line,
+                        "reason": "Formato incompleto"
+                    })
                     snps_skipped += 1
                     continue
 
@@ -176,49 +206,113 @@ class UploadGeneticFileAPIView(APIView):
                 rsid = parts[1].strip()
                 genotipo = parts[2].strip()
 
-                # Validar campos obligatorios
                 if not cromosoma or not rsid or not genotipo:
-                    logger.warning(f"Línea {idx}: campos vacíos (cromosoma='{cromosoma}', rsid='{rsid}', genotipo='{genotipo}')")
+                    logger.warning(
+                        f"Línea {idx+1}: campos vacíos. Contenido: {line}"
+                    )
+                    unprocessed_lines.append({
+                        "line": idx + 1,
+                        "content": line,
+                        "reason": "Campos vacíos"
+                    })
                     snps_skipped += 1
                     continue
 
+                # Normalizar genotipo (ordenar alelos, p.ej. T/C -> C/T)
+                genotipo_normalizado = genotipo
+                if '/' in genotipo:
+                    alelos = [a.strip() for a in genotipo.split('/') if a.strip()]
+                    alelos.sort()
+                    genotipo_normalizado = "/".join(alelos)
+
                 try:
-                    # Buscar SNP en la base de datos por rsid y genotipo
-                    try:
-                        snp = SNP.objects.get(rsid=rsid, genotipo=genotipo)
-                        snps_matched += 1
-                        logger.debug(f"SNP encontrado en BD: rsid={rsid}, genotipo={genotipo}, cromosoma={snp.cromosoma}")
-                    except SNP.DoesNotExist:
-                        # Si no existe, crear uno básico (aunque lo ideal es que exista en la BD)
-                        logger.warning(f"SNP no encontrado en BD, creando básico: rsid={rsid}, genotipo={genotipo}")
-                        snp = SNP.objects.create(
-                            rsid=rsid,
-                            genotipo=genotipo,
-                            fenotipo=f"Variante genética {rsid}",
-                            cromosoma=cromosoma,
-                            categoria=None
+                    # Buscar SNPs que coincidan con el rsid y el genotipo normalizado
+                    snp_qs = SNP.objects.filter(rsid=rsid, genotipo=genotipo_normalizado)
+
+                    # Priorizar registros con informaciИn de Chile (evita que se asigne Finlandia u otro paЦs
+                    # cuando el SNP tiene varias filas con el mismo rsid/genotipo).
+                    priority_order = Case(
+                        When(pais__iexact='Chile', then=0),
+                        When(continente__icontains='america', then=1),
+                        When(poblacion_pais__isnull=False, then=2),
+                        When(pais__isnull=False, then=3),
+                        default=4,
+                        output_field=IntegerField()
+                    )
+                    snp_qs = snp_qs.annotate(priority=priority_order).order_by('priority', '-af_pais', 'id')
+
+                    if not snp_qs.exists():
+                        logger.warning(
+                            f"Línea {idx+1}: SNP no encontrado en BD (rsid={rsid}, "
+                            f"genotipo={genotipo} -> normalizado={genotipo_normalizado})."
+                        )
+                        unprocessed_lines.append({
+                            "line": idx + 1,
+                            "content": line,
+                            "reason": "SNP no encontrado en la base de datos"
+                        })
+                        snps_skipped += 1
+                        continue
+
+                    if snp_qs.count() > 1:
+                        logger.warning(
+                            f"Línea {idx+1}: SNP con rsid={rsid}, genotipo={genotipo_normalizado} "
+                            f"tiene {snp_qs.count()} registros. Usando el primero."
                         )
 
-                    # Crear asociación user-snp si no existe
+                    snp = snp_qs.first()
+                    processed_rsids.append(rsid)
+                    logger.debug(
+                        f"SNP encontrado en BD: rsid={rsid}, "
+                        f"genotipo_original={genotipo}, genotipo_normalizado={genotipo_normalizado}"
+                    )
+
+                    # Crear asociación usuario-SNP
                     user_snp, created = UserSNP.objects.get_or_create(
                         user=user,
                         snp=snp
                     )
-
                     if created:
                         snps_added += 1
-                        logger.debug(f"Asociación user-snp creada: rsid={rsid}, genotipo={genotipo}")
-                        
+                        logger.debug(
+                            f"Asociación user-snp creada: user={user.id}, "
+                            f"rsid={rsid}, genotipo={genotipo_normalizado}"
+                        )
+                    else:
+                        logger.debug(
+                            f"Asociación user-snp ya existía: user={user.id}, "
+                            f"rsid={rsid}, genotipo={genotipo_normalizado}"
+                        )
+
                 except Exception as snp_error:
-                    logger.error(f"Error procesando SNP en línea {idx}: {str(snp_error)}")
+                    logger.error(
+                        f"Error procesando SNP en línea {idx+1}: {str(snp_error)}",
+                        exc_info=True
+                    )
+                    unprocessed_lines.append({
+                        "line": idx + 1,
+                        "content": line,
+                        "reason": str(snp_error)
+                    })
                     snps_skipped += 1
 
-            logger.info(f"Procesamiento completado: {snps_added} SNPs agregados, {snps_matched} encontrados en BD, {snps_skipped} saltados")
-            return snps_added
+            result = {
+                'snps_added': snps_added,
+                'snps_skipped': snps_skipped,
+                'total_lines': len(lines),
+                'processed_rsids': processed_rsids,
+                'unprocessed_lines': unprocessed_lines
+            }
+            logger.info(f"Procesamiento completado: {result}")
+            return result
 
         except Exception as e:
-            logger.error(f"Error procesando archivo genético: {str(e)}", exc_info=True)
+            logger.error(
+                f"Error procesando archivo genético: {str(e)}",
+                exc_info=True
+            )
             return -1
+
 
 
 @method_decorator(csrf_exempt, name='dispatch')

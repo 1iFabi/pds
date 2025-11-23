@@ -91,10 +91,10 @@ const PostloginAdmin = ({ user }) => {
 
             <div className="postlogin-admin__stat-card">
               <div className="postlogin-admin__stat-header">
-                <span className="postlogin-admin__stat-label">Reportes Procesados</span>
+                <span className="postlogin-admin__stat-label">Reportes Pendientes</span>
                 <FileText size={24} className="postlogin-admin__stat-icon" style={{ color: '#f97316' }} />
               </div>
-              <div className="postlogin-admin__stat-value">{stats.processedReports.toLocaleString()}</div>
+              <div className="postlogin-admin__stat-value">{stats.pendingReports.toLocaleString()}</div>
             </div>
 
             <div className="postlogin-admin__stat-card">

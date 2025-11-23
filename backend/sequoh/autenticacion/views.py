@@ -20,7 +20,7 @@ from allauth.account.models import EmailAddress
 from .email_utils import send_welcome_email, send_password_reset_email, send_email, build_branded_html
 from .jwt_utils import encode_jwt
 from .authentication import JWTAuthentication
-from .models import ServiceStatus
+from .models import ServiceStatus, Profile, SNP
 import json
 import re
 
@@ -819,36 +819,15 @@ class AdminStatsAPIView(APIView):
                 profile__service_status=ServiceStatus.COMPLETED
             ).count()
             
-            # Queries SQL directas a las tablas
-            variants_count = 0
-            processed_reports = 0
+            # Contar reportes pendientes
+            pending_reports = Profile.objects.filter(service_status=ServiceStatus.PENDING).count()
             
-            with connection.cursor() as cursor:
-                try:
-                    # Contar variantes en tabla snps
-                    cursor.execute("SELECT COUNT(*) FROM snps")
-                    result = cursor.fetchone()
-                    variants_count = result[0] if result else 0
-                except Exception as e:
-                    print(f"Error contando snps: {e}")
-                    variants_count = 0
-                
-                try:
-                    # Contar usuarios regulares que han procesado reportes
-                    cursor.execute("""
-                        SELECT COUNT(DISTINCT us.user_id) FROM user_snps us
-                        INNER JOIN auth_user au ON us.user_id = au.id
-                        WHERE au.is_staff = 0 AND au.is_superuser = 0
-                    """)
-                    result = cursor.fetchone()
-                    processed_reports = result[0] if result else 0
-                except Exception as e:
-                    print(f"Error contando user_snps: {e}")
-                    processed_reports = 0
+            # Contar variantes en la BD
+            variants_count = SNP.objects.count()
             
             payload = {
                 "total_users": total_users,
-                "processed_reports": processed_reports,
+                "pending_reports": pending_reports,
                 "variants_count": variants_count,
                 "analysis_count": analysis_count,
                 "user_growth": "+12%",

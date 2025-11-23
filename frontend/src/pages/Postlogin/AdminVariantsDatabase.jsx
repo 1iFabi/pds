@@ -94,7 +94,8 @@ const AdminVariantsDatabase = ({ user }) => {
       filtered = filtered.filter(v =>
         (v.rsid?.toLowerCase().includes(term)) ||
         (v.fenotipo?.toLowerCase().includes(term)) ||
-        (v.cromosoma?.toLowerCase().includes(term))
+        (v.cromosoma?.toLowerCase().includes(term)) ||
+        (v.pais?.toLowerCase().includes(term))
       );
     }
 
@@ -261,7 +262,7 @@ const AdminVariantsDatabase = ({ user }) => {
             <Search size={18} />
             <input
               type="text"
-              placeholder="Buscar por rsID, fenotipo o cromosoma..."
+              placeholder="Buscar por rsID, fenotipo, cromosoma o país..."
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
               className="admin-variants__search-input"
@@ -338,13 +339,16 @@ const AdminVariantsDatabase = ({ user }) => {
               <tbody>
                 {paginatedVariants.map((variant) => (
                   <React.Fragment key={variant.id}>
-                    <tr className={expandedRow === variant.id ? 'expanded' : ''}>
-                      <td className="admin-variants__rsid">{variant.rsid}</td>
-                      <td className="admin-variants__genotipo">{variant.genotipo}</td>
-                      <td className="admin-variants__fenotipo" title={variant.fenotipo}>
+                    <tr 
+                      className={`cursor-pointer ${expandedRow === variant.id ? 'expanded' : ''}`}
+                      onClick={() => setExpandedRow(expandedRow === variant.id ? null : variant.id)}
+                    >
+                      <td data-label="rsID" className="admin-variants__rsid">{variant.rsid}</td>
+                      <td data-label="Genotipo" className="admin-variants__genotipo">{variant.genotipo}</td>
+                      <td data-label="Fenotipo" className="admin-variants__fenotipo" title={variant.fenotipo}>
                         {variant.fenotipo?.substring(0, 40)}...
                       </td>
-                      <td>
+                      <td data-label="Categoría">
                         <span 
                           className="admin-variants__badge"
                           style={{ backgroundColor: `${getCategoryColor(variant.categoria)}20`, color: getCategoryColor(variant.categoria) }}
@@ -352,8 +356,8 @@ const AdminVariantsDatabase = ({ user }) => {
                           {capitalize(variant.categoria)}
                         </span>
                       </td>
-                      <td>{variant.magnitud_efecto || '-'}</td>
-                      <td>
+                      <td data-label="Magnitud">{variant.magnitud_efecto || '-'}</td>
+                      <td data-label="Nivel Riesgo">
                         <span 
                           className="admin-variants__risk"
                           style={{ backgroundColor: `${getRiskColor(variant.nivel_riesgo)}20`, color: getRiskColor(variant.nivel_riesgo) }}
@@ -361,12 +365,15 @@ const AdminVariantsDatabase = ({ user }) => {
                           {variant.nivel_riesgo}
                         </span>
                       </td>
-                      <td className="admin-variants__source">{variant.fuente_base_datos || '-'}</td>
-                      <td>{variant.fecha_actualizacion || '-'}</td>
-                      <td className="admin-variants__actions">
+                      <td data-label="Fuente" className="admin-variants__source">{variant.fuente_base_datos || '-'}</td>
+                      <td data-label="Actualización">{variant.fecha_actualizacion || '-'}</td>
+                      <td data-label="Acciones" className="admin-variants__actions">
                         <button
                           className="admin-variants__btn-action"
-                          onClick={() => setExpandedRow(expandedRow === variant.id ? null : variant.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setExpandedRow(expandedRow === variant.id ? null : variant.id);
+                          }}
                           title="Ver detalles"
                         >
                           <Eye size={16} />

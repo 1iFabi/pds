@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import ReactECharts from 'echarts-for-react';
 import { API_ENDPOINTS, apiRequest } from '../../config/api';
 import './IndigenousRadarChart.css';
@@ -31,8 +31,6 @@ const IndigenousRadarChart = () => {
     }
   };
 
-  const allIndigenousPeoples = ['Aimara', 'Atacameño', 'Diaguita', 'Mapuche', 'Rapa Nui'];
-
   const colors = [
     '#0D47A1',  // Azul oscuro profundo
     '#1565C0',  // Azul oscuro
@@ -41,25 +39,26 @@ const IndigenousRadarChart = () => {
     '#42A5F5'   // Azul claro
   ];
 
-  const getChartData = () => {
-    const dataMap = {};
-
-    if (data && data.indigenous_peoples) {
-      data.indigenous_peoples.forEach(people => {
-        dataMap[people.name] = people;
-      });
-    }
-
-    return allIndigenousPeoples.map((name, index) => ({
-      label: name,
-      value: dataMap[name]?.percentage || 0,
-      color: colors[index],
-      variant_count: dataMap[name]?.variant_count || 0,
-      avg_allele_frequency: dataMap[name]?.avg_allele_frequency || 0
-    })).filter(item => item.value > 0);
+  const normalizeName = (name = '') => {
+    const cleaned = name.replace(/_/g, ' ').trim();
+    const fixes = {
+      Aimara: 'Aymara',
+      Aymara: 'Aymara',
+      Chileno_general: 'Chileno general'
+    };
+    return fixes[cleaned] || cleaned || 'Desconocido';
   };
 
-  const chartData = getChartData();
+  const chartData = useMemo(() => {
+    return (data?.indigenous_peoples || []).map((item, index) => ({
+      label: normalizeName(item.name),
+      value: Number(item.percentage) || 0,
+      color: colors[index % colors.length],
+      variant_count: item.variant_count || 0,
+      avg_allele_frequency: item.avg_allele_frequency || 0
+    })).filter(item => item.value > 0);
+  }, [data]);
+
   const total = chartData.reduce((a, b) => a + b.value, 0) || 100;
 
   // Determinar qué mostrar en el centro
@@ -187,7 +186,7 @@ const IndigenousRadarChart = () => {
               <div key={index} className="people-item">
                 <div className="people-header">
                   <span className="people-name" style={{ color: item.color }}>
-                    ● {item.label}
+                    - {item.label}
                   </span>
                   <span className="people-percentage">{item.value}%</span>
                 </div>
