@@ -37,10 +37,10 @@ const Dashboard = ({ user, onLogout, onDownload }) => {
     () => [
       {
         id: 'postlogin-ancestria',
-        navLabel: 'Ancestr\u00eda',
-        title: 'Ancestr\u00eda',
+        navLabel: 'Ancestría',
+        title: 'Ancestría',
         description:
-          'Descubre tus or\u00edgenes gen\u00e9ticos y c\u00f3mo las conexiones con distintas poblaciones han influido en tu historia ancestral.',
+          'Descubre tus orígenes genéticos y cómo las conexiones con distintas poblaciones han influido en tu historia ancestral.',
         cta: {
           label: 'Explorar ahora',
           href: '/dashboard/ancestria',
@@ -64,7 +64,7 @@ const Dashboard = ({ user, onLogout, onDownload }) => {
         navLabel: 'Rasgos',
         title: 'Rasgos',
         description:
-          'Conoce los rasgos gen\u00e9ticos que influyen en tu apariencia, comportamiento y habilidades \u00fanicas.',
+          'Conoce los rasgos genéticos que influyen en tu apariencia, comportamiento y habilidades únicas.',
         cta: {
           label: 'Explorar ahora',
           href: '/dashboard/rasgos',
@@ -84,8 +84,8 @@ const Dashboard = ({ user, onLogout, onDownload }) => {
       },
       {
         id: 'postlogin-farmacogenetica',
-        navLabel: 'Farmacogen\u00e9tica',
-        title: 'Farmacogen\u00e9tica',
+        navLabel: 'Farmacogenética',
+        title: 'Farmacogenética',
         description:
           'Descubre cómo tu genética influye en los medicamentos para optimizar tus tratamientos.',
         cta: {
@@ -110,7 +110,7 @@ const Dashboard = ({ user, onLogout, onDownload }) => {
         navLabel: 'Biomarcadores',
         title: 'Biomarcadores',
         description:
-          'Identifica biomarcadores gen\u00e9ticos que revelan factores clave de tu salud, bienestar y predisposici\u00f3n.',
+          'Identifica biomarcadores genéticos que revelan factores clave de tu salud, bienestar y predisposición.',
         cta: {
           label: 'Explorar ahora',
           href: '/dashboard/biomarcadores',
@@ -130,10 +130,10 @@ const Dashboard = ({ user, onLogout, onDownload }) => {
       },
       {
         id: 'postlogin-biometricas',
-        navLabel: 'Biom\u00e9tricas',
-        title: 'Biom\u00e9tricas',
+        navLabel: 'Biométricas',
+        title: 'Biométricas',
         description:
-          'Analiza tus datos biom\u00e9tricos para entender c\u00f3mo tus caracter\u00edsticas f\u00edsicas influyen en tu salud general.',
+          'Analiza tus datos biométricos para entender cómo tus características físicas influyen en tu salud general.',
         cta: {
           label: 'Explorar ahora',
           href: '/dashboard/biometricas',
@@ -156,7 +156,7 @@ const Dashboard = ({ user, onLogout, onDownload }) => {
         navLabel: 'Enfermedades',
         title: 'Enfermedades',
         description:
-          'Analiza tu gen\u00e9tica para conocer predisposiciones y mutaciones que pueden influir en tu salud y bienestar.',
+          'Analiza tu genética para conocer predisposiciones y mutaciones que pueden influir en tu salud y bienestar.',
         cta: {
           label: 'Explorar ahora',
           href: '/dashboard/enfermedades',

@@ -9,17 +9,20 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS('Iniciando la normalización de nombres...'))
 
         # --- Definir mapeos de corrección ---
-        # Mapeos basados en el nombre normalizado (lowercase, stripped)
         continent_map = {
             'americas': 'América',
-            'américas': 'América', # Para manejar la 'á'
+            'américas': 'América',
             'america': 'América',
             'africa': 'África',
-            'àfrica': 'África',   # Para manejar la 'à'
+            'àfrica': 'África',
             'europe': 'Europa',
             'asia': 'Asia',
             'oceania': 'Oceanía',
             'asia oriental': 'Asia Oriental',
+        }
+
+        special_continent_map = {
+            'Àfrica': 'África',
         }
 
         country_map = {
@@ -29,7 +32,6 @@ class Command(BaseCommand):
             'puerto rico': 'Puerto Rico',
         }
 
-        # Mapeo de casos especiales con nombres exactos (para problemas de encoding)
         special_country_map = {
             'PerÀº': 'Perú',
             'Peràº': 'Perú',
@@ -44,15 +46,20 @@ class Command(BaseCommand):
                 continue
             
             original_name = name
-            normalized_name_lower = name.strip().lower()
+            normalized_name = None
 
-            if normalized_name_lower in continent_map:
-                normalized_name = continent_map[normalized_name_lower]
+            if original_name in special_continent_map:
+                normalized_name = special_continent_map[original_name]
             else:
-                # Fallback to title case if no specific rule applies
-                normalized_name = original_name.strip().title()
-            
-            if normalized_name != original_name:
+                normalized_name_lower = name.strip().lower()
+                if normalized_name_lower in continent_map:
+                    normalized_name = continent_map[normalized_name_lower]
+                else:
+                    potential_name = name.strip().title()
+                    if potential_name != original_name:
+                        normalized_name = potential_name
+
+            if normalized_name and normalized_name != original_name:
                 self.stdout.write(f"Continente: '{original_name}' -> '{normalized_name}'")
                 updated_count = SNP.objects.filter(continente=original_name).update(continente=normalized_name)
                 updated_continent_count += updated_count
@@ -73,16 +80,13 @@ class Command(BaseCommand):
             original_name = name
             normalized_name = None
 
-            # 1. Comprobar casos especiales de encoding primero
             if original_name in special_country_map:
                 normalized_name = special_country_map[original_name]
             else:
-                # 2. Proceder con el mapeo normalizado
                 normalized_name_lower = name.strip().lower()
                 if normalized_name_lower in country_map:
                     normalized_name = country_map[normalized_name_lower]
                 else:
-                    # 3. Como último recurso, usar title() si hay cambios
                     potential_name = name.strip().title()
                     if potential_name != original_name:
                         normalized_name = potential_name

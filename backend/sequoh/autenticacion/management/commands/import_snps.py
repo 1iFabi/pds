@@ -51,6 +51,7 @@ class Command(BaseCommand):
                             genotipo=genotipo_normalizado,
                             fenotipo=row.get('fenotipo', '').strip(),
                             categoria=row.get('categoria', '').strip() or None,
+                            grupo=row.get('grupo_rasgos', '').strip() or None,
                             cromosoma=row.get('cromosoma', '').strip() or None,
                             posicion=int(row.get('posicion', 0)) if row.get('posicion', '').strip() else None,
                             alelo_referencia=row.get('alelo_referencia', '').strip() or None,
