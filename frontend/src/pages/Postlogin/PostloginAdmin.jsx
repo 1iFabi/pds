@@ -6,11 +6,12 @@ import AdminSidebar from '../../components/AdminSidebar/AdminSidebar';
 import { useAdminStats } from '../../hooks/useAdminStats';
 import './PostloginAdmin.css';
 
-const PostloginAdmin = ({ user }) => {
+const PostloginAdmin = ({ user, mode = 'admin' }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const navigate = useNavigate();
   const { stats } = useAdminStats();
+  const isAdmin = mode === 'admin';
 
   useEffect(() => {
     const checkMobile = () => {
@@ -66,15 +67,23 @@ const PostloginAdmin = ({ user }) => {
           user={user}
           isMobileMenuOpen={isMobileMenuOpen}
           setIsMobileMenuOpen={setIsMobileMenuOpen}
+          isAdmin={isAdmin}
         />
       </aside>
 
       <main className="postlogin-admin__main">
         <header className="postlogin-admin__header">
+          {isAdmin && (
+            <div className="postlogin-admin__badge">
+              ESTÁS DESDE EL ADMINISTRADOR
+            </div>
+          )}
           <div className="postlogin-admin__headline">
-            <h1 className="postlogin-admin__title">Bienvenido/a {displayName}!</h1>
+            <h1 className="postlogin-admin__title">
+              Bienvenido/a {displayName}!
+            </h1>
             <p className="postlogin-admin__subtitle">
-              Esta es la vista del administrador, donde podrás gestionar usuarios y explorar la base de datos del sistema, que integra genotipos y fenotipos.
+              Esta es la vista {isAdmin ? 'del administrador' : 'del analista'}, donde podrás gestionar usuarios y explorar la base de datos del sistema, que integra genotipos y fenotipos.
             </p>
           </div>
         </header>
@@ -156,6 +165,27 @@ const PostloginAdmin = ({ user }) => {
                 </a>
               </div>
             </div>
+
+            {isAdmin && (
+              <div className="postlogin-admin__card postlogin-admin__card--blue" role="button" tabIndex="0">
+                <div className="postlogin-admin__card-content">
+                  <h2 className="postlogin-admin__card-title">Otorgar Permisos</h2>
+                  <p className="postlogin-admin__card-description">
+                    Asigna o revoca acceso a la vista de Analista para las cuentas que elijas.
+                  </p>
+                  <a
+                    onClick={(e) => {
+                      e.preventDefault();
+                      navigate('/dashboard/admin/analysts');
+                    }}
+                    href="#"
+                    className="postlogin-admin__card-link"
+                  >
+                    Gestionar permisos
+                  </a>
+                </div>
+              </div>
+            )}
           </div>
         </section>
       </main>

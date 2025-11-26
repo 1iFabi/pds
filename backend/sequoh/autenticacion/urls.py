@@ -14,6 +14,7 @@ from .views import (
     UserServiceStatusAPIView,
     AdminStatsAPIView,
     GetUsersAPIView,
+    ManageAnalystRoleAPIView,
 )
 from .upload_views import UploadGeneticFileAPIView, DeleteGeneticFileAPIView, GetUserReportStatusAPIView
 from .diseases_views import DiseasesAPIView
@@ -45,6 +46,7 @@ urlpatterns = [
 
     # Endpoint para administradores
     path('admin/stats/', AdminStatsAPIView.as_view(), name='api_admin_stats'),
+    path('admin/analysts/', ManageAnalystRoleAPIView.as_view(), name='api_admin_manage_analysts'),
     path('users/', GetUsersAPIView.as_view(), name='api_get_users'),
     path('upload-genetic-file/', UploadGeneticFileAPIView.as_view(), name='api_upload_genetic_file'),
     path('delete-genetic-file/', DeleteGeneticFileAPIView.as_view(), name='api_delete_genetic_file'),

@@ -9,6 +9,7 @@ from django.db.models import Case, When, IntegerField
 from .authentication import JWTAuthentication
 from .models import Profile, ServiceStatus, SNP, UserSNP
 from .email_utils import send_results_ready_email
+from .roles import is_admin_or_analyst
 import logging
 import json
 
@@ -22,8 +23,8 @@ class UploadGeneticFileAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        # Verificar que el usuario sea staff
-        if not request.user.is_staff:
+        # Verificar que el usuario sea staff o analista autorizado
+        if not is_admin_or_analyst(request.user):
             return Response(
                 {"error": "No tienes permisos para realizar esta acción"},
                 status=status.HTTP_403_FORBIDDEN
@@ -322,8 +323,8 @@ class DeleteGeneticFileAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        # Verificar que el usuario sea staff
-        if not request.user.is_staff:
+        # Verificar que el usuario sea staff o analista autorizado
+        if not is_admin_or_analyst(request.user):
             return Response(
                 {"error": "No tienes permisos para realizar esta acción"},
                 status=status.HTTP_403_FORBIDDEN
@@ -389,7 +390,7 @@ class GetUserReportStatusAPIView(APIView):
 
     def get(self, request, user_id):
         # Verificar que el usuario sea staff
-        if not request.user.is_staff:
+        if not is_admin_or_analyst(request.user):
             return Response(
                 {"error": "No tienes permisos para realizar esta ación"},
                 status=status.HTTP_403_FORBIDDEN

@@ -61,7 +61,12 @@ export default function AdminReports({ user }) {
         if (response.ok && response.data) {
           const users = Array.isArray(response.data) ? response.data : response.data.results || [];
           // Filtrar para excluir usuarios con permisos de admin o staff
-          const filteredUsers = users.filter(user => !user.is_staff && !user.is_superuser);
+          const filteredUsers = users.filter(user =>
+            !user.is_staff &&
+            !user.is_superuser &&
+            !(user.roles?.includes('ANALISTA')) &&
+            !(user.roles?.includes('ADMIN'))
+          );
           
           // Mapear usuarios y obtener estado real de reportes
           const mappedPatients = await Promise.all(
@@ -385,7 +390,7 @@ export default function AdminReports({ user }) {
     }
   };
 
-  if (loading) return <div></div>;
+  const isAdmin = user?.is_staff || user?.is_superuser || user?.roles?.includes('ADMIN');
 
   return (
     <div className="admin-reports-wrapper">
@@ -406,6 +411,7 @@ export default function AdminReports({ user }) {
           user={user}
           isMobileMenuOpen={isMobileMenuOpen}
           setIsMobileMenuOpen={setIsMobileMenuOpen}
+          isAdmin={isAdmin}
         />
       </aside>
 
@@ -419,177 +425,183 @@ export default function AdminReports({ user }) {
           </div>
         </div>
 
-        <div className="admin-reports__container">
-          <div className="admin-reports__search-card">
-            <div className="admin-reports__search-top">
-              <div className="admin-reports__search-input-container">
-                <Search size={18} className="admin-reports__search-icon" />
-                <input
-                  type="text"
-                  placeholder="Buscar por nombre, RUT o ID..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="admin-reports__search-input"
-                />
-              </div>
-              <div className="admin-reports__status-filter-container">
-                <label className="admin-reports__filter-label">Estado del Reporte</label>
-                <select
-                  value={reportStatusFilter}
-                  onChange={(e) => setReportStatusFilter(e.target.value)}
-                  className="admin-reports__status-filter"
-                >
-                  <option value="todos">Todos</option>
-                  <option value="sin_reporte">Sin Reporte</option>
-                  <option value="pendiente">Pendiente</option>
-                  <option value="subido">Subido</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="admin-reports__stats">
-              <div className="admin-reports__stat-item admin-reports__stat-item--with-icon" title="Reportes completados y subidos">
-                <div className="admin-reports__stat-icon admin-reports__stat-icon--success">✓</div>
-                <div className="admin-reports__stat-number">{withReportCount}</div>
-                <div className="admin-reports__stat-label">Con Reporte</div>
-              </div>
-              <div className="admin-reports__stat-item admin-reports__stat-item--with-icon" title="Reportes pendientes de subir o procesar">
-                <div className="admin-reports__stat-icon admin-reports__stat-icon--warning">!</div>
-                <div className="admin-reports__stat-number">{withoutReportCount}</div>
-                <div className="admin-reports__stat-label">Sin Reporte</div>
-              </div>
-              <div className="admin-reports__stat-item admin-reports__stat-item--with-icon" title="Total de pacientes en el sistema">
-                <div className="admin-reports__stat-icon admin-reports__stat-icon--info">👥</div>
-                <div className="admin-reports__stat-number">{patients.length}</div>
-                <div className="admin-reports__stat-label">Total Pacientes</div>
-              </div>
-            </div>
+        {loading ? (
+          <div className="admin-reports__loading">
+            Cargando pacientes...
           </div>
+        ) : (
+          <div className="admin-reports__container">
+            <div className="admin-reports__search-card">
+              <div className="admin-reports__search-top">
+                <div className="admin-reports__search-input-container">
+                  <Search size={18} className="admin-reports__search-icon" />
+                  <input
+                    type="text"
+                    placeholder="Buscar por nombre, RUT o ID..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="admin-reports__search-input"
+                  />
+                </div>
+                <div className="admin-reports__status-filter-container">
+                  <label className="admin-reports__filter-label">Estado del Reporte</label>
+                  <select
+                    value={reportStatusFilter}
+                    onChange={(e) => setReportStatusFilter(e.target.value)}
+                    className="admin-reports__status-filter"
+                  >
+                    <option value="todos">Todos</option>
+                    <option value="sin_reporte">Sin Reporte</option>
+                    <option value="pendiente">Pendiente</option>
+                    <option value="subido">Subido</option>
+                  </select>
+                </div>
+              </div>
 
-          <div className="admin-reports__table-card">
-            <div className="admin-reports__table-header">
-              <h2 className="admin-reports__table-title">Pacientes Registrados</h2>
-              <p className="admin-reports__table-description">
-                Lista completa de pacientes y el estado de sus reportes genéticos
-              </p>
+              <div className="admin-reports__stats">
+                <div className="admin-reports__stat-item admin-reports__stat-item--with-icon" title="Reportes completados y subidos">
+                  <div className="admin-reports__stat-icon admin-reports__stat-icon--success">✓</div>
+                  <div className="admin-reports__stat-number">{withReportCount}</div>
+                  <div className="admin-reports__stat-label">Con Reporte</div>
+                </div>
+                <div className="admin-reports__stat-item admin-reports__stat-item--with-icon" title="Reportes pendientes de subir o procesar">
+                  <div className="admin-reports__stat-icon admin-reports__stat-icon--warning">!</div>
+                  <div className="admin-reports__stat-number">{withoutReportCount}</div>
+                  <div className="admin-reports__stat-label">Sin Reporte</div>
+                </div>
+                <div className="admin-reports__stat-item admin-reports__stat-item--with-icon" title="Total de pacientes en el sistema">
+                  <div className="admin-reports__stat-icon admin-reports__stat-icon--info">👥</div>
+                  <div className="admin-reports__stat-number">{patients.length}</div>
+                  <div className="admin-reports__stat-label">Total Pacientes</div>
+                </div>
+              </div>
             </div>
 
-            <div className="admin-reports__table-wrapper">
-              <table className="admin-reports__table">
-                <thead className="admin-reports__table-head">
-                  <tr className="admin-reports__table-row">
-                    <th className="admin-reports__table-cell">ID</th>
-                    <th className="admin-reports__table-cell">Paciente</th>
-                    <th className="admin-reports__table-cell">RUT</th>
-                    <th className="admin-reports__table-cell">Email</th>
-                    <th className="admin-reports__table-cell">Estado Reporte</th>
-                    <th className="admin-reports__table-cell">Archivo</th>
-                    <th className="admin-reports__table-cell">Fecha</th>
-                    <th className="admin-reports__table-cell admin-reports__table-cell--align-right">
-                      Acciones
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="admin-reports__table-body">
-                  {filteredPatients.length === 0 ? (
+            <div className="admin-reports__table-card">
+              <div className="admin-reports__table-header">
+                <h2 className="admin-reports__table-title">Pacientes Registrados</h2>
+                <p className="admin-reports__table-description">
+                  Lista completa de pacientes y el estado de sus reportes genéticos
+                </p>
+              </div>
+
+              <div className="admin-reports__table-wrapper">
+                <table className="admin-reports__table">
+                  <thead className="admin-reports__table-head">
                     <tr className="admin-reports__table-row">
-                      <td colSpan="8" className="admin-reports__table-cell admin-reports__table-cell--center">
-                        No se encontraron pacientes
-                      </td>
+                      <th className="admin-reports__table-cell">ID</th>
+                      <th className="admin-reports__table-cell">Paciente</th>
+                      <th className="admin-reports__table-cell">RUT</th>
+                      <th className="admin-reports__table-cell">Email</th>
+                      <th className="admin-reports__table-cell">Estado Reporte</th>
+                      <th className="admin-reports__table-cell">Archivo</th>
+                      <th className="admin-reports__table-cell">Fecha</th>
+                      <th className="admin-reports__table-cell admin-reports__table-cell--align-right">
+                        Acciones
+                      </th>
                     </tr>
-                  ) : (
-                    filteredPatients.map((patient) => (
-                      <tr key={patient.id} className="admin-reports__table-row">
-                        <td className="admin-reports__table-cell admin-reports__table-cell--bold">
-                          {patient.id}
-                        </td>
-                        <td className="admin-reports__table-cell">
-                          {patient.hasReport ? (
-                            <button
-                              className="admin-reports__patient-name-btn"
-                              onClick={() => handleViewVariants(patient)}
-                              title="Ver variantes genéticas"
-                            >
-                              {patient.name}
-                            </button>
-                          ) : (
-                            patient.name
-                          )}
-                        </td>
-                        <td className="admin-reports__table-cell">{patient.rut}</td>
-                        <td className="admin-reports__table-cell admin-reports__table-cell--muted">
-                          {patient.email}
-                        </td>
-                        <td className="admin-reports__table-cell">
-                          {patient.hasReport ? (
-                            <span className="admin-reports__badge admin-reports__badge--success">
-                              Completado
-                            </span>
-                          ) : (
-                            <select
-                              value={patient.serviceStatus}
-                              onChange={(e) => handleServiceStatusChange(patient, e.target.value)}
-                              className="admin-reports__service-status-select"
-                            >
-                              <option value="NO_PURCHASED">Sin Reporte</option>
-                              <option value="PENDING">Pendiente</option>
-                            </select>
-                          )}
-                        </td>
-                        <td className="admin-reports__table-cell">
-                          {patient.reportName ? (
-                            <div className="admin-reports__file-cell">
-                              <FileText size={16} className="admin-reports__file-icon" />
-                              <span className="admin-reports__file-name" title={patient.reportName}>
-                                {patient.reportName}
-                              </span>
-                            </div>
-                          ) : (
-                            <span className="admin-reports__table-cell--muted">-</span>
-                          )}
-                        </td>
-                        <td className="admin-reports__table-cell admin-reports__table-cell--muted">
-                          {patient.reportDate || "-"}
-                        </td>
-                        <td className="admin-reports__table-cell admin-reports__table-cell--actions">
-                          <div className="admin-reports__actions">
-                            {!patient.hasReport ? (
-                              <button
-                                className="admin-reports__action-btn admin-reports__action-btn--upload"
-                                onClick={() => handleUpload(patient)}
-                                title="Subir reporte"
-                              >
-                                <Upload size={18} />
-                                <span>Subir</span>
-                              </button>
-                            ) : (
-                              <>
-                                <button
-                                  className="admin-reports__action-btn admin-reports__action-btn--edit"
-                                  onClick={() => handleEdit(patient)}
-                                  title="Editar reporte"
-                                >
-                                  <Edit size={18} />
-                                </button>
-                                <button
-                                  className="admin-reports__action-btn admin-reports__action-btn--delete"
-                                  onClick={() => handleDelete(patient)}
-                                  title="Eliminar reporte"
-                                >
-                                  <Trash2 size={18} />
-                                </button>
-                              </>
-                            )}
-                          </div>
+                  </thead>
+                  <tbody className="admin-reports__table-body">
+                    {filteredPatients.length === 0 ? (
+                      <tr className="admin-reports__table-row">
+                        <td colSpan="8" className="admin-reports__table-cell admin-reports__table-cell--center">
+                          No se encontraron pacientes
                         </td>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+                    ) : (
+                      filteredPatients.map((patient) => (
+                        <tr key={patient.id} className="admin-reports__table-row">
+                          <td className="admin-reports__table-cell admin-reports__table-cell--bold">
+                            {patient.id}
+                          </td>
+                          <td className="admin-reports__table-cell">
+                            {patient.hasReport ? (
+                              <button
+                                className="admin-reports__patient-name-btn"
+                                onClick={() => handleViewVariants(patient)}
+                                title="Ver variantes genéticas"
+                              >
+                                {patient.name}
+                              </button>
+                            ) : (
+                              patient.name
+                            )}
+                          </td>
+                          <td className="admin-reports__table-cell">{patient.rut}</td>
+                          <td className="admin-reports__table-cell admin-reports__table-cell--muted">
+                            {patient.email}
+                          </td>
+                          <td className="admin-reports__table-cell">
+                            {patient.hasReport ? (
+                              <span className="admin-reports__badge admin-reports__badge--success">
+                                Completado
+                              </span>
+                            ) : (
+                              <select
+                                value={patient.serviceStatus}
+                                onChange={(e) => handleServiceStatusChange(patient, e.target.value)}
+                                className="admin-reports__service-status-select"
+                              >
+                                <option value="NO_PURCHASED">Sin Reporte</option>
+                                <option value="PENDING">Pendiente</option>
+                              </select>
+                            )}
+                          </td>
+                          <td className="admin-reports__table-cell">
+                            {patient.reportName ? (
+                              <div className="admin-reports__file-cell">
+                                <FileText size={16} className="admin-reports__file-icon" />
+                                <span className="admin-reports__file-name" title={patient.reportName}>
+                                  {patient.reportName}
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="admin-reports__table-cell--muted">-</span>
+                            )}
+                          </td>
+                          <td className="admin-reports__table-cell admin-reports__table-cell--muted">
+                            {patient.reportDate || "-"}
+                          </td>
+                          <td className="admin-reports__table-cell admin-reports__table-cell--actions">
+                            <div className="admin-reports__actions">
+                              {!patient.hasReport ? (
+                                <button
+                                  className="admin-reports__action-btn admin-reports__action-btn--upload"
+                                  onClick={() => handleUpload(patient)}
+                                  title="Subir reporte"
+                                >
+                                  <Upload size={18} />
+                                  <span>Subir</span>
+                                </button>
+                              ) : (
+                                <>
+                                  <button
+                                    className="admin-reports__action-btn admin-reports__action-btn--edit"
+                                    onClick={() => handleEdit(patient)}
+                                    title="Editar reporte"
+                                  >
+                                    <Edit size={18} />
+                                  </button>
+                                  <button
+                                    className="admin-reports__action-btn admin-reports__action-btn--delete"
+                                    onClick={() => handleDelete(patient)}
+                                    title="Eliminar reporte"
+                                  >
+                                    <Trash2 size={18} />
+                                  </button>
+                                </>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {uploadDialogOpen && (
           <div className="admin-reports__overlay" onClick={() => setUploadDialogOpen(false)}>

@@ -21,6 +21,14 @@ from .email_utils import send_welcome_email, send_password_reset_email, send_ema
 from .jwt_utils import encode_jwt
 from .authentication import JWTAuthentication
 from .models import ServiceStatus, Profile, SNP
+from .roles import (
+    ensure_default_groups,
+    is_admin,
+    is_analyst,
+    is_admin_or_analyst,
+    grant_analyst_role,
+    revoke_analyst_role,
+)
 import json
 import re
 
@@ -50,7 +58,7 @@ class UserServiceStatusAPIView(APIView):
 
     def post(self, request):
         """Actualiza el estado de servicio de un usuario (solo staff). Body: {userId, status} """
-        if not request.user.is_staff:
+        if not is_admin_or_analyst(request.user):
             return Response({"error": "No tienes permisos"}, status=status.HTTP_403_FORBIDDEN)
         try:
             data = json.loads(request.body or '{}')
@@ -187,6 +195,9 @@ class MeAPIView(APIView):
 
     def get(self, request):
         u = request.user
+        # Asegurar que los grupos base existan
+        ensure_default_groups()
+
         # Cargar estado de servicio desde Profile
         from .models import Profile, ServiceStatus
         try:
@@ -194,6 +205,13 @@ class MeAPIView(APIView):
             service_status = p.service_status
         except Profile.DoesNotExist:
             service_status = ServiceStatus.NO_PURCHASED
+
+        roles = list(u.groups.values_list("name", flat=True))
+        admin_flag = is_admin(u)
+        analyst_flag = is_analyst(u)
+        if admin_flag and "ADMIN" not in roles:
+            roles.append("ADMIN")
+        data_roles = sorted(set(roles))
         data = {
             "id": u.id,
             "email": u.email,
@@ -201,7 +219,10 @@ class MeAPIView(APIView):
             "last_name": u.last_name,
             "is_staff": u.is_staff,
             "is_superuser": u.is_superuser,
-            "user_type": "admin" if u.is_staff else "user",
+            "is_admin": admin_flag,
+            "is_analyst": analyst_flag,
+            "roles": data_roles,
+            "user_type": "admin" if admin_flag else ("analyst" if analyst_flag else "user"),
             "service_status": service_status,
             "can_view_results": service_status == ServiceStatus.COMPLETED,
         }
@@ -765,6 +786,45 @@ class VerifyEmailView(APIView):
             return resp
 
 
+class ManageAnalystRoleAPIView(APIView):
+    """
+    Permite a un ADMIN otorgar o revocar el rol ANALISTA a otros usuarios.
+    """
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        if not is_admin(request.user):
+            return Response({"error": "No tienes permisos"}, status=status.HTTP_403_FORBIDDEN)
+        try:
+            data = json.loads(request.body or '{}')
+        except json.JSONDecodeError:
+            data = request.data or {}
+
+        user_id = data.get("userId") or data.get("user_id")
+        grant = data.get("grant")
+        if user_id is None or grant is None:
+            return Response(
+                {"error": "userId y grant (true/false) son obligatorios"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            target = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response({"error": "Usuario no encontrado"}, status=status.HTTP_404_NOT_FOUND)
+
+        ensure_default_groups()
+        if grant:
+            grant_analyst_role(target)
+        else:
+            revoke_analyst_role(target)
+        return Response({
+            "user_id": target.id,
+            "is_analyst": is_analyst(target),
+            "roles": list(target.groups.values_list("name", flat=True)),
+        })
+
+
 class GetUsersAPIView(APIView):
     """Endpoint para obtener lista de usuarios (solo staff)."""
     authentication_classes = [JWTAuthentication]
@@ -772,7 +832,7 @@ class GetUsersAPIView(APIView):
 
     def get(self, request):
         # Verificar que sea staff
-        if not request.user.is_staff:
+        if not is_admin_or_analyst(request.user):
             return Response({"error": "No tienes permisos"}, status=status.HTTP_403_FORBIDDEN)
         
         users = User.objects.filter(is_active=True).values(
@@ -789,6 +849,15 @@ class GetUsersAPIView(APIView):
                 user_dict['rut'] = getattr(profile, 'rut', None)
             except Profile.DoesNotExist:
                 user_dict['rut'] = None
+            try:
+                target = User.objects.get(id=user['id'])
+                user_dict['roles'] = list(target.groups.values_list("name", flat=True))
+                user_dict['is_admin'] = is_admin(target)
+                user_dict['is_analyst'] = is_analyst(target)
+            except User.DoesNotExist:
+                user_dict['roles'] = []
+                user_dict['is_admin'] = False
+                user_dict['is_analyst'] = False
             users_list.append(user_dict)
         
         return Response(users_list)
@@ -801,7 +870,7 @@ class AdminStatsAPIView(APIView):
 
     def get(self, request):
         # Verificar que sea staff
-        if not request.user.is_staff:
+        if not is_admin_or_analyst(request.user):
             return Response({"error": "No tienes permisos"}, status=status.HTTP_403_FORBIDDEN)
         
         from django.db import connection
@@ -809,7 +878,10 @@ class AdminStatsAPIView(APIView):
         
         try:
             # Contar usuarios activos (excluyendo staff y superusers)
-            total_users = User.objects.filter(is_active=True, is_staff=False, is_superuser=False).count()
+            total_users = User.objects.filter(
+                is_active=True,
+                is_superuser=False,
+            ).exclude(groups__name__in=["ADMIN", "ANALISTA"]).filter(is_staff=False).count()
             
             # Análisis completados (solo usuarios regulares)
             analysis_count = User.objects.filter(
@@ -817,10 +889,10 @@ class AdminStatsAPIView(APIView):
                 is_staff=False,
                 is_superuser=False,
                 profile__service_status=ServiceStatus.COMPLETED
-            ).count()
+            ).exclude(groups__name__in=["ADMIN", "ANALISTA"]).count()
             
             # Contar reportes pendientes
-            pending_reports = Profile.objects.filter(service_status=ServiceStatus.PENDING).count()
+            pending_reports = Profile.objects.filter(service_status=ServiceStatus.PENDING).exclude(user__groups__name__in=["ADMIN", "ANALISTA"]).count()
             
             # Contar variantes en la BD
             variants_count = SNP.objects.count()
@@ -842,7 +914,7 @@ class AdminStatsAPIView(APIView):
             print(f"Error en AdminStatsAPIView: {e}")
             # Devolver al menos los usuarios que podemos contar
             return Response({
-                "total_users": User.objects.filter(is_active=True, is_staff=False, is_superuser=False).count(),
+                "total_users": User.objects.filter(is_active=True, is_superuser=False).exclude(groups__name__in=["ADMIN", "ANALISTA"]).filter(is_staff=False).count(),
                 "processed_reports": 0,
                 "variants_count": 0,
                 "analysis_count": 0,

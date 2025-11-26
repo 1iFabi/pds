@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react'
-import { LogOut, FileText, Database, ChevronDown, ChevronUp } from 'lucide-react'
+import { LogOut, FileText, Database, Shield } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import './AdminSidebar.css'
 
-const AdminSidebar = ({ onLogout, user, isMobileMenuOpen = false, setIsMobileMenuOpen = () => {} }) => {
+const AdminSidebar = ({ onLogout, user, isMobileMenuOpen = false, setIsMobileMenuOpen = () => {}, isAdmin = false }) => {
   const navigate = useNavigate()
   const [isHovered, setIsHovered] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
@@ -95,6 +95,22 @@ const AdminSidebar = ({ onLogout, user, isMobileMenuOpen = false, setIsMobileMen
               <span className="admin-sidebar__nav-label">Ver variantes en base de datos</span>
             )}
           </a>
+
+          {isAdmin && (isExpanded || isMobile) && <div className="admin-sidebar__divider" />}
+
+          {isAdmin && (
+            <a 
+              href="#gestionar-analistas"
+              className="admin-sidebar__nav-item"
+              title={!isExpanded && !isMobile ? 'Otorgar permisos' : undefined}
+              onClick={closeMenuAndNavigate('/dashboard/admin/analysts')}
+            >
+              <Shield size={20} className="admin-sidebar__nav-icon" />
+              {(isExpanded || isMobile) && (
+                <span className="admin-sidebar__nav-label">Otorgar permisos</span>
+              )}
+            </a>
+          )}
         </nav>
 
         <div className="admin-sidebar__footer">
