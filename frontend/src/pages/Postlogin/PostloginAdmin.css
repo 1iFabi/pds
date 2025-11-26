@@ -89,6 +89,19 @@
   flex-shrink: 0;
 }
 
+.postlogin-admin__badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: linear-gradient(120deg, #0b7ad0 0%, #1d8bf1 100%);
+  color: #fff;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  box-shadow: 0 8px 24px rgba(29, 139, 241, 0.2);
+  width: fit-content;
+}
+
 .postlogin-admin__headline {
   display: flex;
   flex-direction: column;
@@ -261,6 +274,41 @@
   background-color: #381549;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(74, 28, 95, 0.3);
+}
+
+/* ===== CARD BLUE ===== */
+.postlogin-admin__card--blue {
+  background-color: #D6EAF8;
+  background-image: url('/Dashboard/cuadrado.png');
+  background-size: 60% auto;
+  background-position: calc(100% + 60px) center;
+  background-repeat: no-repeat;
+  color: #154360;
+  box-shadow: 0 12px 28px rgba(21, 67, 96, 0.14);
+}
+
+.postlogin-admin__card--blue:hover {
+  box-shadow: 0 16px 36px rgba(21, 67, 96, 0.18);
+}
+
+.postlogin-admin__card--blue .postlogin-admin__card-title {
+  color: #1A5276;
+}
+
+.postlogin-admin__card--blue .postlogin-admin__card-description {
+  color: #21618C;
+}
+
+.postlogin-admin__card--blue .postlogin-admin__card-link {
+  background-color: #154360;
+  color: #ffffff;
+  border: none;
+}
+
+.postlogin-admin__card--blue .postlogin-admin__card-link:hover {
+  background-color: #0E2F44;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(21, 67, 96, 0.3);
 }
 
 /* ===== CARD CONTENT ===== */

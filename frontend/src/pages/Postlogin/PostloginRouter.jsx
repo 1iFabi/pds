@@ -3,8 +3,10 @@ import { useNavigate, Routes, Route } from 'react-router-dom';
 import { API_ENDPOINTS, apiRequest } from '../../config/api';
 import PostloginUser from './PostloginUser';
 import PostloginAdmin from './PostloginAdmin';
+import PostloginAnalyst from './PostloginAnalyst';
 import AdminReports from './AdminReports';
 import AdminVariantsDatabase from './AdminVariantsDatabase';
+import AdminAnalystAccess from './AdminAnalystAccess';
 
 const PostloginRouter = () => {
   const [user, setUser] = useState(null);
@@ -36,13 +38,25 @@ const PostloginRouter = () => {
     return null;
   }
 
-  // Detectar si el usuario es staff (administrador)
-  const isStaff = user?.is_staff === true;
+  const roles = user?.roles || [];
+  const isAdmin = user?.is_admin || user?.is_staff || roles.includes('ADMIN');
+  const isAnalyst = user?.is_analyst || roles.includes('ANALISTA');
 
-  if (isStaff) {
+  if (isAdmin) {
     return (
       <Routes>
-        <Route path="/" element={<PostloginAdmin user={user} />} />
+        <Route path="/" element={<PostloginAdmin user={user} mode="admin" />} />
+        <Route path="admin/reports" element={<AdminReports user={user} />} />
+        <Route path="admin/variants" element={<AdminVariantsDatabase user={user} />} />
+        <Route path="admin/analysts" element={<AdminAnalystAccess user={user} />} />
+      </Routes>
+    );
+  }
+
+  if (isAnalyst) {
+    return (
+      <Routes>
+        <Route path="/" element={<PostloginAnalyst user={user} mode="analyst" />} />
         <Route path="admin/reports" element={<AdminReports user={user} />} />
         <Route path="admin/variants" element={<AdminVariantsDatabase user={user} />} />
       </Routes>

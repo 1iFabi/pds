@@ -13,6 +13,7 @@ export const API_ENDPOINTS = {
   DASHBOARD: `${API_BASE_URL}/dashboard/`,
   CONTACT: `${API_BASE_URL}/contact/`,
   GET_USERS: `${API_BASE_URL}/users/`,
+  ADMIN_ANALYSTS: `${API_BASE_URL}/admin/analysts/`,
   UPLOAD_GENETIC_FILE: `${API_BASE_URL}/upload-genetic-file/`,
   DELETE_GENETIC_FILE: `${API_BASE_URL}/delete-genetic-file/`,
   UPDATE_SERVICE_STATUS: `${API_BASE_URL}/service/status/`,

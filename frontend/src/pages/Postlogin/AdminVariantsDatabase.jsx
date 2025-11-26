@@ -198,6 +198,8 @@ const AdminVariantsDatabase = ({ user }) => {
     }
   };
 
+  const isAdmin = user?.is_staff || user?.is_superuser || user?.roles?.includes('ADMIN');
+
   return (
     <div className="admin-variants-wrapper">
       {isMobile && (
@@ -217,6 +219,7 @@ const AdminVariantsDatabase = ({ user }) => {
           user={user}
           isMobileMenuOpen={isMobileMenuOpen}
           setIsMobileMenuOpen={setIsMobileMenuOpen}
+          isAdmin={isAdmin}
         />
       </aside>
 
