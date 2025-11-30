@@ -6,6 +6,7 @@ from django.utils.decorators import method_decorator
 from django.contrib.auth import get_user_model
 from .authentication import JWTAuthentication
 from .models import UserSNP, SNP
+from .roles import is_admin_or_analyst
 
 User = get_user_model()
 
@@ -21,7 +22,7 @@ class PatientVariantsAPIView(APIView):
 
     def get(self, request, user_id):
         # Verificar que el usuario autenticado es admin/staff
-        if not (request.user.is_staff or request.user.is_superuser):
+        if not is_admin_or_analyst(request.user):
             return Response({
                 'success': False,
                 'error': 'No tienes permisos para acceder a esta información'

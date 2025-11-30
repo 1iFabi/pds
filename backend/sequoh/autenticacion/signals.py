@@ -11,7 +11,7 @@ def send_welcome_on_confirmation(request, email_address, **kwargs):
     user = email_address.user
     ws, _ = WelcomeStatus.objects.get_or_create(user=user)
     if not ws.welcome_sent:
-        send_welcome_email(user_email=user.email, user_name=user.first_name or user.username)
+        send_welcome_email(user)
         ws.welcome_sent = True
         ws.sent_at = timezone.now()
         ws.save()
@@ -23,7 +23,7 @@ def send_welcome_on_login(sender, request, user, **kwargs):
         return
     # Solo enviarlo si el email está verificado
     if EmailAddress.objects.filter(user=user, email=user.email, verified=True).exists():
-        send_welcome_email(user_email=user.email, user_name=user.first_name or user.username)
+        send_welcome_email(user)
         ws.welcome_sent = True
         ws.sent_at = timezone.now()
         ws.save()

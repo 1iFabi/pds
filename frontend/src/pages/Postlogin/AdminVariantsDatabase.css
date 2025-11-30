@@ -12,12 +12,19 @@
 }
 
 .admin-variants__sidebar {
+  width: 280px;
+  min-width: 280px;
   flex-shrink: 0;
   background: transparent;
   display: flex;
   transition: all 0.3s ease;
   position: sticky;
   top: 0;
+}
+
+.admin-variants__sidebar:has(.admin-sidebar--folded) {
+  width: 80px;
+  min-width: 80px;
 }
 
 .admin-variants__main {

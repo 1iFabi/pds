@@ -232,31 +232,39 @@ const RasgosContent = ({ traits, groupedData, isMobile }) => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
       <div className="lg:col-span-2 grid grid-cols-1 gap-8 rasgos-groups-column">
-        {groupedData.map(group => (
-          <div key={group.name} className="card-pro card-large-pro rasgos-card p-6 pb-12 flex flex-col transition-none">
-            <div className="card-pro__header mb-2">
-              <div className="flex items-center">
-                <span className="w-4 h-4 rounded-md mr-3" style={{ backgroundColor: group.fill }}></span>
-                <h3 className="card-pro__title text-base">{group.name}</h3>
+        {groupedData.map(group => {
+          const isExpanded = expandedCards[group.name];
+          return (
+            <div key={group.name} className="card-pro card-large-pro rasgos-card p-6 pb-12 flex flex-col transition-none">
+              <div className="card-pro__header mb-2 cursor-pointer flex justify-between items-center" onClick={() => toggleCard(group.name)}>
+                <div className="flex items-center">
+                  <span className="w-4 h-4 rounded-md mr-3" style={{ backgroundColor: group.fill }}></span>
+                  <h3 className="card-pro__title text-base">{group.name}</h3>
+                </div>
+                <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors">
+                  <ChevronDown className={`w-5 h-5 text-gray-500 transform transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
+                </div>
               </div>
-            </div>
-            <p className="text-sm text-gray-600 mb-4 ml-7">{groupDescriptions[group.name] || 'Rasgos asociados a esta categoría.'}</p>
+              <p className="text-sm text-gray-600 mb-4 ml-7">{groupDescriptions[group.name] || 'Rasgos asociados a esta categoría.'}</p>
 
-            <div className="trait-list">
-              {group.traits.map((trait, index) => (
-                <TraitBar
-                  key={index}
-                  trait={trait}
-                  name={trait.name || trait.fenotipo}
-                  level={trait.level || 'medium'}
-                  percentage={typeof trait.percentage === 'number' ? trait.percentage : 50}
-                  groupColor={group.fill}
-                />
-              ))}
-            </div>
+              {isExpanded && (
+                <div className="trait-list">
+                  {group.traits.map((trait, index) => (
+                    <TraitBar
+                      key={index}
+                      trait={trait}
+                      name={trait.name || trait.fenotipo}
+                      level={trait.level || 'medium'}
+                      percentage={typeof trait.percentage === 'number' ? trait.percentage : 50}
+                      groupColor={group.fill}
+                    />
+                  ))}
+                </div>
+              )}
 
-          </div>
-        ))}
+            </div>
+          )
+        })}
       </div>
       <div className="space-y-8">
         {!isMobile && (

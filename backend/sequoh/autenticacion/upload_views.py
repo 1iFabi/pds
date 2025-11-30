@@ -9,6 +9,7 @@ from django.db.models import Case, When, IntegerField
 from .authentication import JWTAuthentication
 from .models import Profile, ServiceStatus, SNP, UserSNP
 from .email_utils import send_results_ready_email
+from .roles import is_admin_or_analyst
 import logging
 import json
 
@@ -22,8 +23,8 @@ class UploadGeneticFileAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        # Verificar que el usuario sea staff
-        if not request.user.is_staff:
+        # Verificar que el usuario sea staff o analista autorizado
+        if not is_admin_or_analyst(request.user):
             return Response(
                 {"error": "No tienes permisos para realizar esta acción"},
                 status=status.HTTP_403_FORBIDDEN
@@ -38,7 +39,6 @@ class UploadGeneticFileAPIView(APIView):
 
             user_id = data.get('userId')
             file_content = data.get('fileContent', '').strip()
-            rut_from_file = data.get('rutFromFile', '').strip()
             filename = data.get('filename', 'report.txt').strip()
 
             # Validaciones
@@ -54,12 +54,6 @@ class UploadGeneticFileAPIView(APIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-            if not rut_from_file:
-                return Response(
-                    {"error": "rutFromFile es obligatorio"},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-
             # Verificar que el usuario exista
             try:
                 target_user = User.objects.get(id=user_id)
@@ -69,20 +63,17 @@ class UploadGeneticFileAPIView(APIView):
                     status=status.HTTP_404_NOT_FOUND
                 )
 
-            # Validar que el RUT del archivo coincida con el RUT del usuario en BD
+            # Validar que el filename coincida con el sample_code del usuario
             try:
                 user_profile = target_user.profile
-                user_rut = user_profile.rut
-                # Comparar: el rut_from_file debe coincidir exactamente con el RUT sin guiones
-                # Ej: rut_from_file="211977760", user_rut="21197776-0" -> "211977760"
-                user_rut_clean = user_rut.replace('-', '').replace('.', '')
-                if rut_from_file != user_rut_clean:
+                sample_code = user_profile.sample_code
+                
+                # Comparar: el filename (sin extensión) debe coincidir con el sample_code
+                filename_without_ext = filename.split('.')[0]
+                if filename_without_ext != sample_code:
                     return Response(
                         {
-                            "error": (
-                                f"El RUT del archivo ({rut_from_file}) no coincide con el "
-                                f"RUT del usuario ({user_rut}) en la base de datos."
-                            )
+                            "error": "El nombre del archivo no coincide con el SampleCode del usuario."
                         },
                         status=status.HTTP_400_BAD_REQUEST
                     )
@@ -322,8 +313,8 @@ class DeleteGeneticFileAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        # Verificar que el usuario sea staff
-        if not request.user.is_staff:
+        # Verificar que el usuario sea staff o analista autorizado
+        if not is_admin_or_analyst(request.user):
             return Response(
                 {"error": "No tienes permisos para realizar esta acción"},
                 status=status.HTTP_403_FORBIDDEN
@@ -389,7 +380,7 @@ class GetUserReportStatusAPIView(APIView):
 
     def get(self, request, user_id):
         # Verificar que el usuario sea staff
-        if not request.user.is_staff:
+        if not is_admin_or_analyst(request.user):
             return Response(
                 {"error": "No tienes permisos para realizar esta ación"},
                 status=status.HTTP_403_FORBIDDEN

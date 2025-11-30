@@ -450,10 +450,16 @@ def send_verification_email(user_email: str, user_name: str, verification_url: s
         return False
 
 
-def send_welcome_email(user_email: str, user_name: str) -> bool:
+def send_welcome_email(user) -> bool:
     """Envía email de bienvenida tras verificación."""
+    from .utils import ensure_sample_code
+    from .models import Profile
+
     try:
-        subject = 'Bienvenido a GenomIA!'
+        profile, _ = Profile.objects.get_or_create(user=user)
+        sample_code = ensure_sample_code(profile)
+
+        subject = f'¡Bienvenido a GenomIA! Tu SampleCode es {sample_code}'
         login_url = getattr(
             settings,
             'FRONTEND_LOGIN_REDIRECT',
@@ -471,60 +477,41 @@ def send_welcome_email(user_email: str, user_name: str) -> bool:
 
         btn_html = email_button(login_url, "Acceder a mi cuenta", kind="primary")
         inner = f"""
-          <p>Hola {user_name},</p>
-          <p>¡Bienvenido a GenomIA! Tu registro ha sido exitoso y estás a un paso de descubrir los secretos de tu ADN.</p>
+          <p>Hola {user.first_name},</p>
+          <p>¡Bienvenido a GenomIA! Tu registro ha sido exitoso y tu cuenta ha sido verificada.</p>
           
           <div style="background:#F0F9FF; border-left:4px solid #0EA5E9; padding:20px; border-radius:12px; margin:24px 0;">
-            <h3 style="color:#0369A1; margin:0 0 12px 0; font-size:18px;">📍 Próximo paso: Realiza tu examen genético</h3>
-            <p style="margin:8px 0; color:#1E40AF;"><strong>Ubicación:</strong> Av. Libertador Bernardo O'Higgins 611, Rancagua</p>
-            <p style="margin:8px 0; color:#1E40AF;"><strong>Horario de atención:</strong> 08:30 – 16:30 hrs (lunes a viernes)</p>
-            <p style="margin:12px 0 4px 0; color:#374151; font-size:14px;">Recuerda llevar tu cédula de identidad y presentarte en el horario indicado.</p>
+            <h3 style="color:#0369A1; margin:0 0 12px 0; font-size:18px;">Tu SampleCode</h3>
+            <p style="margin:8px 0; color:#1E40AF;">Guarda este código, lo necesitarás para tu examen genético:</p>
+            <p style="font-size: 20px; font-weight: 700; letter-spacing: 0.8px;">{sample_code}</p>
           </div>
-          
-          <p>Una vez realizado el examen, podrás:</p>
-          <ul style="color:#374151; margin:16px 0; padding-left:20px; line-height:1.6;">
-            <li>Acceder a tu perfil genético personalizado</li>
-            <li>Descubrir tu ancestría y orígenes étnicos</li>
-            <li>Obtener reportes detallados sobre predisposiciones genéticas</li>
-            <li>Conocer cómo tu genética influye en tu respuesta a medicamentos</li>
-          </ul>
           
           <div style="text-align:center; margin: 28px 0;">
             {btn_html}
           </div>
-          
-
         """
         html_content = build_branded_html(
             inner_html=inner,
             title_text='¡Bienvenido a GenomIA!',
             logo_src=logo_src,
-            preheader="Tu próximo paso: realiza tu examen genético en Rancagua."
+            preheader=f"Tu SampleCode es {sample_code}"
         )
 
         text_content = text_block(
-            f"¡Bienvenido a GenomIA, {user_name}!",
+            f"¡Bienvenido a GenomIA, {user.first_name}!",
             "",
-            "Tu registro ha sido exitoso. Ahora es momento de realizar tu examen genético.",
+            "Tu registro ha sido exitoso y tu cuenta ha sido verificada.",
             "",
-            "PRÓXIMO PASO: REALIZA TU EXAMEN",
-            "Ubicación: Av. Libertador Bernardo O'Higgins 611, Rancagua",
-            "Horario de atención: 08:30 – 16:30 hrs (lunes a viernes)",
-            "Recuerda llevar tu cédula de identidad.",
+            "Tu SampleCode es:",
+            sample_code,
             "",
-            "Una vez realizado el examen, podrás:",
-            "• Acceder a tu perfil genético personalizado",
-            "• Descubrir tu ancestría y orígenes étnicos",
-            "• Obtener reportes detallados sobre predisposiciones genéticas",
-            "• Conocer cómo tu genética influye en tu respuesta a medicamentos",
-            "",
-            f"Accede a tu cuenta: {login_url}"
+            f"Accede a tu cuenta: {login_url}",
             "",
             f"Equipo {BRAND['name']}"
         )
 
         ok = send_email(
-            to_email=user_email,
+            to_email=user.email,
             subject=subject,
             html_body=html_content,
             text_body=text_content,
@@ -533,10 +520,10 @@ def send_welcome_email(user_email: str, user_name: str) -> bool:
             from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'proyectogenomia@gmail.com'),
         )
         if ok:
-            logger.info(f"Email de bienvenida enviado a {user_email}")
+            logger.info(f"Email de bienvenida enviado a {user.email}")
         return ok
     except Exception as e:
-        logger.error(f"Error enviando email de bienvenida a {user_email}: {str(e)}")
+        logger.error(f"Error enviando email de bienvenida a {user.email}: {str(e)}")
         return False
 
 def send_password_reset_email(user_email: str, user_name: str, reset_url: str) -> bool:

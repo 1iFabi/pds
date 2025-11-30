@@ -120,6 +120,20 @@
   margin-bottom: 2rem;
 }
 
+/* ===== LOADING ===== */
+.admin-reports__loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem;
+  color: #6b7a90;
+  font-weight: 500;
+  gap: 1rem;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 16px;
+}
+
 /* ===== SEARCH CARD ===== */
 .admin-reports__search-card {
   background: linear-gradient(135deg, #ffffff 0%, #f9fbfd 100%);
@@ -354,6 +368,11 @@
 .admin-reports__badge--success {
   background: #d1fae5;
   color: #047857;
+}
+
+.admin-reports__badge--pending {
+  background: #fef3c7;
+  color: #92400e;
 }
 
 .admin-reports__badge--secondary {
