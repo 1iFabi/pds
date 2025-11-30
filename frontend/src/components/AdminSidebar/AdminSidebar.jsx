@@ -3,7 +3,7 @@ import { LogOut, FileText, Database, Shield } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import './AdminSidebar.css'
 
-const AdminSidebar = ({ onLogout, user, isMobileMenuOpen = false, setIsMobileMenuOpen = () => {}, isAdmin = false }) => {
+const AdminSidebar = ({ onLogout, user, isMobileMenuOpen = false, setIsMobileMenuOpen = () => {}, isAdmin = false, showNavItems = true }) => {
   const navigate = useNavigate()
   const [isHovered, setIsHovered] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
@@ -68,49 +68,53 @@ const AdminSidebar = ({ onLogout, user, isMobileMenuOpen = false, setIsMobileMen
         </div>
 
         <nav className="admin-sidebar__nav">
-          {/* Administrar Reportes Genéticos */}
-          <a 
-            href="#"
-            className="admin-sidebar__nav-item"
-            title={!isExpanded && !isMobile ? 'Administrar reportes genéticos' : undefined}
-            onClick={closeMenuAndNavigate('/dashboard/admin/reports')}
-          >
-            <FileText size={20} className="admin-sidebar__nav-icon" />
-            {(isExpanded || isMobile) && (
-              <span className="admin-sidebar__nav-label">Administrar reportes genéticos</span>
-            )}
-          </a>
+          { showNavItems &&
+            <>
+              {/* Administrar Reportes Genéticos */}
+              <a 
+                href="#"
+                className="admin-sidebar__nav-item"
+                title={!isExpanded && !isMobile ? 'Administrar reportes genéticos' : undefined}
+                onClick={closeMenuAndNavigate('/dashboard/admin/reports')}
+              >
+                <FileText size={20} className="admin-sidebar__nav-icon" />
+                {(isExpanded || isMobile) && (
+                  <span className="admin-sidebar__nav-label">Administrar reportes genéticos</span>
+                )}
+              </a>
 
-          {(isExpanded || isMobile) && <div className="admin-sidebar__divider" />}
+              {(isExpanded || isMobile) && <div className="admin-sidebar__divider" />}
 
-          {/* Ver Variantes en Base de Datos */}
-          <a 
-            href="#ver-variantes"
-            className="admin-sidebar__nav-item"
-            title={!isExpanded && !isMobile ? 'Ver variantes en base de datos' : undefined}
-            onClick={closeMenuAndNavigate('/dashboard/admin/variants')}
-          >
-            <Database size={20} className="admin-sidebar__nav-icon" />
-            {(isExpanded || isMobile) && (
-              <span className="admin-sidebar__nav-label">Ver variantes en base de datos</span>
-            )}
-          </a>
+              {/* Ver Variantes en Base de Datos */}
+              <a 
+                href="#ver-variantes"
+                className="admin-sidebar__nav-item"
+                title={!isExpanded && !isMobile ? 'Ver variantes en base de datos' : undefined}
+                onClick={closeMenuAndNavigate('/dashboard/admin/variants')}
+              >
+                <Database size={20} className="admin-sidebar__nav-icon" />
+                {(isExpanded || isMobile) && (
+                  <span className="admin-sidebar__nav-label">Ver variantes en base de datos</span>
+                )}
+              </a>
 
-          {isAdmin && (isExpanded || isMobile) && <div className="admin-sidebar__divider" />}
+              {isAdmin && (isExpanded || isMobile) && <div className="admin-sidebar__divider" />}
 
-          {isAdmin && (
-            <a 
-              href="#gestionar-analistas"
-              className="admin-sidebar__nav-item"
-              title={!isExpanded && !isMobile ? 'Otorgar permisos' : undefined}
-              onClick={closeMenuAndNavigate('/dashboard/admin/analysts')}
-            >
-              <Shield size={20} className="admin-sidebar__nav-icon" />
-              {(isExpanded || isMobile) && (
-                <span className="admin-sidebar__nav-label">Otorgar permisos</span>
+              {isAdmin && (
+                <a 
+                  href="#gestionar-analistas"
+                  className="admin-sidebar__nav-item"
+                  title={!isExpanded && !isMobile ? 'Otorgar permisos' : undefined}
+                  onClick={closeMenuAndNavigate('/dashboard/admin/analysts')}
+                >
+                  <Shield size={20} className="admin-sidebar__nav-icon" />
+                  {(isExpanded || isMobile) && (
+                    <span className="admin-sidebar__nav-label">Otorgar permisos</span>
+                  )}
+                </a>
               )}
-            </a>
-          )}
+            </>
+          }
         </nav>
 
         <div className="admin-sidebar__footer">

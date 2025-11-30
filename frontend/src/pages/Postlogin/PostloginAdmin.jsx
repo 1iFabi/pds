@@ -75,10 +75,11 @@ const PostloginAdmin = ({ user, mode = 'admin' }) => {
         <header className="postlogin-admin__header">
           {isAdmin && (
             <div className="postlogin-admin__badge">
-              ESTÁS DESDE EL ADMINISTRADOR
+              ADMINISTRADOR
             </div>
           )}
           <div className="postlogin-admin__headline">
+
             <h1 className="postlogin-admin__title">
               Bienvenido/a {displayName}!
             </h1>
@@ -151,7 +152,7 @@ const PostloginAdmin = ({ user, mode = 'admin' }) => {
               <div className="postlogin-admin__card-content">
                 <h2 className="postlogin-admin__card-title">Base de datos de variantes genéticas</h2>
                 <p className="postlogin-admin__card-description">
-                  Explora, revisa y gestiona las variantes genéticas almacenadas en la base de datos del sistema.
+                  Explora y gestiona las variantes genéticas almacenadas en la base de datos del sistema.
                 </p>
                 <a
                   onClick={(e) => {
@@ -169,9 +170,9 @@ const PostloginAdmin = ({ user, mode = 'admin' }) => {
             {isAdmin && (
               <div className="postlogin-admin__card postlogin-admin__card--blue" role="button" tabIndex="0">
                 <div className="postlogin-admin__card-content">
-                  <h2 className="postlogin-admin__card-title">Otorgar Permisos</h2>
+                  <h2 className="postlogin-admin__card-title">Administración de Roles y Accesos</h2>
                   <p className="postlogin-admin__card-description">
-                    Asigna o revoca acceso a la vista de Analista para las cuentas que elijas.
+                    Asigna o revoca acceso al rol y vista de Analista para las cuentas específicas que tú elijas.
                   </p>
                   <a
                     onClick={(e) => {

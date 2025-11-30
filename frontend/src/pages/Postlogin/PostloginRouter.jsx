@@ -4,6 +4,7 @@ import { API_ENDPOINTS, apiRequest } from '../../config/api';
 import PostloginUser from './PostloginUser';
 import PostloginAdmin from './PostloginAdmin';
 import PostloginAnalyst from './PostloginAnalyst';
+import PostloginReception from './PostloginReception';
 import AdminReports from './AdminReports';
 import AdminVariantsDatabase from './AdminVariantsDatabase';
 import AdminAnalystAccess from './AdminAnalystAccess';
@@ -41,6 +42,7 @@ const PostloginRouter = () => {
   const roles = user?.roles || [];
   const isAdmin = user?.is_admin || user?.is_staff || roles.includes('ADMIN');
   const isAnalyst = user?.is_analyst || roles.includes('ANALISTA');
+  const isReception = user?.is_reception || roles.includes('RECEPCION');
 
   if (isAdmin) {
     return (
@@ -59,6 +61,14 @@ const PostloginRouter = () => {
         <Route path="/" element={<PostloginAnalyst user={user} mode="analyst" />} />
         <Route path="admin/reports" element={<AdminReports user={user} />} />
         <Route path="admin/variants" element={<AdminVariantsDatabase user={user} />} />
+      </Routes>
+    );
+  }
+
+  if (isReception) {
+    return (
+      <Routes>
+        <Route path="/" element={<PostloginReception user={user} />} />
       </Routes>
     );
   }

@@ -23,6 +23,10 @@ export const API_ENDPOINTS = {
   ANCESTRY: `${API_BASE_URL}/ancestry/`,
   INDIGENOUS: `${API_BASE_URL}/indigenous/`,
   TRAITS: `${API_BASE_URL}/traits/`,
+  RECEPTION_SEARCH: `${API_BASE_URL}/reception/search/`,
+  RECEPTION_MARK_ARRIVAL: `${API_BASE_URL}/reception/arrival/`,
+  RECEPTION_SAMPLE_CODE: `${API_BASE_URL}/reception/sample-code/`,
+  RECEPTION_SAMPLE_STATUS: `${API_BASE_URL}/reception/sample-status/`,
 };
 
 export const getToken = () => localStorage.getItem('token');

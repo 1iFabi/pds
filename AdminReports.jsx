@@ -49,17 +49,9 @@ export default function AdminReports({ user }) {
           const mappedPatients = await Promise.all(
             users.map(async (user) => {
               const sampleCode = user.sample_code || user.sampleCode || null;
-              const hasPrivilegedRole =
-                user.is_admin ||
-                user.is_analyst ||
-                user.is_reception ||
-                user.is_staff ||
-                user.is_superuser ||
-                (user.roles || []).some((r) => ['ADMIN', 'ANALISTA', 'RECEPCION'].includes(r));
-              if (hasPrivilegedRole) return null;
               if (!sampleCode) return null;
 
-              // Por contrato de backend, solo deberían venir en PENDING
+              // Por contrato de backend, solo deberÃ­an venir en PENDING
               let serviceStatus = user.service_status || 'NO_PURCHASED';
               let hasReport = false;
               let reportName = null;
@@ -83,10 +75,6 @@ export default function AdminReports({ user }) {
               return {
                 id: `P${String(user.id).padStart(3, '0')}`,
                 userId: user.id,
-                firstName: user.first_name || '',
-                lastName: user.last_name || '',
-                rut: user.rut || user.rut_dv || '',
-                email: user.email || '',
                 sampleCode,
                 hasReport,
                 reportDate,
@@ -112,29 +100,22 @@ export default function AdminReports({ user }) {
     try {
       await apiRequest(API_ENDPOINTS.LOGOUT, { method: 'POST' });
     } catch (error) {
-      console.error('Error al cerrar sesión', error);
+      console.error('Error al cerrar sesiÃ³n', error);
     }
     clearToken();
     navigate('/');
   };
 
   const filteredPatients = patients.filter((patient) => {
-    // Filtro de búsqueda: solo Sample ID / ID interno / nombre de archivo
+    // Filtro de bÃºsqueda: solo Sample ID / ID interno / nombre de archivo
     const needle = searchTerm.toLowerCase();
     const matchesSearch =
       (patient.sampleCode || '').toLowerCase().includes(needle) ||
       patient.id.toLowerCase().includes(needle) ||
       (patient.reportName || '').toLowerCase().includes(needle);
     
-    // Filtro de estado de reporte
-    let matchesStatus = true;
-    if (reportStatusFilter === 'sin_reporte') {
-      matchesStatus = !patient.hasReport;
-    } else if (reportStatusFilter === 'pendiente') {
-      matchesStatus = patient.serviceStatus === 'PENDING';
-    } else if (reportStatusFilter === 'subido') {
-      matchesStatus = patient.hasReport || patient.serviceStatus === 'COMPLETED';
-    } // 'todos' deja matchesStatus = true
+    // Filtro de estado de reporte (solo pendientes)
+    const matchesStatus = patient.serviceStatus === 'PENDING';
 
     return matchesSearch && matchesStatus;
   });
@@ -154,17 +135,48 @@ export default function AdminReports({ user }) {
     setDeleteDialogOpen(true);
   };
 
+  const extractRutFromFilename = (filename) => {
+    // Formato esperado: nombre_rut.txt -> fayala_205165851.txt o fayala_2051658519K.txt
+    // Extrae todo despuÃ©s del Ãºltimo underscore y antes del .txt
+    // Permite nÃºmeros y opcionalmente K como Ãºltimo carÃ¡cter
+    const match = filename.match(/_([0-9]+[Kk]?)\.txt$/);
+    return match ? match[1] : null;
+  };
+
   const confirmUpload = async () => {
     if (selectedPatient && selectedFile) {
       try {
+        // Validar que el nombre del archivo coincida con el Sample ID
         const sampleCode = selectedPatient.sampleCode;
-        if (selectedFile.name !== `${sampleCode}.txt`) {
-          alert(`El nombre del archivo debe ser exactamente ${sampleCode}.txt`);
+        const filenameWithoutExt = selectedFile.name.replace(/\.[^.]+$/, '');
+        const filenameToUse = sampleCode ? `${sampleCode}.txt` : selectedFile.name;
+        if (sampleCode && filenameWithoutExt !== sampleCode) {
+          alert(`El archivo debe llamarse exactamente ${sampleCode}.txt para este Sample ID.`);
           return;
         }
 
+        // Extraer RUT del nombre del archivo
+        const rutFromFile = extractRutFromFilename(selectedFile.name);
+        
+        if (!rutFromFile) {
+          alert('El nombre del archivo debe tener formato: nombre_rut.txt (ej: napellido_12345689)');
+          return;
+        }
+        
+        // Validar que el RUT del archivo coincida con el RUT del paciente
+        if (selectedPatient.rut !== 'N/A') {
+          const rutClean = selectedPatient.rut.replace(/[-.]\s*/g, '').toUpperCase();
+          const rutFileClean = rutFromFile.toUpperCase();
+          if (rutFileClean !== rutClean) {
+            alert(`El RUT del archivo (${rutFromFile}) no coincide con el RUT del paciente (${selectedPatient.rut}). Por favor, verifica el archivo.`);
+            return;
+          }
+        }
+        
+        // Leer archivo .txt
         const fileContent = await selectedFile.text();
         
+        // Enviar al backend
         const response = await apiRequest(
           API_ENDPOINTS.UPLOAD_GENETIC_FILE,
           {
@@ -173,35 +185,37 @@ export default function AdminReports({ user }) {
             body: JSON.stringify({
               userId: parseInt(selectedPatient.id.replace('P', '')),
               fileContent: fileContent,
-              filename: selectedFile.name
+              rutFromFile: rutFromFile,
+              filename: filenameToUse
             })
           }
         );
         
-        if (response.ok) {
-          setPatients(
-            patients.map((p) =>
-              p.id === selectedPatient.id
-                ? {
-                    ...p,
-                    hasReport: true,
-                    reportDate: new Date().toISOString().split("T")[0],
-                    reportName: selectedFile.name,
-                    serviceStatus: 'COMPLETED',
-                  }
-                : p
-            )
-          );
+    if (response.ok) {
+      // Actualizar la tabla localmente
+      setPatients(
+        patients.map((p) =>
+          p.id === selectedPatient.id
+            ? {
+                ...p,
+                hasReport: true,
+                reportDate: new Date().toISOString().split("T")[0],
+                reportName: filenameToUse,
+                serviceStatus: 'COMPLETED',
+              }
+            : p
+        )
+      );
           setUploadDialogOpen(false);
           setSelectedFile(null);
           setSelectedPatient(null);
-          alert(`Archivo procesado correctamente. ${response.data.snps_count} variantes genéticas agregadas.`);
+          alert(`Archivo procesado correctamente. ${response.data.snps_count} variantes genÃ©ticas agregadas.`);
         } else {
           alert('Error al procesar el archivo: ' + (response.data?.error || 'Error desconocido'));
         }
       } catch (error) {
         console.error('Error procesando archivo:', error);
-        alert('Error al procesar el archivo genético');
+        alert('Error al procesar el archivo genÃ©tico');
       }
     }
   };
@@ -209,14 +223,37 @@ export default function AdminReports({ user }) {
   const confirmEdit = async () => {
     if (selectedPatient && selectedFile) {
       try {
+        // Validar que el nombre del archivo coincida con el Sample ID
         const sampleCode = selectedPatient.sampleCode;
-        if (selectedFile.name !== `${sampleCode}.txt`) {
-          alert(`El nombre del archivo debe ser exactamente ${sampleCode}.txt`);
+        const filenameWithoutExt = selectedFile.name.replace(/\.[^.]+$/, '');
+        const filenameToUse = sampleCode ? `${sampleCode}.txt` : selectedFile.name;
+        if (sampleCode && filenameWithoutExt !== sampleCode) {
+          alert(`El archivo debe llamarse exactamente ${sampleCode}.txt para este Sample ID.`);
           return;
         }
 
+        // Extraer RUT del nombre del archivo
+        const rutFromFile = extractRutFromFilename(selectedFile.name);
+        
+        if (!rutFromFile) {
+          alert('El nombre del archivo debe tener formato: nombre_rut.txt (ej: fayala_205165851.txt o fayala_2051658519K.txt)');
+          return;
+        }
+        
+        // Validar que el RUT del archivo coincida con el RUT del paciente
+        if (selectedPatient.rut !== 'N/A') {
+          const rutClean = selectedPatient.rut.replace(/[-.]\s*/g, '').toUpperCase();
+          const rutFileClean = rutFromFile.toUpperCase();
+          if (rutFileClean !== rutClean) {
+            alert(`El RUT del archivo (${rutFromFile}) no coincide con el RUT del paciente (${selectedPatient.rut}). Por favor, verifica el archivo.`);
+            return;
+          }
+        }
+        
+        // Leer archivo .txt
         const fileContent = await selectedFile.text();
         
+        // Enviar al backend
         const response = await apiRequest(
           API_ENDPOINTS.UPLOAD_GENETIC_FILE,
           {
@@ -225,34 +262,36 @@ export default function AdminReports({ user }) {
             body: JSON.stringify({
               userId: parseInt(selectedPatient.id.replace('P', '')),
               fileContent: fileContent,
-              filename: selectedFile.name
+              rutFromFile: rutFromFile,
+              filename: filenameToUse
             })
           }
         );
         
-        if (response.ok) {
-          setPatients(
-            patients.map((p) =>
-              p.id === selectedPatient.id
-                ? {
-                    ...p,
-                    reportDate: new Date().toISOString().split("T")[0],
-                    reportName: selectedFile.name,
-                    serviceStatus: 'COMPLETED',
-                  }
-                : p
-            )
-          );
+    if (response.ok) {
+      // Actualizar la tabla localmente
+      setPatients(
+        patients.map((p) =>
+          p.id === selectedPatient.id
+            ? {
+                ...p,
+                reportDate: new Date().toISOString().split("T")[0],
+                reportName: filenameToUse,
+                serviceStatus: 'COMPLETED',
+              }
+            : p
+        )
+      );
           setEditDialogOpen(false);
           setSelectedFile(null);
           setSelectedPatient(null);
-          alert(`Archivo procesado correctamente. ${response.data.snps_count} variantes genéticas agregadas.`);
+          alert(`Archivo procesado correctamente. ${response.data.snps_count} variantes genÃ©ticas agregadas.`);
         } else {
           alert('Error al procesar el archivo: ' + (response.data?.error || 'Error desconocido'));
         }
       } catch (error) {
         console.error('Error procesando archivo:', error);
-        alert('Error al procesar el archivo genético');
+        alert('Error al procesar el archivo genÃ©tico');
       }
     }
   };
@@ -297,7 +336,7 @@ export default function AdminReports({ user }) {
         }
       } catch (error) {
         console.error('Error eliminando archivo:', error);
-        alert('Error al eliminar el reporte genético');
+        alert('Error al eliminar el reporte genÃ©tico');
       }
     }
   };
@@ -353,7 +392,7 @@ export default function AdminReports({ user }) {
         <button 
           className="admin-reports__burger"
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          aria-label={isMobileMenuOpen ? "Cerrar menú" : "Abrir menú"}
+          aria-label={isMobileMenuOpen ? "Cerrar menÃº" : "Abrir menÃº"}
           aria-expanded={isMobileMenuOpen}
         >
           {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
@@ -373,9 +412,9 @@ export default function AdminReports({ user }) {
       <main className="admin-reports">
         <div className="admin-reports__header">
           <div className="admin-reports__headline">
-            <h1 className="admin-reports__title">Administrar Reportes Genéticos</h1>
+            <h1 className="admin-reports__title">Administrar Reportes GenÃ©ticos</h1>
             <p className="admin-reports__subtitle">
-              Gestiona y visualiza todos los reportes genéticos de los pacientes
+              Gestiona y visualiza todos los reportes genÃ©ticos de los pacientes
             </p>
           </div>
         </div>
@@ -415,7 +454,7 @@ export default function AdminReports({ user }) {
 
               <div className="admin-reports__stats">
                 <div className="admin-reports__stat-item admin-reports__stat-item--with-icon" title="Reportes completados y subidos">
-                  <div className="admin-reports__stat-icon admin-reports__stat-icon--success">✓</div>
+                  <div className="admin-reports__stat-icon admin-reports__stat-icon--success">âœ“</div>
                   <div className="admin-reports__stat-number">{withReportCount}</div>
                   <div className="admin-reports__stat-label">Con Reporte</div>
                 </div>
@@ -425,7 +464,7 @@ export default function AdminReports({ user }) {
                   <div className="admin-reports__stat-label">Sin Reporte</div>
                 </div>
                 <div className="admin-reports__stat-item admin-reports__stat-item--with-icon" title="Total de pacientes en el sistema">
-                  <div className="admin-reports__stat-icon admin-reports__stat-icon--info">👥</div>
+                  <div className="admin-reports__stat-icon admin-reports__stat-icon--info">ðŸ‘¥</div>
                   <div className="admin-reports__stat-number">{patients.length}</div>
                   <div className="admin-reports__stat-label">Total Pacientes</div>
                 </div>
@@ -443,61 +482,26 @@ export default function AdminReports({ user }) {
               <div className="admin-reports__table-wrapper">
                 <table className="admin-reports__table">
                   <thead className="admin-reports__table-head">
-                    {isAdmin ? (
-                      <tr className="admin-reports__table-row">
-                        <th className="admin-reports__table-cell">Nombre</th>
-                        <th className="admin-reports__table-cell">Apellido</th>
-                        <th className="admin-reports__table-cell">RUT</th>
-                        <th className="admin-reports__table-cell">Correo</th>
-                        <th className="admin-reports__table-cell">Sample ID</th>
-                        <th className="admin-reports__table-cell">Estado Reporte</th>
-                        <th className="admin-reports__table-cell">Archivo</th>
-                        <th className="admin-reports__table-cell">Fecha</th>
-                        <th className="admin-reports__table-cell admin-reports__table-cell--align-right">
-                          Acciones
-                        </th>
-                      </tr>
-                    ) : (
-                      <tr className="admin-reports__table-row">
-                        <th className="admin-reports__table-cell">Sample ID</th>
-                        <th className="admin-reports__table-cell">Estado Reporte</th>
-                        <th className="admin-reports__table-cell">Archivo</th>
-                        <th className="admin-reports__table-cell">Fecha</th>
-                        <th className="admin-reports__table-cell admin-reports__table-cell--align-right">
-                          Acciones
-                        </th>
-                      </tr>
-                    )}
+                    <tr className="admin-reports__table-row">
+                      <th className="admin-reports__table-cell">Sample ID</th>
+                      <th className="admin-reports__table-cell">Estado Reporte</th>
+                      <th className="admin-reports__table-cell">Archivo</th>
+                      <th className="admin-reports__table-cell">Fecha</th>
+                      <th className="admin-reports__table-cell admin-reports__table-cell--align-right">
+                        Acciones
+                      </th>
+                    </tr>
                   </thead>
                   <tbody className="admin-reports__table-body">
                     {filteredPatients.length === 0 ? (
                       <tr className="admin-reports__table-row">
-                        <td
-                          colSpan={isAdmin ? 9 : 5}
-                          className="admin-reports__table-cell admin-reports__table-cell--center"
-                        >
+                        <td colSpan="5" className="admin-reports__table-cell admin-reports__table-cell--center">
                           No se encontraron muestras
                         </td>
                       </tr>
                     ) : (
                       filteredPatients.map((patient) => (
                         <tr key={patient.id} className="admin-reports__table-row">
-                          {isAdmin && (
-                            <>
-                              <td className="admin-reports__table-cell admin-reports__table-cell--muted">
-                                {patient.firstName || '-'}
-                              </td>
-                              <td className="admin-reports__table-cell admin-reports__table-cell--muted">
-                                {patient.lastName || '-'}
-                              </td>
-                              <td className="admin-reports__table-cell admin-reports__table-cell--muted">
-                                {patient.rut || '-'}
-                              </td>
-                              <td className="admin-reports__table-cell admin-reports__table-cell--muted">
-                                {patient.email || '-'}
-                              </td>
-                            </>
-                          )}
                           <td className="admin-reports__table-cell admin-reports__table-cell--bold">
                             {patient.hasReport ? (
                               <button
@@ -517,9 +521,14 @@ export default function AdminReports({ user }) {
                                 Completado
                               </span>
                             ) : (
-                              <span className="admin-reports__badge admin-reports__badge--pending">
-                                Pendiente
-                              </span>
+                              <select
+                                value={patient.serviceStatus}
+                                onChange={(e) => handleServiceStatusChange(patient, e.target.value)}
+                                className="admin-reports__service-status-select"
+                              >
+                                <option value="NO_PURCHASED">Sin Reporte</option>
+                                <option value="PENDING">Pendiente</option>
+                              </select>
                             )}
                           </td>
                           <td className="admin-reports__table-cell">
@@ -582,9 +591,9 @@ export default function AdminReports({ user }) {
           <div className="admin-reports__overlay" onClick={() => setUploadDialogOpen(false)}>
             <div className="admin-reports__dialog" onClick={(e) => e.stopPropagation()}>
               <div className="admin-reports__dialog-header">
-                <h2 className="admin-reports__dialog-title">Subir Reporte Genético</h2>
+                <h2 className="admin-reports__dialog-title">Subir Reporte GenÃ©tico</h2>
                 <p className="admin-reports__dialog-description">
-                  Sube el archivo de reporte genético para {selectedPatient?.name}
+                  Sube el archivo de reporte genÃ©tico para {selectedPatient?.name}
                 </p>
               </div>
               <div className="admin-reports__dialog-content">
@@ -619,9 +628,9 @@ export default function AdminReports({ user }) {
           <div className="admin-reports__overlay" onClick={() => setEditDialogOpen(false)}>
             <div className="admin-reports__dialog" onClick={(e) => e.stopPropagation()}>
               <div className="admin-reports__dialog-header">
-                <h2 className="admin-reports__dialog-title">Editar Reporte Genético</h2>
+                <h2 className="admin-reports__dialog-title">Editar Reporte GenÃ©tico</h2>
                 <p className="admin-reports__dialog-description">
-                  Reemplaza el archivo de reporte genético para {selectedPatient?.name}
+                  Reemplaza el archivo de reporte genÃ©tico para {selectedPatient?.name}
                 </p>
               </div>
               <div className="admin-reports__dialog-content">
@@ -663,10 +672,10 @@ export default function AdminReports({ user }) {
           <div className="admin-reports__overlay" onClick={() => setDeleteDialogOpen(false)}>
             <div className="admin-reports__dialog" onClick={(e) => e.stopPropagation()}>
               <div className="admin-reports__dialog-header">
-                <h2 className="admin-reports__dialog-title">Eliminar Reporte Genético</h2>
+                <h2 className="admin-reports__dialog-title">Eliminar Reporte GenÃ©tico</h2>
                 <p className="admin-reports__dialog-description">
-                  ¿Estás seguro de que deseas eliminar el reporte genético de {selectedPatient?.name}?
-                  Esta acción no se puede deshacer.
+                  Â¿EstÃ¡s seguro de que deseas eliminar el reporte genÃ©tico de {selectedPatient?.name}?
+                  Esta acciÃ³n no se puede deshacer.
                 </p>
               </div>
               <div className="admin-reports__dialog-content">
