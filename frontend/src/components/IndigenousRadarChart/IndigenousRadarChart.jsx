@@ -32,11 +32,11 @@ const IndigenousRadarChart = () => {
   };
 
   const colors = [
-    '#0D47A1',  // Azul oscuro profundo
-    '#1565C0',  // Azul oscuro
-    '#1976D2',  // Azul medio-oscuro
-    '#2196F3',  // Azul medio
-    '#42A5F5'   // Azul claro
+    '#8b5cf6', // Purple
+    '#06b6d4', // Cyan
+    '#f59e0b', // Orange
+    '#ec4899', // Pink
+    '#22c55e'  // Green
   ];
 
   const normalizeName = (name = '') => {

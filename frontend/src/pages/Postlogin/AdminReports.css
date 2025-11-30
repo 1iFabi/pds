@@ -370,6 +370,11 @@
   color: #047857;
 }
 
+.admin-reports__badge--pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
 .admin-reports__badge--secondary {
   background: #e5e7eb;
   color: #374151;

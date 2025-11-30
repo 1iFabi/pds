@@ -201,13 +201,13 @@
 
 .postlogin-admin__grid-wrapper {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 32px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 30px;
 }
 
 /* ===== CARD STYLES ===== */
 .postlogin-admin__card {
-  height: 400;
+  height: 400px;
   border-radius: 28px;
   padding: 32px;
   position: relative;
@@ -236,7 +236,7 @@
   background-color: #F8E8D4;
   background-image: url('/Dashboard/naranjo.png');
   background-size: 60% auto;
-  background-position: calc(100% + 60px) center;
+  background-position: calc(100% + 120px) center; /* Adjusted position */
   background-repeat: no-repeat;
 }
 
@@ -254,7 +254,7 @@
   background-color: #E8D4F0;
   background-image: url('/Dashboard/ojo.png');
   background-size: 70% auto;
-  background-position: calc(100% + 100px) center;
+  background-position: calc(100% + 200px) center; /* Adjusted position */
   background-repeat: no-repeat;
 }
 
@@ -279,9 +279,9 @@
 /* ===== CARD BLUE ===== */
 .postlogin-admin__card--blue {
   background-color: #D6EAF8;
-  background-image: url('/Dashboard/cuadrado.png');
+  background-image: url('/Dashboard/semicirculo.png');
   background-size: 60% auto;
-  background-position: calc(100% + 60px) center;
+  background-position: calc(100% + 140px) center; /* Adjusted position */
   background-repeat: no-repeat;
   color: #154360;
   box-shadow: 0 12px 28px rgba(21, 67, 96, 0.14);
@@ -317,16 +317,16 @@
   z-index: 2;
   display: flex;
   flex-direction: column;
-  max-width: 50%;
+  max-width: 72%; /* Increased max-width */
 }
 
 .postlogin-admin__card-title {
   margin: 0;
-  font-size: clamp(2.1rem, 0.95rem + 0.45vw, 2.5rem);
+  font-size: clamp(2rem, 0.95rem + 0.45vw, 2.2rem);
   font-weight: 700;
   line-height: 1.2;
   color: inherit;
-  margin-bottom: 40px;
+  margin-bottom: 30px;
 }
 
 .postlogin-admin__card-description {
@@ -334,7 +334,7 @@
   font-size: clamp(0.8rem, 0.75rem + 0.12vw, 1.2rem);
   line-height: 1.48;
   color: var(--card-description-color, rgba(17, 24, 39, 0.72));
-  margin-bottom: 40px;
+  margin-bottom: 30px;
 }
 
 .postlogin-admin__card-link {
@@ -352,6 +352,7 @@
   margin-top: 12px;
   border: none;
   width: fit-content;
+  white-space: nowrap;
 }
 
 .postlogin-admin__card--orange .postlogin-admin__card-link {
@@ -461,12 +462,12 @@
   }
 
   .postlogin-admin__card {
-    height: 200px;
+    height: 180px; /* Altura reducida para pantallas muy pequeñas */
     padding: 16px;
   }
 
   .postlogin-admin__card-content {
-    max-width: 100%;
+    max-w-width: 100%;
   }
 
   .postlogin-admin__card-title {

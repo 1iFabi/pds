@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { X, Search, ChevronLeft, ChevronRight, Download } from 'lucide-react';
+import { X, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { API_ENDPOINTS, apiRequest } from '../../config/api';
 import './PatientVariantsModal.css';
 
@@ -85,63 +85,6 @@ export default function PatientVariantsModal({ isOpen, onClose, patient }) {
     return cats.sort();
   }, [variants]);
 
-  // Exportar a CSV
-  const exportToCSV = () => {
-    const headers = [
-      'rsID',
-      'Cromosoma',
-      'Posición',
-      'Genotipo',
-      'Fenotipo',
-      'Categoría',
-      'Alelo Referencia',
-      'Alelo Alternativo',
-      'Nivel Riesgo',
-      'Magnitud Efecto',
-      'Fecha Actualización'
-    ];
-
-    // Función para escapar campos CSV
-    const escapeCSV = (value) => {
-      if (value === null || value === undefined) return '';
-      const stringValue = String(value);
-      // Si contiene comillas, comas o saltos de línea, envolver en comillas y escapar comillas
-      if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
-        return `"${stringValue.replace(/"/g, '""')}"`;
-      }
-      return stringValue;
-    };
-
-    const csvContent = [
-      headers.join(','),
-      ...filteredVariants.map(v => [
-        escapeCSV(v.rsid),
-        escapeCSV(v.cromosoma),
-        escapeCSV(v.posicion),
-        escapeCSV(v.genotipo),
-        escapeCSV(v.fenotipo),
-        escapeCSV(v.categoria),
-        escapeCSV(v.alelo_referencia),
-        escapeCSV(v.alelo_alternativo),
-        escapeCSV(v.nivel_riesgo),
-        escapeCSV(v.magnitud_efecto),
-        escapeCSV(v.fecha_actualizacion)
-      ].join(','))
-    ].join('\n');
-
-    // Agregar BOM para UTF-8 (asegura que Excel abra el archivo correctamente)
-    const BOM = '\uFEFF';
-    const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `variantes_${patient.name.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
   if (!isOpen) return null;
 
   return (
@@ -192,15 +135,6 @@ export default function PatientVariantsModal({ isOpen, onClose, patient }) {
               ))}
             </select>
           </div>
-
-          <button
-            className="patient-variants-modal__export-btn"
-            onClick={exportToCSV}
-            disabled={filteredVariants.length === 0}
-          >
-            <Download size={18} />
-            <span>Exportar CSV</span>
-          </button>
         </div>
 
         {/* Content */}
