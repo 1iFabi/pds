@@ -21,6 +21,18 @@ from .email_utils import send_welcome_email, send_password_reset_email, send_ema
 from .jwt_utils import encode_jwt
 from .authentication import JWTAuthentication
 from .models import ServiceStatus, Profile, SNP
+from .roles import (
+    ensure_default_groups,
+    is_admin,
+    is_analyst,
+    is_reception,
+    is_admin_or_analyst,
+    is_admin_or_reception,
+    grant_analyst_role,
+    revoke_analyst_role,
+    grant_reception_role,
+    revoke_reception_role,
+)
 import json
 import re
 
@@ -50,7 +62,7 @@ class UserServiceStatusAPIView(APIView):
 
     def post(self, request):
         """Actualiza el estado de servicio de un usuario (solo staff). Body: {userId, status} """
-        if not request.user.is_staff:
+        if not is_admin_or_analyst(request.user):
             return Response({"error": "No tienes permisos"}, status=status.HTTP_403_FORBIDDEN)
         try:
             data = json.loads(request.body or '{}')
@@ -187,6 +199,9 @@ class MeAPIView(APIView):
 
     def get(self, request):
         u = request.user
+        # Asegurar que los grupos base existan
+        ensure_default_groups()
+
         # Cargar estado de servicio desde Profile
         from .models import Profile, ServiceStatus
         try:
@@ -194,6 +209,24 @@ class MeAPIView(APIView):
             service_status = p.service_status
         except Profile.DoesNotExist:
             service_status = ServiceStatus.NO_PURCHASED
+
+        roles = list(u.groups.values_list("name", flat=True))
+        admin_flag = is_admin(u)
+        analyst_flag = is_analyst(u)
+        reception_flag = is_reception(u)
+        if admin_flag and "ADMIN" not in roles:
+            roles.append("ADMIN")
+        if reception_flag and "RECEPCION" not in roles:
+            roles.append("RECEPCION")
+        data_roles = sorted(set(roles))
+        if admin_flag:
+            user_type = "admin"
+        elif analyst_flag:
+            user_type = "analyst"
+        elif reception_flag:
+            user_type = "reception"
+        else:
+            user_type = "user"
         data = {
             "id": u.id,
             "email": u.email,
@@ -201,7 +234,11 @@ class MeAPIView(APIView):
             "last_name": u.last_name,
             "is_staff": u.is_staff,
             "is_superuser": u.is_superuser,
-            "user_type": "admin" if u.is_staff else "user",
+            "is_admin": admin_flag,
+            "is_analyst": analyst_flag,
+            "is_reception": reception_flag,
+            "roles": data_roles,
+            "user_type": user_type,
             "service_status": service_status,
             "can_view_results": service_status == ServiceStatus.COMPLETED,
         }
@@ -530,7 +567,7 @@ class RegisterAPIView(APIView):
                 )
             else:
                 try:
-                    send_welcome_email(user_email=user.email, user_name=user.first_name)
+                    send_welcome_email(user)
                 except Exception as e:
                     print(f"Error enviando email de bienvenida: {e}")
 
@@ -733,11 +770,9 @@ class VerifyEmailView(APIView):
                 user.is_active = True
                 user.save()
                 try:
-                    send_welcome_email(
-                        user_email=user.email,
-                        user_name=user.first_name or user.username
-                    )
-                except Exception:
+                    send_welcome_email(user)
+                except Exception as e:
+                    print(f"Error sending welcome email: {e}")
                     pass
 
             frontend_login_redirect = getattr(settings, 'FRONTEND_LOGIN_REDIRECT', f"{frontend_base.rstrip('/')}/login?verified=1")
@@ -747,7 +782,7 @@ class VerifyEmailView(APIView):
                 secure=not settings.DEBUG, samesite='Lax'
             )
             resp.set_cookie(
-                key='verification_message', value=quote('Tu cuenta fue verificada correctamente.'), max_age=300, path='/',
+                key='verification_message', value=quote('Tu cuenta fue verificada correctamente. Hemos enviado tu SampleCode a tu correo.'), max_age=300, path='/',
                 secure=not settings.DEBUG, samesite='Lax'
             )
             return resp
@@ -765,34 +800,131 @@ class VerifyEmailView(APIView):
             return resp
 
 
+class ManageAnalystRoleAPIView(APIView):
+    """
+    Permite a un ADMIN otorgar o revocar roles privilegiados (ANALISTA o RECEPCION).
+    """
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        if not is_admin(request.user):
+            return Response({"error": "No tienes permisos"}, status=status.HTTP_403_FORBIDDEN)
+        try:
+            data = json.loads(request.body or '{}')
+        except json.JSONDecodeError:
+            data = request.data or {}
+
+        user_id = data.get("userId") or data.get("user_id")
+        grant = data.get("grant")
+        if user_id is None or grant is None:
+            return Response(
+                {"error": "userId y grant (true/false) son obligatorios"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            target = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response({"error": "Usuario no encontrado"}, status=status.HTTP_404_NOT_FOUND)
+
+        role_raw = (data.get("role") or data.get("rol") or "analyst")
+        role_value = str(role_raw).strip().lower()
+        if role_value in ("analyst", "analista"):
+            target_role = "analyst"
+        elif role_value in ("reception", "recepcion", "recepcionista"):
+            target_role = "reception"
+        else:
+            return Response(
+                {"error": "Rol invalido. Usa 'analyst' o 'reception'."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        ensure_default_groups()
+        if target_role == "analyst":
+            if grant:
+                revoke_reception_role(target)
+                grant_analyst_role(target)
+            else:
+                revoke_analyst_role(target)
+        else:
+            if grant:
+                revoke_analyst_role(target)
+                grant_reception_role(target)
+            else:
+                revoke_reception_role(target)
+        return Response({
+            "user_id": target.id,
+            "is_analyst": is_analyst(target),
+            "is_reception": is_reception(target),
+            "role": target_role,
+            "roles": list(target.groups.values_list("name", flat=True)),
+        })
+
+
 class GetUsersAPIView(APIView):
     """Endpoint para obtener lista de usuarios (solo staff)."""
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        # Verificar que sea staff
-        if not request.user.is_staff:
+        if not is_admin_or_analyst(request.user):
             return Response({"error": "No tienes permisos"}, status=status.HTTP_403_FORBIDDEN)
-        
+
+        user_is_analyst = is_analyst(request.user)
+
+        if user_is_analyst:
+            # Analistas: ver muestras de usuarios finales (sin admin/analista/recepción)
+            profiles = (
+                Profile.objects.select_related("user")
+                .filter(user__is_active=True, user__is_superuser=False, user__is_staff=False)
+                .exclude(user__groups__name__in=["ADMIN", "ANALISTA", "RECEPCION"])
+            )
+            from .utils import ensure_sample_code
+            users_list = []
+            for profile in profiles:
+                if not profile.sample_code:
+                    ensure_sample_code(profile)
+                if not profile.sample_code:
+                    continue
+                users_list.append({
+                    "id": profile.user.id,
+                    "sample_code": profile.sample_code,
+                    "service_status": profile.service_status,
+                })
+            return Response(users_list)
+
+        # Admin: información completa
         users = User.objects.filter(is_active=True).values(
-            'id', 'username', 'email', 'first_name', 'last_name', 'is_staff', 'is_superuser'
+            "id", "username", "email", "first_name", "last_name", "is_staff", "is_superuser"
         )
-        
-        # Agregar campo rut si existe en el profile
-        from .models import Profile
         users_list = []
         for user in users:
             user_dict = dict(user)
             try:
-                profile = Profile.objects.get(user_id=user['id'])
-                user_dict['rut'] = getattr(profile, 'rut', None)
+                profile = Profile.objects.get(user_id=user["id"])
+                user_dict["rut"] = getattr(profile, "rut", None)
+                user_dict["sample_code"] = getattr(profile, "sample_code", None)
+                user_dict["service_status"] = getattr(profile, "service_status", None)
             except Profile.DoesNotExist:
-                user_dict['rut'] = None
-            users_list.append(user_dict)
-        
-        return Response(users_list)
+                user_dict["rut"] = None
+                user_dict["sample_code"] = None
+                user_dict["service_status"] = None
 
+            try:
+                target = User.objects.get(id=user["id"])
+                user_dict["roles"] = list(target.groups.values_list("name", flat=True))
+                user_dict["is_admin"] = is_admin(target)
+                user_dict["is_analyst"] = is_analyst(target)
+                user_dict["is_reception"] = is_reception(target)
+            except User.DoesNotExist:
+                user_dict["roles"] = []
+                user_dict["is_admin"] = False
+                user_dict["is_analyst"] = False
+                user_dict["is_reception"] = False
+
+            users_list.append(user_dict)
+
+        return Response(users_list)
 
 class AdminStatsAPIView(APIView):
     """Endpoint para obtener estadísticas del sistema (solo staff)."""
@@ -801,7 +933,7 @@ class AdminStatsAPIView(APIView):
 
     def get(self, request):
         # Verificar que sea staff
-        if not request.user.is_staff:
+        if not is_admin_or_analyst(request.user):
             return Response({"error": "No tienes permisos"}, status=status.HTTP_403_FORBIDDEN)
         
         from django.db import connection
@@ -809,7 +941,10 @@ class AdminStatsAPIView(APIView):
         
         try:
             # Contar usuarios activos (excluyendo staff y superusers)
-            total_users = User.objects.filter(is_active=True, is_staff=False, is_superuser=False).count()
+            total_users = User.objects.filter(
+                is_active=True,
+                is_superuser=False,
+            ).exclude(groups__name__in=["ADMIN", "ANALISTA"]).filter(is_staff=False).count()
             
             # Análisis completados (solo usuarios regulares)
             analysis_count = User.objects.filter(
@@ -817,10 +952,10 @@ class AdminStatsAPIView(APIView):
                 is_staff=False,
                 is_superuser=False,
                 profile__service_status=ServiceStatus.COMPLETED
-            ).count()
+            ).exclude(groups__name__in=["ADMIN", "ANALISTA"]).count()
             
             # Contar reportes pendientes
-            pending_reports = Profile.objects.filter(service_status=ServiceStatus.PENDING).count()
+            pending_reports = Profile.objects.filter(service_status=ServiceStatus.PENDING).exclude(user__groups__name__in=["ADMIN", "ANALISTA"]).count()
             
             # Contar variantes en la BD
             variants_count = SNP.objects.count()
@@ -842,7 +977,7 @@ class AdminStatsAPIView(APIView):
             print(f"Error en AdminStatsAPIView: {e}")
             # Devolver al menos los usuarios que podemos contar
             return Response({
-                "total_users": User.objects.filter(is_active=True, is_staff=False, is_superuser=False).count(),
+                "total_users": User.objects.filter(is_active=True, is_superuser=False).exclude(groups__name__in=["ADMIN", "ANALISTA"]).filter(is_staff=False).count(),
                 "processed_reports": 0,
                 "variants_count": 0,
                 "analysis_count": 0,
@@ -910,3 +1045,4 @@ class ContactFormAPIView(APIView):
                 {"error": f"Error interno del servidor: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
