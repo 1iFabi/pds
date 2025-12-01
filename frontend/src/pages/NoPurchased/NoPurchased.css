@@ -200,59 +200,56 @@
   font-weight: 500;
 }
 
-.contact-button {
+.contact-chip {
   display: inline-flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 1rem; /* Increased gap for better spacing */
+  background: rgba(13, 94, 140, 0.08);
+  color: #0b7ad0;
+  padding: 1rem 1.6rem; /* Adjusted padding */
+  border-radius: 16px; /* Slightly larger border-radius */
+  font-size: 0.95rem;
+  font-weight: 600;
+  box-shadow: 0 16px 30px rgba(13, 94, 140, 0.1); /* Refined shadow */
+  border: 1px solid rgba(13, 94, 140, 0.2);
+  backdrop-filter: blur(8px); /* Slightly more blur */
+  transition: all 0.3s ease; /* Add transition for hover effect */
+}
+
+.contact-chip:hover {
+  transform: translateY(-3px); /* Subtle lift effect */
+  box-shadow: 0 20px 40px rgba(13, 94, 140, 0.15); /* Enhanced shadow on hover */
+}
+
+.contact-chip__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px; /* Slightly larger icon container */
+  height: 44px; /* Slightly larger icon container */
+  border-radius: 14px; /* Maintain consistency with chip border-radius */
   background: linear-gradient(135deg, #0D5E8C 0%, #294a91 100%);
   color: #ffffff;
-  padding: 1rem 2rem;
-  border: none;
-  border-radius: 12px;
-  font-size: 1rem;
+  box-shadow: 0 10px 20px rgba(13, 94, 140, 0.25);
+}
+
+.contact-chip__text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.4; /* Adjusted line height for better readability */
+}
+
+.contact-chip__label {
+  font-size: 0.85rem; /* Slightly larger label font size */
+  color: #4f637c;
   font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 
-    0 10px 25px rgba(13, 94, 140, 0.3),
-    0 0 0 0 rgba(13, 94, 140, 0.5);
-  position: relative;
-  overflow: hidden;
 }
 
-.contact-button::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 0;
-  height: 0;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.2);
-  transform: translate(-50%, -50%);
-  transition: width 0.6s ease, height 0.6s ease;
-}
-
-.contact-button:hover::before {
-  width: 300px;
-  height: 300px;
-}
-
-.contact-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 
-    0 15px 35px rgba(13, 94, 140, 0.4),
-    0 0 0 4px rgba(13, 94, 140, 0.2);
-}
-
-.contact-button:active {
-  transform: translateY(0px);
-}
-
-.contact-button svg {
-  flex-shrink: 0;
-  position: relative;
-  z-index: 1;
+.contact-chip__value {
+  font-size: 1.1rem; /* Increased font size for the email address */
+  color: #0f2341;
+  font-weight: 700;
 }
 
 /* Logout button */
@@ -321,11 +318,9 @@
     font-size: 0.95rem;
   }
 
-  .contact-button {
-    font-size: 0.9rem;
-    padding: 0.85rem 1.5rem;
+  .contact-chip {
     width: 100%;
-    justify-content: center;
+    justify-content: flex-start;
   }
 }
 
@@ -358,7 +353,7 @@
   .no-purchased-content,
   .logo-section,
   .status-badge,
-  .contact-button:hover,
+  .contact-chip,
   .logout-button:hover {
     animation: none;
     transition: none;

@@ -272,27 +272,25 @@ export default function AdminReports({ user }) {
           }
         );
         
-    if (response.ok) {
-      // Actualizar la tabla localmente
-      setPatients(
-        patients
-          .map((p) =>
-            p.id === selectedPatient.id
-              ? {
-                  ...p,
-                  hasReport: false,
-                  reportDate: null,
-                  reportName: null,
-                  serviceStatus: 'NO_PURCHASED',
-                }
-              : p
-          )
-          .filter((p) => p.serviceStatus === 'PENDING')
-      );
-      setDeleteDialogOpen(false);
-      setSelectedPatient(null);
-      alert(`Reporte eliminado correctamente. ${response.data.deleted_count} variantes removidas.`);
-    } else {
+        if (response.ok) {
+          // Solo limpiamos el reporte; el paciente debe seguir visible
+          setPatients((prevPatients) =>
+            prevPatients.map((p) =>
+              p.id === selectedPatient.id
+                ? {
+                    ...p,
+                    hasReport: false,
+                    reportDate: null,
+                    reportName: null,
+                    serviceStatus: 'PENDING',
+                  }
+                : p
+            )
+          );
+          setDeleteDialogOpen(false);
+          setSelectedPatient(null);
+          alert(`Reporte eliminado correctamente. ${response.data.deleted_count} variantes removidas.`);
+        } else {
           alert('Error al eliminar el archivo: ' + (response.data?.error || 'Error desconocido'));
         }
       } catch (error) {
