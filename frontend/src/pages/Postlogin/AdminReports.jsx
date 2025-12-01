@@ -68,8 +68,8 @@ export default function AdminReports({ user }) {
               try {
                 const statusUrl = `${API_ENDPOINTS.GET_USERS.replace('/users/', '/user-report-status/')}${user.id}/`;
                 const statusResponse = await apiRequest(statusUrl, { method: 'GET' });
-                if (statusResponse.ok) {
-                  hasReport = statusResponse.data.has_report;
+                if (statusResponse.ok && statusResponse.data) {
+                  hasReport = !!statusResponse.data.has_report;
                   serviceStatus = statusResponse.data.service_status || serviceStatus;
                   if (hasReport) {
                     reportName = statusResponse.data.report_filename;
@@ -129,7 +129,7 @@ export default function AdminReports({ user }) {
     // Filtro de estado de reporte
     let matchesStatus = true;
     if (reportStatusFilter === 'sin_reporte') {
-      matchesStatus = !patient.hasReport;
+      matchesStatus = !patient.hasReport && patient.serviceStatus !== 'COMPLETED';
     } else if (reportStatusFilter === 'pendiente') {
       matchesStatus = patient.serviceStatus === 'PENDING';
     } else if (reportStatusFilter === 'subido') {
@@ -333,8 +333,8 @@ export default function AdminReports({ user }) {
     }
   };
 
-  const withReportCount = patients.filter((p) => p.hasReport).length;
-  const withoutReportCount = patients.filter((p) => !p.hasReport).length;
+  const withReportCount = patients.filter((p) => p.serviceStatus === 'COMPLETED' || p.hasReport).length;
+  const withoutReportCount = patients.filter((p) => p.serviceStatus === 'PENDING').length;
 
   const handleViewVariants = (patient) => {
     if (patient.hasReport) {
@@ -478,7 +478,23 @@ export default function AdminReports({ user }) {
                         </td>
                       </tr>
                     ) : (
-                      filteredPatients.map((patient) => (
+                      filteredPatients.map((patient) => {
+                        const status = patient.serviceStatus || 'NO_PURCHASED';
+                        const isCompleted = status === 'COMPLETED' || patient.hasReport;
+                        const isPending = status === 'PENDING';
+                        const isNoService = status === 'NO_PURCHASED';
+                        const statusLabel = isCompleted
+                          ? 'Completado'
+                          : isPending
+                            ? 'Pendiente'
+                            : 'Sin Servicio';
+                        const statusClass = isCompleted
+                          ? 'admin-reports__badge admin-reports__badge--success'
+                          : isPending
+                            ? 'admin-reports__badge admin-reports__badge--pending'
+                            : 'admin-reports__badge admin-reports__badge--secondary';
+
+                        return (
                         <tr key={patient.id} className="admin-reports__table-row">
                           {isAdmin && (
                             <>
@@ -510,15 +526,9 @@ export default function AdminReports({ user }) {
                             )}
                           </td>
                           <td className="admin-reports__table-cell">
-                            {patient.hasReport ? (
-                              <span className="admin-reports__badge admin-reports__badge--success">
-                                Completado
-                              </span>
-                            ) : (
-                              <span className="admin-reports__badge admin-reports__badge--pending">
-                                Pendiente
-                              </span>
-                            )}
+                            <span className={statusClass}>
+                              {statusLabel}
+                            </span>
                           </td>
                           <td className="admin-reports__table-cell">
                             {patient.reportName ? (
@@ -537,7 +547,11 @@ export default function AdminReports({ user }) {
                           </td>
                           <td className="admin-reports__table-cell admin-reports__table-cell--actions">
                             <div className="admin-reports__actions">
-                              {!patient.hasReport ? (
+                              {isNoService ? (
+                                <span className="admin-reports__table-cell--muted">
+                                  Servicio pendiente en recepcion
+                                </span>
+                              ) : !isCompleted ? (
                                 <button
                                   className="admin-reports__action-btn admin-reports__action-btn--upload"
                                   onClick={() => handleUpload(patient)}
@@ -567,7 +581,8 @@ export default function AdminReports({ user }) {
                             </div>
                           </td>
                         </tr>
-                      ))
+                        );
+                      })
                     )}
                   </tbody>
                 </table>
