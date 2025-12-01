@@ -26,14 +26,10 @@ export default function NoPurchased() {
     navigate("/login", { replace: true });
   };
 
-  const handleContact = () => {
-    window.location.href = "mailto:proyectogenomia@gmail.com?subject=Consulta sobre el servicio GenomIA";
-  };
-
   return (
     <div className="no-purchased-page">
       <Threads 
-        color={[0.8, 0.88, 0.95]}  // Light blue-white for subtle effect
+        color={[0.8, 0.88, 0.95]}
         amplitude={0.4}
         distance={0.08}
         enableMouseInteraction={false}
@@ -65,7 +61,7 @@ export default function NoPurchased() {
 
             <div className="steps-section">
               <p className="steps-text">
-                Ahora que ya estás registrado, puedes realizar tu examen en <strong>Av. Libertador Bernardo O'Higgins 611, Rancagua</strong>. Debes presentarte en el horario de atención estipulado: <strong>08:30 – 16:30 hrs</strong>.
+                Ahora que ya estás registrado, puedes realizar tu examen en <strong>Av. Libertador Bernardo O'Higgins 611, Rancagua</strong>. Debes presentarte en el horario de atención estipulado: <strong>08:30 – 16:30 hrs</strong>. Recuerda presentarte en el laboratorio con tu <strong>Sample ID</strong> para poder realizar el procedimiento.
               </p>
             </div>
 
@@ -73,12 +69,17 @@ export default function NoPurchased() {
               <p className="contact-text">
                 ¿Tienes dudas? Contáctanos:
               </p>
-              <button className="contact-button" onClick={handleContact}>
-                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                </svg>
-                proyectogenomia@gmail.com
-              </button>
+              <div className="contact-chip">
+                <div className="contact-chip__icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                  </svg>
+                </div>
+                <div className="contact-chip__text">
+                  <span className="contact-chip__label">Correo</span>
+                  <span className="contact-chip__value">proyectogenomia@gmail.com</span>
+                </div>
+              </div>
             </div>
           </div>
 
