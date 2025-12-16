@@ -125,6 +125,7 @@ class LoginAPIView(APIView):
             # Autentica al usuario usando las credenciales
             user = authenticate(request, username=username, password=password)
 
+            # Rate limiting básico por IP
             if user is not None:
                 # Verificar email confirmado con allauth
                 if getattr(settings, 'REQUIRE_EMAIL_VERIFICATION', False):
@@ -135,12 +136,49 @@ class LoginAPIView(APIView):
                             "requires_verification": True
                         }, status=400)
 
-                # Generar JWT (stateless) para Vercel/Render
+                # Generar JWT de acceso (corto) y refresh (largo)
                 token = encode_jwt({
                     "sub": str(user.id),
                     "email": user.email,
                 })
-                return Response({"mensaje": "Inicio de sesión exitoso", "success": True, "token": token})
+                resp = Response({"mensaje": "Inicio de sesiИn exitoso", "success": True, "token": token})
+                resp["Cache-Control"] = "no-store"
+                return resp
+                refresh_ttl = getattr(settings, "REFRESH_TOKEN_TTL_SECONDS", 60 * 60 * 24 * 7)  # 7 días
+                access_token = encode_jwt({"sub": str(user.id), "email": user.email}, ttl_seconds=access_ttl)
+                refresh_token = encode_jwt({"sub": str(user.id), "type": "refresh"}, ttl_seconds=refresh_ttl)
+
+                resp = Response({
+                    "mensaje": "Inicio de sesión exitoso",
+                    "success": True,
+                    "access": access_token,
+                    "refresh": refresh_token,
+                })
+                access_cookie = getattr(settings, "ACCESS_TOKEN_COOKIE_NAME", "access_token")
+                refresh_cookie = getattr(settings, "REFRESH_TOKEN_COOKIE_NAME", "refresh_token")
+                secure_flag = getattr(settings, "COOKIE_SECURE", not settings.DEBUG)
+                samesite = getattr(settings, "COOKIE_SAMESITE", "Lax")
+
+                resp.set_cookie(
+                    access_cookie,
+                    access_token,
+                    max_age=access_ttl,
+                    httponly=True,
+                    secure=secure_flag,
+                    samesite=samesite,
+                    path="/",
+                )
+                resp.set_cookie(
+                    refresh_cookie,
+                    refresh_token,
+                    max_age=refresh_ttl,
+                    httponly=True,
+                    secure=secure_flag,
+                    samesite=samesite,
+                    path="/",
+                )
+                resp["Cache-Control"] = "no-store"
+                return resp
             else:
                 # Detectar caso de usuario pendiente de verificación (is_active=False)
                 try:
@@ -372,7 +410,7 @@ class DeleteAccountAPIView(APIView):
 
 @method_decorator(csrf_exempt, name='dispatch')
 class LogoutAPIView(APIView):
-    """Logout stateless: el cliente elimina su token."""
+    """Logout: limpiar cookies de sesión."""
     authentication_classes = []
     permission_classes = []
 

@@ -57,7 +57,7 @@ export const apiRequest = async (endpoint, options = {}) => {
     const contentType = response.headers.get('Content-Type') || '';
     const isJson = contentType.includes('application/json');
     const data = isJson ? await response.json() : {};
-    
+
     return {
       ok: response.ok,
       status: response.status,

@@ -36,13 +36,29 @@ def validate_rut_format(value):
     return value
 
 
+def validate_chilean_phone(value):
+    """
+    Valida un teléfono chileno. Acepta +56 y 9 dígitos móviles (ej: +56912345678)
+    o fijos con 9 dígitos incluyendo código de área (ej: +56223456789).
+    Se permiten espacios, guiones y paréntesis, pero se eliminan antes de validar.
+    """
+    if not value:
+        return value
+
+    normalized = re.sub(r'[\s\-()]+', '', value)
+    pattern = r'^(\+?56)?(9\d{8}|[2-9]\d{7})$'
+    if not re.match(pattern, normalized):
+        raise ValidationError('El teléfono debe estar en formato chileno, ej: +569XXXXXXXX o +562XXXXXXX.')
+    return value
+
+
 class Profile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='profile')
-    phone = models.CharField(max_length=20, blank=True)
+    phone = models.CharField(max_length=20, blank=True, validators=[validate_chilean_phone])
     rut = models.CharField(
         max_length=12,
         unique=True,
-        null=True,
+        null=False,
         blank=False,
         validators=[validate_rut_format],
         help_text='RUT en formato XXXXXXX-R (ejemplo: 12345678-9 o 1234567-K)',
@@ -205,12 +221,13 @@ class SNP(models.Model):
         db_table = 'snps'
         verbose_name = 'SNP'
         verbose_name_plural = 'SNPs'
-        unique_together = [('rsid', 'genotipo', 'fenotipo', 'categoria')]
         indexes = [
-            models.Index(fields=['rsid']),
-            models.Index(fields=['categoria']),
-            models.Index(fields=['cromosoma']),
-            models.Index(fields=['nivel_riesgo']),
+            models.Index(fields=['rsid'], name='snp_rsid_idx'),
+            models.Index(fields=['categoria'], name='snp_cat_idx'),
+            models.Index(fields=['cromosoma'], name='snp_chr_idx'),
+            models.Index(fields=['nivel_riesgo'], name='snp_risk_idx'),
+            models.Index(fields=['cromosoma', 'posicion'], name='snp_chr_pos_idx'),
+            models.Index(fields=['categoria', 'nivel_riesgo'], name='snp_cat_risk_idx'),
         ]
 
     def __str__(self):
@@ -238,10 +255,12 @@ class UserSNP(models.Model):
         db_table = 'user_snps'
         verbose_name = 'SNP de Usuario'
         verbose_name_plural = 'SNPs de Usuarios'
-        unique_together = [('user', 'snp')]
         indexes = [
             models.Index(fields=['user']),
             models.Index(fields=['snp']),
+        ]
+        constraints = [
+            models.UniqueConstraint(fields=['user', 'snp'], name='usersnp_user_snp_unique')
         ]
 
     def __str__(self):

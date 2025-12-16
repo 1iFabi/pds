@@ -69,6 +69,11 @@ if RENDER_EXTERNAL_HOSTNAME:
         f"http://{RENDER_EXTERNAL_HOSTNAME}",
     ]
 
+# Cookies / SameSite y TTL de tokens
+# Cookies:
+# - En desarrollo (http://localhost): SameSite=Lax + Secure=False para que el navegador NO descarte las cookies.
+# - En producción (https + cross-site): SameSite=None + Secure=True para que viajen desde el frontend.
+
 
 # Application definition
 

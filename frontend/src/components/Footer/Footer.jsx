@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import './Footer.css';
 
 const CONTACT_EMAIL = 'contacto@sequoh.cl';
@@ -27,12 +28,12 @@ export default function Footer() {
         <nav className="ft-col ft-links" aria-label="Enlaces">
           <h4 className="ft-title">Navegación</h4>
           <ul>
-            <li><a href="#inicio">Inicio</a></li>
-            <li><a href="#descubre">Descubre</a></li>
-            <li><a href="#conoce">Conoce</a></li>
-            <li><a href="#obten">Precio</a></li>
-            <li><a href="#equipo">Equipo</a></li>
-            <li><a href="#contacto">Contacto</a></li>
+            <li><Link to="/inicio">Inicio</Link></li>
+            <li><Link to="/descubre">Descubre</Link></li>
+            <li><Link to="/conoce">Conoce</Link></li>
+            <li><Link to="/obten">Precio</Link></li>
+            <li><Link to="/equipo">Equipo</Link></li>
+            <li><Link to="/contacto">Contacto</Link></li>
           </ul>
         </nav>
 

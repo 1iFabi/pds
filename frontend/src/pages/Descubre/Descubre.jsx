@@ -24,7 +24,7 @@ const Descubre = () => {
       ref={sectionRef}
       className="descubre"
       data-nav-theme="light"
-      id="learn-more"
+      id="descubre"
       aria-label="Sección Descubre"
     >
       <div className="descubre-container">

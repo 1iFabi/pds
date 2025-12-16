@@ -1,8 +1,7 @@
 // src/components/Navbar/Navbar.jsx
 import "./Navbar.css";
 import { useEffect, useRef, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
-import { HashLink } from "react-router-hash-link";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import SpinningCoin from "../SpinningCoin/SpinningCoin.jsx";
 
 
@@ -16,6 +15,7 @@ const Navbar = ({ theme: forcedTheme }) => {
   const btnRef = useRef(null);
   const navRef = useRef(null);
   const location = useLocation();
+  const navigate = useNavigate();
 
 
   const activeTheme = forcedTheme || autoTheme;
@@ -54,8 +54,9 @@ const Navbar = ({ theme: forcedTheme }) => {
   useEffect(() => {
     if (forcedTheme) return;
 
-    // Fuera de "/", deja light por defecto
-    if (location.pathname !== "/") {
+    const landingPaths = ["/", "/inicio", "/descubre", "/conoce", "/obten", "/preguntas", "/equipo", "/contacto"];
+    // Fuera de las rutas de landing, deja light por defecto
+    if (!landingPaths.includes(location.pathname)) {
       setAutoTheme("light");
       return;
     }
@@ -182,24 +183,24 @@ const Navbar = ({ theme: forcedTheme }) => {
       >
         {/* izquierda: links desktop */}
         <div className="nav-left nav-desktop">
-          <HashLink smooth to="/#inicio">
+          <Link to="/inicio">
             Inicio
-          </HashLink>
-          <HashLink smooth to="/#learn-more">
+          </Link>
+          <Link to="/descubre">
             Descubre
-          </HashLink>
-          <HashLink smooth to="/#conoce">
+          </Link>
+          <Link to="/conoce">
             Conoce
-          </HashLink>
-          <HashLink smooth to="/#obten">
+          </Link>
+          <Link to="/obten">
             Obtén el Tuyo
-          </HashLink>
+          </Link>
         </div>
 
         {/* centro (logo) */}
         <div className="nav-logo" aria-label="Genomia logo">
           <button 
-            onClick={() => window.location.href = '/'} 
+            onClick={() => navigate('/')} 
             className="logo-link"
             style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
           >
@@ -209,9 +210,9 @@ const Navbar = ({ theme: forcedTheme }) => {
 
         {/* derecha: links desktop */}
         <div className="nav-right nav-desktop">
-          <HashLink smooth to="/#preguntas">Preguntas</HashLink>
-          <HashLink smooth to="/#equipo">Equipo</HashLink>
-          <HashLink smooth to="/#contacto">Contacto</HashLink>
+          <Link to="/preguntas">Preguntas</Link>
+          <Link to="/equipo">Equipo</Link>
+          <Link to="/contacto">Contacto</Link>
           <Link to="/login" className="login-btn">Inicia Sesión</Link>
         </div>
 
@@ -262,7 +263,7 @@ const Navbar = ({ theme: forcedTheme }) => {
         >
           <div className="drawer-header">
             <button 
-              onClick={() => window.location.href = '/'} 
+              onClick={() => navigate('/')} 
               className="logo-link"
               style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
             >
@@ -285,30 +286,30 @@ const Navbar = ({ theme: forcedTheme }) => {
           </div>
 
           <nav className="drawer-links">
-            <HashLink smooth to="/#inicio" onClick={closeAnd()}>
+            <Link to="/inicio" onClick={closeAnd()}>
               Inicio
-            </HashLink>
-            <HashLink smooth to="/#learn-more" onClick={closeAnd()}>
+            </Link>
+            <Link to="/descubre" onClick={closeAnd()}>
               Descubre
-            </HashLink>
-            <HashLink smooth to="/#conoce" onClick={closeAnd()}>
+            </Link>
+            <Link to="/conoce" onClick={closeAnd()}>
               Conoce
-            </HashLink>
-            <HashLink smooth to="/#obten" onClick={closeAnd()}>
+            </Link>
+            <Link to="/obten" onClick={closeAnd()}>
               Obtén el Tuyo
-            </HashLink>
+            </Link>
 
             <div className="drawer-sep" />
 
-            <HashLink smooth to="/#preguntas" onClick={closeAnd()}>
+            <Link to="/preguntas" onClick={closeAnd()}>
               Preguntas
-            </HashLink>
-            <HashLink smooth to="/#equipo" onClick={closeAnd()}>
+            </Link>
+            <Link to="/equipo" onClick={closeAnd()}>
               Equipo
-            </HashLink>
-            <HashLink smooth to="/#contacto" onClick={closeAnd()}>
+            </Link>
+            <Link to="/contacto" onClick={closeAnd()}>
               Contacto
-            </HashLink>
+            </Link>
 
             <Link to="/login" className="login-btn" onClick={closeAnd()}>
               Inicia Sesión

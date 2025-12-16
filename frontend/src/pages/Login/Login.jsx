@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { API_ENDPOINTS, apiRequest, setToken, getToken, clearToken } from "../../config/api.js";
+import { API_ENDPOINTS, apiRequest, getToken, clearToken, setToken } from "../../config/api.js";
 import ErrorMessage from "../../components/Errormessage.jsx";
 import "./Login.css";
 import ForgotPasswordModal from "./ForgotPasswordModal.jsx";
@@ -24,13 +24,34 @@ export default function Login() {
     setErrors((prev) => ({ ...prev, [name === 'email' ? 'email' : name]: '' }));
   };
 
-  // Si el usuario llega a /login con una sesión activa, cerrarla
+  // Reusar sesión activa salvo en flujos de recuperación
   useEffect(() => {
-    const token = getToken();
-    if (token) {
-      clearToken();
-    }
-  }, []);
+    let cancelled = false;
+    const hasRecoveryQuery = searchParams.get('token') || searchParams.get('forgot') === 'true';
+
+    const resumeSession = async () => {
+      const token = getToken();
+      if (!token || hasRecoveryQuery) return;
+
+      try {
+        const res = await apiRequest(API_ENDPOINTS.ME, { method: 'GET' });
+        if (cancelled) return;
+
+        if (res.ok) {
+          navigate('/dashboard', { replace: true });
+        } else if (res.status === 401 || res.status === 403) {
+          clearToken();
+        }
+      } catch (error) {
+        if (!cancelled) {
+          console.error('Error validando sesión existente', error);
+        }
+      }
+    };
+
+    resumeSession();
+    return () => { cancelled = true; };
+  }, [navigate, searchParams]);
 
 // Detectar si hay un token de reset en la URL
   useEffect(() => {
@@ -152,19 +173,11 @@ export default function Login() {
       });
       
       if (result.ok && result.data.success && result.data.token) {
-        // Guardar JWT para siguientes requests
         setToken(result.data.token);
         setLoginSuccess(true);
         setShowSuccessModal(true);
         setTimeout(() => {
-          // Generar session ID único y legible
-          const generateSessionId = () => {
-            const timestamp = Date.now().toString(36);
-            const randomPart = Math.random().toString(36).substring(2, 9);
-            return `${timestamp}${randomPart}`.toUpperCase();
-          };
-          const sessionId = generateSessionId();
-          navigate(`/dashboard?session=${sessionId}`);
+          navigate('/dashboard');
         }, 600);
       } else {
         // Mapear errores del backend a campos específicos cuando sea posible
