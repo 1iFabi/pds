@@ -5,12 +5,11 @@ import { API_ENDPOINTS, apiRequest, clearToken } from '../../config/api';
 import Sidebar from '../../components/Sidebar/Sidebar';
 import SectionHeader from '../../components/SectionHeader/SectionHeader';
 import SemiGauge from '../../components/SemiGauge/SemiGauge';
-import BiomarkerStats from '../../components/BioMarkerStats/BiomarkerStats';
+import BiomarkerStats from '../../components/BiomarkerStats/BiomarkerStats';
 import './Biomarcadores.css';
 
 const Biomarcadores = () => {
   const [expandedCard, setExpandedCard] = useState(null);
-  const [showOnlyUser, setShowOnlyUser] = useState(false);
   const [user, setUser] = useState(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -76,11 +75,11 @@ const Biomarcadores = () => {
   };
 
   const sidebarItems = useMemo(() => [
-    { label: 'Ancestria', href: '/dashboard/ancestria' },
+    { label: 'Ancestría', href: '/dashboard/ancestria' },
     { label: 'Rasgos', href: '/dashboard/rasgos' },
-    { label: 'Farmacogenetica', href: '/dashboard/farmacogenetica' },
+    { label: 'Farmacogenética', href: '/dashboard/farmacogenetica' },
     { label: 'Biomarcadores', href: '/dashboard/biomarcadores' },
-    { label: 'Biometricas', href: '/dashboard/biometricas' },
+    { label: 'Biométricas', href: '/dashboard/biometricas' },
     { label: 'Enfermedades', href: '/dashboard/enfermedades' },
   ], []);
 
@@ -106,14 +105,8 @@ const Biomarcadores = () => {
     bajo: { color: '#f59e0b' },
   };
 
-  const filteredBiomarkers = useMemo(() => {
-    if (!showOnlyUser) return biomarkers;
-    return biomarkers.filter((bio) => !!bio.userResult);
-  }, [biomarkers, showOnlyUser]);
-
   return (
     <div className="dashboard">
-      {/* Burger button para moviles */}
       {isMobile && (
         <button
           className="dashboard__burger"
@@ -121,11 +114,7 @@ const Biomarcadores = () => {
           aria-label={isMobileMenuOpen ? "Cerrar menu" : "Abrir menu"}
           aria-expanded={isMobileMenuOpen}
         >
-          {isMobileMenuOpen ? (
-            <X size={24} strokeWidth={2.5} />
-          ) : (
-            <Menu size={24} strokeWidth={2.5} />
-          )}
+          {isMobileMenuOpen ? <X size={24} strokeWidth={2.5} /> : <Menu size={24} strokeWidth={2.5} />}
         </button>
       )}
 
@@ -144,7 +133,7 @@ const Biomarcadores = () => {
           <div className="biomarcador-wrapper">
             <SectionHeader
               title="Biomarcadores"
-              subtitle="Resultados personalizados de tu analisis genetico"
+              subtitle="Resultados personalizados de tu análisis genético"
               icon={Globe}
             />
 
@@ -199,9 +188,8 @@ const Biomarcadores = () => {
                   </div>
                 </div>
 
-                {/* Cards de biomarcadores */}
                 <div className="cards-container">
-                  {filteredBiomarkers.map((bio) => (
+                  {biomarkers.map((bio) => (
                     <div
                       key={bio.id}
                       className={`biomarker-card ${getRiskClass(bio.userResult?.risk)}`}
@@ -298,12 +286,8 @@ const Biomarcadores = () => {
                                     key={gen.genotype}
                                     className={gen.genotype === (bio.userGenotype || bio.userResult?.genotype) ? 'user-row' : ''}
                                   >
-                                    <td>
-                                      <span className="genotype-code">{gen.genotype}</span>
-                                    </td>
-                                    <td>
-                                      <span className="phenotype-desc">{gen.phenotype}</span>
-                                    </td>
+                                    <td><span className="genotype-code">{gen.genotype}</span></td>
+                                    <td><span className="phenotype-desc">{gen.phenotype}</span></td>
                                     <td>
                                       <span className={`risk-badge ${getRiskClass(gen.risk)}`}>
                                         {(gen.risk || '').toUpperCase()}
