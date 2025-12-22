@@ -1,7 +1,7 @@
 /* Container principal */
 .biomarker-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #e0e7ff 0%, #f3e8ff 50%, #fce7f3 100%);
+  background: #f8fafc;
   padding: 1.5rem;
 }
 
@@ -10,115 +10,81 @@
   margin: 0 auto;
 }
 
-/* Header */
-.header {
-  margin-bottom: 2rem;
+/* Summary Grid */
+.biomarkers-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  margin: 2rem 0;
 }
 
-.main-title {
-  font-size: 2.25rem;
-  font-weight: bold;
-  color: #1f2937;
-  margin-bottom: 0.5rem;
-}
-
-.subtitle {
-  color: #6b7280;
-  font-size: 1rem;
-}
-
-/* Gauge and Info Container */
-.gauge-info-container {
+.summary-card {
+  background: white;
+  border-radius: 1.25rem;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  border: 1px solid #e2e8f0;
   display: flex;
-  flex-wrap: wrap; /* Allow items to wrap on smaller screens */
-  gap: 1.5rem; /* Space between the gauge, biomarkerstats, and info box */
-  align-items: stretch; /* Make items of same height */
-  margin-top: 2rem;
-  margin-bottom: 2rem;
+  flex-direction: column;
 }
 
-/* Adjusted individual items within gauge-info-container to be proportional*/
-.gauge-info-container > .highlight-on-hover,
-.gauge-info-container .BiomarkerStats-wrapper,
-.gauge-info-container .footer-info {
-  flex: 1; /* Allow all items to grow and take available space */
-  min-width: 250px; /* Minimum width before wrapping */
-}
-
-/* Hover effect */
-.highlight-on-hover {
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  will-change: transform;
-}
-
-.highlight-on-hover:hover {
-  transform: translateY(-5px) scale(1.03);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1), 0 6px 6px rgba(0, 0, 0, 0.1);
-}
-
-
-@media (max-width: 768px) {
-  .gauge-info-container {
-    flex-direction: column; /* Stack items vertically on small screens */
-    align-items: center; /* Center items when stacked */
-  }
-
-  .gauge-info-container > .highlight-on-hover,
-  .gauge-info-container .BiomarkerStats-wrapper,
-  .gauge-info-container .footer-info {
-    width: 100%; /* Full width on small screens */
-    max-width: none; /* Remove max-width constraint */
-  }
-}
-
-/* Filtros */
-.filters-container {
-  background: linear-gradient(to right, #f9fafb, #eef2ff);
-  border: 1px solid #d1d5db;
-  border-radius: 0.75rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-  padding: 1rem;
-  margin-top: 1.5rem; /* Add separation from the top */
+.summary-card__title {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   margin-bottom: 1.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #f1f5f9;
 }
 
-.filters-content {
+.summary-card__content {
+  flex: 1;
   display: flex;
-  justify-content: center; /* Center the text */
-  align-items: center;
+  flex-direction: column;
+  justify-content: center;
 }
 
-.filter-checkbox {
+/* Reset specific component styles to fit in cards */
+.summary-card .gauge-card,
+.summary-card .stats-container {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  background: transparent !important;
+}
+
+/* Info Card Specifics */
+.info-card {
+  background: linear-gradient(135deg, #ffffff 0%, #f0f7ff 100%);
+}
+
+.info-card__text {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: #475569;
+  margin-bottom: 1rem;
+}
+
+.info-card__footer {
+  margin-top: auto;
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  cursor: pointer;
-  user-select: none;
+  color: #3b82f6;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding-top: 1rem;
+  border-top: 1px dashed #cbd5e1;
 }
 
-.filter-checkbox input[type="checkbox"] {
-  width: 1rem;
-  height: 1rem;
-  accent-color: #6366f1;
-  border-radius: 0.25rem;
-  cursor: pointer;
-}
-
-.filter-checkbox span {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #374151;
-}
-
-.spacer {
-  flex: 1;
-}
-
-.biomarker-count {
-  font-size: 1.125rem; /* Increase font size */
-  font-weight: 600; /* Make it bolder */
-  color: #4f46e5; /* Use a more prominent color */
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+@media (max-width: 1024px) {
+  .biomarkers-summary-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Cards container */

@@ -15,6 +15,7 @@ const Biomarcadores = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [totalBiomarcadores, setTotalBiomarcadores] = useState(0);
+  const [globalTotal, setGlobalTotal] = useState(0);
   const [biomarkers, setBiomarkers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -33,6 +34,7 @@ const Biomarcadores = () => {
       if (response.ok && response.data) {
         setBiomarkers(response.data.biomarkers || []);
         setTotalBiomarcadores(response.data.total || 0);
+        setGlobalTotal(response.data.global_total || response.data.total || 0);
       } else {
         setError('No pudimos cargar tus biomarcadores.');
       }
@@ -162,19 +164,38 @@ const Biomarcadores = () => {
 
             {!loading && !error && (
               <>
-                <div className="gauge-info-container">
-                  <div className="highlight-on-hover">
-                    <SemiGauge data={riskDistribution} riskConfig={biomarkerRiskConfig} />
+                <div className="biomarkers-summary-grid">
+                  <div className="summary-card">
+                    <h3 className="summary-card__title">Perfil de Impacto</h3>
+                    <div className="summary-card__content">
+                      <SemiGauge data={riskDistribution} riskConfig={biomarkerRiskConfig} />
+                    </div>
                   </div>
-                  <div className="BiomarkerStats-wrapper highlight-on-hover">
-                    <BiomarkerStats data={riskDistribution} total={totalBiomarcadores} />
+
+                  <div className="summary-card">
+                    <h3 className="summary-card__title">Resumen de Análisis</h3>
+                    <div className="summary-card__content">
+                      <BiomarkerStats 
+                        data={riskDistribution} 
+                        total={globalTotal} 
+                      />
+                    </div>
                   </div>
-                  <div className="footer-info highlight-on-hover">
-                    <h3 className="footer-title">Información sobre los resultados</h3>
-                    <p className="footer-text">
-                      Este análisis revela variantes genéticas asociadas a indicadores biológicos clave. 
-                      Los niveles de impacto reflejan cómo tu composición genética influye en cada biomarcador, permitiendo una visión profunda de tu bienestar fisiológico.
-                    </p>
+
+                  <div className="summary-card info-card">
+                    <h3 className="summary-card__title">Información de Resultados</h3>
+                    <div className="summary-card__content">
+                      <p className="info-card__text">
+                        Este análisis revela variantes genéticas asociadas a indicadores biológicos clave.
+                      </p>
+                      <p className="info-card__text">
+                        Los niveles de impacto reflejan cómo tu composición genética influye en cada biomarcador, permitiendo una visión profunda de tu bienestar fisiológico.
+                      </p>
+                      <div className="info-card__footer">
+                        <Info size={16} />
+                        <span>Datos basados en tu perfil genético único.</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
