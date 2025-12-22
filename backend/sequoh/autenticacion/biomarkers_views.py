@@ -49,6 +49,15 @@ class BiomarkersAPIView(APIView):
             if risk in risk_counts:
                 risk_counts[risk] += 1
 
+            frequency_val = None
+            try:
+                if snp.af_pais is not None:
+                    frequency_val = float(snp.af_pais)
+                elif snp.af_continente is not None:
+                    frequency_val = float(snp.af_continente)
+            except Exception:
+                frequency_val = None
+
             biomarkers.append({
                 "id": snp.rsid,
                 "rsid": snp.rsid,
@@ -66,10 +75,18 @@ class BiomarkersAPIView(APIView):
                     "phenotype": snp.fenotipo,
                     "risk": risk or "medio",
                     "magnitude": magnitude,
-                    "frequency": snp.af_pais or snp.af_continente,
+                    "frequency": frequency_val,
                     "continent": snp.continente,
                     "country": snp.pais,
                 },
+                "allGenotypes": [
+                    {
+                        "genotype": snp.genotipo,
+                        "phenotype": snp.fenotipo,
+                        "risk": (risk or "medio"),
+                        "frequency": frequency_val if frequency_val is not None else 0,
+                    }
+                ],
             })
 
         return Response({
