@@ -7,7 +7,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('autenticacion', '0023_remove_snp_snps_rsid_789da6_idx_and_more'),
+        ('autenticacion', '0020_create_reception_group'),
     ]
 
     operations = [
