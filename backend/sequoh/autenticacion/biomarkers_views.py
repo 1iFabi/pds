@@ -5,7 +5,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Q
 from .authentication import JWTAuthentication
-from .models import UserSNP
+from .models import UserSNP, SNP
 import sys
 
 
@@ -28,6 +28,10 @@ class BiomarkersAPIView(APIView):
             .select_related("snp")
         )
 
+        # Contar total global de biomarcadores disponibles en la base de datos
+        global_filter = Q(categoria__icontains="biomarc") | Q(grupo__icontains="biomarc")
+        global_total = SNP.objects.filter(global_filter).count()
+
         biomarkers = []
         risk_counts = {"bajo": 0, "medio": 0, "alto": 0}
 
@@ -44,6 +48,15 @@ class BiomarkersAPIView(APIView):
             risk = (snp.nivel_riesgo or "").strip().lower()
             if risk in risk_counts:
                 risk_counts[risk] += 1
+
+            frequency_val = None
+            try:
+                if snp.af_pais is not None:
+                    frequency_val = float(snp.af_pais)
+                elif snp.af_continente is not None:
+                    frequency_val = float(snp.af_continente)
+            except Exception:
+                frequency_val = None
 
             biomarkers.append({
                 "id": snp.rsid,
@@ -62,15 +75,24 @@ class BiomarkersAPIView(APIView):
                     "phenotype": snp.fenotipo,
                     "risk": risk or "medio",
                     "magnitude": magnitude,
-                    "frequency": snp.af_pais or snp.af_continente,
+                    "frequency": frequency_val,
                     "continent": snp.continente,
                     "country": snp.pais,
                 },
+                "allGenotypes": [
+                    {
+                        "genotype": snp.genotipo,
+                        "phenotype": snp.fenotipo,
+                        "risk": (risk or "medio"),
+                        "frequency": frequency_val if frequency_val is not None else 0,
+                    }
+                ],
             })
 
         return Response({
             "success": True,
             "total": len(biomarkers),
+            "global_total": global_total,
             "risk_distribution": risk_counts,
             "biomarkers": biomarkers,
         })

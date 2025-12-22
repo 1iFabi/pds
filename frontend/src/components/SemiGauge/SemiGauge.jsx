@@ -91,7 +91,6 @@ const SemiGauge = ({ data, riskConfig = {} }) => {
 
   return (
     <div className="gauge-card">
-      <h3 className="gauge-title">Perfil de Impacto Genético en Biomarcadores</h3>
       <div className="gauge-wrap" aria-label={`Distribución de riesgos: ${RISK_ORDER.map(k => `${data[k] || 0} ${k}`).join(', ')}`}>
         <svg viewBox="0 0 200 105" className="gauge-svg">
           {segments.map((segment, index) => (
