@@ -167,6 +167,14 @@ class SNP(models.Model):
     """
     Modelo para almacenar información de SNPs (Single Nucleotide Polymorphisms)
     """
+    pharmacogenetic_system = models.ForeignKey(
+        'PharmacogeneticSystem',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='snps',
+        verbose_name="Sistema Farmacogenetico"
+    )
     # Campos básicos
     rsid = models.CharField(max_length=20, verbose_name="rsID")
     genotipo = models.CharField(max_length=10, verbose_name="Genotipo")
@@ -246,3 +254,16 @@ class UserSNP(models.Model):
 
     def __str__(self):
         return f"UserSNP(user={self.user_id}, snp={self.snp_id})"
+
+
+class PharmacogeneticSystem(models.Model):
+    """Sistema o grupo para clasificar SNPs farmacogenéticos."""
+    name = models.CharField(max_length=100, unique=True, verbose_name='Nombre del Sistema')
+    description = models.TextField(blank=True, null=True, verbose_name='Descripción')
+
+    class Meta:
+        verbose_name = 'Sistema Farmacogenético'
+        verbose_name_plural = 'Sistemas Farmacogenéticos'
+
+    def __str__(self):
+        return self.name

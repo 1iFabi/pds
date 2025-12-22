@@ -19,69 +19,10 @@ import { cn } from '../../lib/utils';
 import "./Farmacogenetica.css";
 
 const farmacoPriorityConfig = {
-  high: {
-    icon: AlertCircle,
-    bgColor: "bg-red-50",
-    accentColor: "text-red-600",
-    iconBgColor: "bg-red-100",
-  },
-  medium: {
-    icon: AlertTriangle,
-    bgColor: "bg-yellow-50",
-    accentColor: "text-yellow-600",
-    iconBgColor: "bg-yellow-100",
-  },
-  low: {
-    icon: Info,
-    bgColor: "bg-green-50",
-    accentColor: "text-green-600",
-    iconBgColor: "bg-green-100",
-  },
+  high: { icon: AlertCircle, bgColor: "bg-red-50", accentColor: "text-red-600", iconBgColor: "bg-red-100" },
+  medium: { icon: AlertTriangle, bgColor: "bg-yellow-50", accentColor: "text-yellow-600", iconBgColor: "bg-yellow-100" },
+  low: { icon: Info, bgColor: "bg-green-50", accentColor: "text-green-600", iconBgColor: "bg-green-100" },
 };
-
-// fallback
-const systems = [
-  {
-    name: 'Cardiología',
-    role: 'Fármacos que afectan el corazón y los vasos sanguíneos.',
-    color: '#F48FB1',
-    drugs: [
-      { name: 'Warfarina', percentage: 75, rsid: 'rs9923231', cromosoma: '16', posicion: '31106951', genotipo: 'C/T', magnitud: 3.2 },
-      { name: 'Clopidogrel', percentage: 45, rsid: 'rs4244285', cromosoma: '10', posicion: '96533169', genotipo: 'G/A', magnitud: 2.8 },
-      { name: 'Simvastatina', percentage: 50, rsid: 'rs1234567', cromosoma: '1', posicion: '12345678', genotipo: 'A/A', magnitud: 2.5 },
-    ]
-  },
-  {
-    name: 'Salud Mental y Neurología',
-    role: 'Fármacos que actúan sobre el sistema nervioso central.',
-    color: '#00BCD4',
-    drugs: [
-      { name: 'Amitriptilina', percentage: 60, rsid: 'rs2292566', cromosoma: '22', posicion: '42129929', genotipo: 'A/G', magnitud: 2.1 },
-    ]
-  },
-  {
-    name: 'Gastroenterología',
-    role: 'Fármacos para el tratamiento de afecciones digestivas.',
-    color: '#9C27B0',
-    drugs: [
-      { name: 'Omeprazol', percentage: 80, rsid: 'rs4986893', cromosoma: '10', posicion: '96533169', genotipo: 'C/T', magnitud: 1.5 },
-    ]
-  },
-  {
-    name: 'Salud Ósea y Reumatología',
-    role: 'Fármacos para el fortalecimiento óseo y afecciones articulares.',
-    color: '#3F51B5',
-    drugs: [
-      { name: 'Alendronato', percentage: 65, rsid: 'rs7654321', cromosoma: '5', posicion: '87654321', genotipo: 'G/G', magnitud: 2.0 },
-    ]
-  },
-  {
-    name: 'Oncología',
-    role: 'Fármacos utilizados en el tratamiento del cáncer.',
-    color: '#FF5722',
-    drugs: []
-  },
-];
 
 const ImpactSummaryCard = ({ level, title, count }) => {
   const config = farmacoPriorityConfig[level];
@@ -95,7 +36,7 @@ const ImpactSummaryCard = ({ level, title, count }) => {
       <div>
         <h3 className={cn("text-sm font-semibold", config.accentColor)}>{title}</h3>
         <p className={cn("text-lg", config.accentColor, "opacity-90")}>
-          {count} {count === 1 ? "fármaco" : "fármacos"}
+          {count} {count === 1 ? "farmaco" : "farmacos"}
         </p>
       </div>
     </div>
@@ -114,6 +55,24 @@ const Farmacogenetica = () => {
 
   const [pharmaData, setPharmaData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const fetchPharmaData = async () => {
+    setError(null);
+    try {
+      const response = await apiRequest(API_ENDPOINTS.PHARMACOGENETICS, { method: 'GET' });
+      if (response.ok && response.data && response.data.data) {
+        setPharmaData(response.data.data);
+      } else {
+        setError('No se encontraron datos de farmacogenetica.');
+        setPharmaData([]);
+      }
+    } catch (err) {
+      setError('Error al obtener farmacogenetica.');
+      setPharmaData([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const impactColors = {
     alto: '#ef4444',
@@ -131,7 +90,6 @@ const Farmacogenetica = () => {
     setExpandedGroups(prev => ({ ...prev, [groupName]: !prev[groupName] }));
   };
 
-  // fetch user
   const fetchUser = async () => {
     const response = await apiRequest(API_ENDPOINTS.ME, { method: 'GET' });
     if (response.ok && response.data) {
@@ -139,33 +97,10 @@ const Farmacogenetica = () => {
     }
   };
 
-  // fetch pharma data
   useEffect(() => {
-    const fetchPharmaData = async () => {
-      try {
-        const response = await apiRequest(API_ENDPOINTS.PHARMACOGENETICS, { method: 'GET' });
-        if (
-          response.ok &&
-          response.data &&
-          response.data.data
-        ) {
-          setPharmaData(response.data.data);
-        } else {
-          console.error("No se encontraron datos de farmacogenética o hubo un error. Usando fallback.");
-          setPharmaData(systems);
-        }
-      } catch (error) {
-        console.error('Error al obtener farmacogenética. Usando fallback:', error);
-        setPharmaData(systems);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchPharmaData();
   }, []);
 
-  // mount user + mobile check
   useEffect(() => {
     fetchUser();
   }, []);
@@ -186,18 +121,18 @@ const Farmacogenetica = () => {
     try {
       await apiRequest(API_ENDPOINTS.LOGOUT, { method: 'POST' });
     } catch (error) {
-      console.error('Error al cerrar sesión', error);
+      console.error('Error al cerrar sesion', error);
     }
     clearToken();
     navigate('/');
   };
 
   const sidebarItems = useMemo(() => [
-    { label: 'Ancestría', href: '/dashboard/ancestria' },
+    { label: 'Ancestria', href: '/dashboard/ancestria' },
     { label: 'Rasgos', href: '/dashboard/rasgos' },
-    { label: 'Farmacogenética', href: '/dashboard/farmacogenetica' },
+    { label: 'Farmacogenetica', href: '/dashboard/farmacogenetica' },
     { label: 'Biomarcadores', href: '/dashboard/biomarcadores' },
-    { label: 'Biométricas', href: '/dashboard/biometricas' },
+    { label: 'Biometricas', href: '/dashboard/biometricas' },
     { label: 'Enfermedades', href: '/dashboard/enfermedades' },
   ], []);
 
@@ -235,13 +170,23 @@ const Farmacogenetica = () => {
     return { high, medium, low };
   }, [pharmaData]);
 
+  if (!loading && !error && pharmaData.length === 0) {
+    return (
+      <div className="farmacogenetica-dashboard">
+        <main className="farmacogenetica-dashboard__main">
+          <div className="text-center p-8">No hay datos farmacogeneticos para este usuario.</div>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="farmacogenetica-dashboard">
       {isMobile && (
         <button
           className="farmacogenetica-dashboard__burger"
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          aria-label={isMobileMenuOpen ? "Cerrar menú" : "Abrir menú"}
+          aria-label={isMobileMenuOpen ? "Cerrar menu" : "Abrir menu"}
           aria-expanded={isMobileMenuOpen}
         >
           {isMobileMenuOpen ? <X size={24} strokeWidth={2.5} /> : <Menu size={24} strokeWidth={2.5} />}
@@ -261,19 +206,30 @@ const Farmacogenetica = () => {
       <main className="farmacogenetica-dashboard__main">
         <div className="farmacogenetica-page">
           <SectionHeader
-            title="Farmacogenética"
-            subtitle="Hemos dividido los fármacos en cinco sistemas: Cardiología, Salud mental y neurología, Gastroenterología, Salud ósea y reumatología, y Oncología. Explora cómo tu genética influye en la eficacia y los efectos secundarios de los medicamentos en cada sistema."
+            title="Farmacogenetica"
+            subtitle="Hemos dividido los farmacos en cinco sistemas. Explora como tu genetica influye en la eficacia y los efectos secundarios de los medicamentos en cada sistema."
             icon={Heart}
           />
 
           <div className="farmacogenetica-content-wrapper">
             {loading ? (
               <div className="text-center p-8">Cargando...</div>
+            ) : error ? (
+              <div className="text-center p-8">
+                <p>{error}</p>
+                <button className="filter-btn" onClick={() => { setLoading(true); fetchPharmaData(); }}>
+                  Reintentar
+                </button>
+              </div>
             ) : (
               <>
                 {/* DERECHA */}
                 <aside className="farmacogenetica-right">
-                  <SunburstChart data={pharmaData} />
+                  {pharmaData.length ? (
+                    <SunburstChart data={pharmaData} />
+                  ) : (
+                    <div className="text-center p-6 text-gray-600">No hay datos farmacogeneticos para mostrar.</div>
+                  )}
                 </aside>
 
                 {/* IZQUIERDA */}

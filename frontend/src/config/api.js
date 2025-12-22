@@ -24,6 +24,8 @@ export const API_ENDPOINTS = {
   INDIGENOUS: `${API_BASE_URL}/indigenous/`,
   TRAITS: `${API_BASE_URL}/traits/`,
   BIOMETRICS: `${API_BASE_URL}/biometrics/`,
+  BIOMARKERS: `${API_BASE_URL}/biomarkers/`,
+  PHARMACOGENETICS: `${API_BASE_URL}/pharmacogenetics/`,
   RECEPTION_SEARCH: `${API_BASE_URL}/reception/search/`,
   RECEPTION_MARK_ARRIVAL: `${API_BASE_URL}/reception/arrival/`,
   RECEPTION_SAMPLE_CODE: `${API_BASE_URL}/reception/sample-code/`,
