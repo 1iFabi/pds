@@ -1,8 +1,10 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from django.db.models import Q
 from .authentication import JWTAuthentication
-from .models import UserSNP, PharmacogeneticSystem, SNP
+from .models import UserSNP, PharmacogeneticSystem
+
 
 class PharmacogeneticsAPIView(APIView):
     authentication_classes = [JWTAuthentication]
@@ -10,75 +12,94 @@ class PharmacogeneticsAPIView(APIView):
 
     def get(self, request):
         user = request.user
-        # Obtener los sistemas ordenados por ID o nombre
-        systems = PharmacogeneticSystem.objects.all().order_by('id')
-        
-        # Colores para los sistemas siguiendo el diseño del frontend
-        system_colors = {
-            'Cardiología': '#F48FB1',
-            'Salud Mental y Neurología': '#00BCD4',
-            'Gastroenterología': '#9C27B0',
-            'Salud Ósea y Reumatología': '#3F51B5',
-            'Oncología': '#FF5722'
-        }
 
-        # Obtener los SNPs del usuario de categoría farmacogenética
-        user_snps = UserSNP.objects.filter(
-            user=user, 
-            snp__categoria__icontains='farmaco'
-        ).select_related('snp', 'snp__pharmacogenetic_system')
+        systems = list(PharmacogeneticSystem.objects.all().order_by('id'))
+        base_colors = ['#F48FB1', '#00BCD4', '#9C27B0', '#3F51B5', '#FF5722', '#4CAF50', '#FFC107']
+        system_colors = {}
+        for idx, sys in enumerate(systems):
+            system_colors[sys.id] = base_colors[idx % len(base_colors)]
+        system_colors['otros'] = '#607D8B'
 
-        result = []
-        for system in systems:
-            system_snps = [us.snp for us in user_snps if us.snp.pharmacogenetic_system_id == system.id]
-            
-            drugs = []
-            for snp in system_snps:
-                # Intentamos limpiar el fenotipo para mostrar el nombre del fármaco
-                # El fenotipo suele ser "Metabolizador lento de warfarina (CYP2C9)"
-                raw_fenotipo = snp.fenotipo
-                name = raw_fenotipo.split('(')[0].strip()
-                
-                # Heurística de limpieza para el nombre del fármaco
-                prefixes_to_remove = [
-                    "metabolizador lento de ", "metabolizador pobre de ",
-                    "metabolizador intermedio de ", "metabolizador ultra-rápido de ",
-                    "metabolizador normal de ", "metabolizador extenso de ",
-                    "metabolismo reducido de ", "metabolismo muy reducido de ",
-                    "metabolismo normal de ", "metabolismo intermedio de ",
-                    "respuesta intermedia a ", "respuesta reducida a ",
-                    "respuesta óptima a ", "respuesta estándar a ",
-                    "mayor respuesta a ", "menor respuesta a ",
-                    "metabolismo de ", "metabolismo "
-                ]
-                
-                cleaned_name = name.lower()
-                for prefix in prefixes_to_remove:
-                    if cleaned_name.startswith(prefix):
-                        cleaned_name = cleaned_name.replace(prefix, "")
-                        break
-                
-                cleaned_name = cleaned_name.capitalize()
+        pharm_filter = Q(snp__categoria__icontains='farmaco') | Q(snp__grupo__icontains='farmaco')
+        user_snps = (
+            UserSNP.objects.filter(user=user)
+            .filter(pharm_filter)
+            .select_related('snp', 'snp__pharmacogenetic_system')
+        )
 
-                drugs.append({
+        system_map = {s.id: s for s in systems}
+        buckets = {s.id: [] for s in systems}
+        buckets['otros'] = []
+
+        prefixes = [
+            "metabolizador lento de ", "metabolizador pobre de ",
+            "metabolizador intermedio de ", "metabolizador ultra-rápido de ",
+            "metabolizador normal de ", "metabolizador extenso de ",
+            "metabolismo reducido de ", "metabolismo muy reducido de ",
+            "metabolismo normal de ", "metabolismo intermedio de ",
+            "respuesta intermedia a ", "respuesta reducida a ",
+            "respuesta óptima a ", "respuesta estándar a ",
+            "mayor respuesta a ", "menor respuesta a ",
+            "metabolismo de ", "metabolismo ",
+        ]
+
+        best_by_key = {}
+        for us in user_snps:
+            snp = us.snp
+            if not snp:
+                continue
+
+            raw = (snp.fenotipo or "").strip()
+            name = raw.split("(")[0].strip() or snp.rsid or "Farmaco"
+            cleaned = name.lower()
+            for pref in prefixes:
+                if cleaned.startswith(pref):
+                    cleaned = cleaned.replace(pref, "")
+                    break
+            cleaned_name = cleaned.capitalize() if cleaned else name
+
+            try:
+                magn = float(snp.magnitud_efecto) if snp.magnitud_efecto is not None else 1.5
+            except Exception:
+                magn = 1.5
+            percentage = max(1, min(100, int((magn / 3.0) * 100)))
+
+            bucket_key = snp.pharmacogenetic_system_id if snp.pharmacogenetic_system_id in system_map else 'otros'
+            dedup_key = (bucket_key, cleaned_name.lower())
+            current = best_by_key.get(dedup_key)
+            if current is None or magn > current["magnitud"]:
+                best_by_key[dedup_key] = {
                     "name": cleaned_name,
-                    "percentage": int((float(snp.magnitud_efecto or 1.5) / 3.0) * 100),
+                    "percentage": percentage,
                     "rsid": snp.rsid,
                     "cromosoma": snp.cromosoma,
                     "posicion": str(snp.posicion or ""),
                     "genotipo": snp.genotipo,
-                    "magnitud": float(snp.magnitud_efecto or 1.5),
-                    "fenotipo": raw_fenotipo
-                })
+                    "magnitud": magn,
+                    "fenotipo": raw or cleaned_name,
+                }
 
+        for (bucket_key, _), data in best_by_key.items():
+            buckets.setdefault(bucket_key, []).append(data)
+
+        result = []
+        for sys_id, drugs in buckets.items():
+            if not drugs:
+                continue
+            if sys_id == 'otros':
+                sys_name = 'Otros'
+                sys_desc = 'Farmacos sin sistema asignado'
+            else:
+                sys_obj = system_map.get(sys_id)
+                if not sys_obj:
+                    continue
+                sys_name = sys_obj.name
+                sys_desc = sys_obj.description or f"Analisis de farmacos para {sys_obj.name}"
             result.append({
-                "name": system.name,
-                "role": system.description or f"Análisis de fármacos para {system.name}",
-                "color": system_colors.get(system.name, '#607D8B'),
-                "drugs": drugs
+                "name": sys_name,
+                "role": sys_desc,
+                "color": system_colors.get(sys_id, '#607D8B'),
+                "drugs": drugs,
             })
 
-        return Response({
-            "success": True,
-            "data": result
-        })
+        return Response({"success": True, "data": result})
