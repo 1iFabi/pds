@@ -1,0 +1,320 @@
+import React, { useEffect, useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Menu, X, Info, Activity, TrendingUp, MapPin, Globe, ChevronDown, ChevronUp } from 'lucide-react';
+import { API_ENDPOINTS, apiRequest, clearToken } from '../../config/api';
+import Sidebar from '../../components/Sidebar/Sidebar';
+import SectionHeader from '../../components/SectionHeader/SectionHeader';
+import SemiGauge from '../../components/SemiGauge/SemiGauge';
+import BiomarkerStats from '../../components/BiomarkerStats/BiomarkerStats';
+import './Biomarcadores.css';
+
+const Biomarcadores = () => {
+  const [expandedCard, setExpandedCard] = useState(null);
+  const [showOnlyUser, setShowOnlyUser] = useState(false);
+  const [user, setUser] = useState(null);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [totalBiomarcadores, setTotalBiomarcadores] = useState(0);
+  const [biomarkers, setBiomarkers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    fetchUser();
+    fetchBiomarkers();
+  }, []);
+
+  const fetchBiomarkers = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await apiRequest(API_ENDPOINTS.BIOMARKERS, { method: 'GET' });
+      if (response.ok && response.data) {
+        setBiomarkers(response.data.biomarkers || []);
+        setTotalBiomarcadores(response.data.total || 0);
+      } else {
+        setError('No pudimos cargar tus biomarcadores.');
+      }
+    } catch (err) {
+      setError('Error de conexion al cargar biomarcadores.');
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    const checkMobile = () => {
+      const mobile = window.innerWidth <= 1024;
+      setIsMobile(mobile);
+      if (!mobile) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  const fetchUser = async () => {
+    const response = await apiRequest(API_ENDPOINTS.ME, { method: 'GET' });
+    if (response.ok && response.data) {
+      setUser(response.data.user || response.data);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await apiRequest(API_ENDPOINTS.LOGOUT, { method: 'POST' });
+    } catch (error) {
+      console.error('Error al cerrar sesion', error);
+    }
+    clearToken();
+    navigate('/');
+  };
+
+  const sidebarItems = useMemo(() => [
+    { label: 'Ancestria', href: '/dashboard/ancestria' },
+    { label: 'Rasgos', href: '/dashboard/rasgos' },
+    { label: 'Farmacogenetica', href: '/dashboard/farmacogenetica' },
+    { label: 'Biomarcadores', href: '/dashboard/biomarcadores' },
+    { label: 'Biometricas', href: '/dashboard/biometricas' },
+    { label: 'Enfermedades', href: '/dashboard/enfermedades' },
+  ], []);
+
+  const riskDistribution = useMemo(() => {
+    const counts = { bajo: 0, medio: 0, alto: 0 };
+    biomarkers.forEach((bio) => {
+      const risk = bio?.userResult?.risk;
+      if (counts[risk] !== undefined) {
+        counts[risk] += 1;
+      }
+    });
+    return counts;
+  }, [biomarkers]);
+
+  const getRiskClass = (risk) => {
+    const classes = { bajo: 'risk-bajo', medio: 'risk-medio', alto: 'risk-alto' };
+    return classes[risk] || 'risk-default';
+  };
+
+  const biomarkerRiskConfig = {
+    alto: { color: '#8b5cf6' },
+    medio: { color: '#06b6d4' },
+    bajo: { color: '#f59e0b' },
+  };
+
+  const filteredBiomarkers = useMemo(() => {
+    if (!showOnlyUser) return biomarkers;
+    return biomarkers.filter((bio) => !!bio.userResult);
+  }, [biomarkers, showOnlyUser]);
+
+  return (
+    <div className="dashboard">
+      {/* Burger button para moviles */}
+      {isMobile && (
+        <button
+          className="dashboard__burger"
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          aria-label={isMobileMenuOpen ? "Cerrar menu" : "Abrir menu"}
+          aria-expanded={isMobileMenuOpen}
+        >
+          {isMobileMenuOpen ? (
+            <X size={24} strokeWidth={2.5} />
+          ) : (
+            <Menu size={24} strokeWidth={2.5} />
+          )}
+        </button>
+      )}
+
+      <aside className="dashboard__sidebar">
+        <Sidebar
+          items={sidebarItems}
+          onLogout={handleLogout}
+          user={user}
+          isMobileMenuOpen={isMobileMenuOpen}
+          setIsMobileMenuOpen={setIsMobileMenuOpen}
+        />
+      </aside>
+
+      <main className="dashboard__main">
+        <div className="biomarcador-container">
+          <div className="biomarcador-wrapper">
+            <SectionHeader
+              title="Biomarcadores"
+              subtitle="Resultados personalizados de tu analisis genetico"
+              icon={Globe}
+            />
+
+            {loading && (
+              <div className="biomarkers-loading">
+                <div className="spinner" />
+                <p>Cargando biomarcadores...</p>
+              </div>
+            )}
+
+            {!loading && error && (
+              <div className="biomarkers-error">
+                <p>{error}</p>
+                <button onClick={fetchBiomarkers}>Reintentar</button>
+              </div>
+            )}
+
+            {!loading && !error && (
+              <>
+                <div className="gauge-info-container">
+                  <div className="highlight-on-hover">
+                    <SemiGauge data={riskDistribution} riskConfig={biomarkerRiskConfig} />
+                  </div>
+                  <div className="BiomarkerStats-wrapper highlight-on-hover">
+                    <BiomarkerStats data={riskDistribution} total={totalBiomarcadores} />
+                  </div>
+                  <div className="footer-info highlight-on-hover">
+                    <h3 className="footer-title">Información sobre los resultados</h3>
+                    <p className="footer-text">
+                      Este análisis revela variantes genéticas asociadas a indicadores biológicos clave. 
+                      Los niveles de impacto reflejan cómo tu composición genética influye en cada biomarcador, permitiendo una visión profunda de tu bienestar fisiológico.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Cards de biomarcadores */}
+                <div className="cards-container">
+                  {filteredBiomarkers.map((bio) => (
+                    <div
+                      key={bio.id}
+                      className={`biomarker-card ${getRiskClass(bio.userResult?.risk)}`}
+                      onClick={() => setExpandedCard(expandedCard === bio.id ? null : bio.id)}
+                    >
+                      <div className="card-content">
+                        <div className="card-header">
+                          <div className="card-info">
+                            <div className="title-row">
+                              <h2 className="card-title">{bio.name}</h2>
+                            </div>
+                            <p className="card-id">{bio.id} — {bio.gene}</p>
+                            <p className="card-location">
+                              Cromosoma {bio.chromosome || '-'} | Posicion: {bio.position || '-'}
+                            </p>
+                          </div>
+                          <div className={`result-badge ${getRiskClass(bio.userResult?.risk)}`}>
+                            TU RESULTADO: {bio.userGenotype || bio.userResult?.genotype || '-'}
+                          </div>
+                        </div>
+
+                        <div className="phenotype-box">
+                          <p className="phenotype-text">
+                            <Activity size={20} className="icon-activity" />
+                            {bio.userResult?.phenotype || 'Sin descripcion'}
+                          </p>
+                        </div>
+
+                        <div className="gauge-container">
+                          <div className="gauge-labels">
+                            <span>Baja</span>
+                            <span>Normal</span>
+                            <span>Alta</span>
+                          </div>
+                          <div className="gauge-bar">
+                            <div className="gauge-indicator"></div>
+                          </div>
+                        </div>
+
+                        <div className="stats-grid">
+                          <div className="stat-box">
+                            <div className="stat-header">
+                              <TrendingUp size={16} className="stat-icon" />
+                              <span className="stat-label">MAGNITUD</span>
+                            </div>
+                            <div className="magnitude-bars">
+                              {[...Array(5)].map((_, i) => (
+                                <div
+                                  key={i}
+                                  className={`magnitude-bar ${i < (bio.userResult?.magnitude || 0) ? 'active' : ''}`}
+                                ></div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setExpandedCard(expandedCard === bio.id ? null : bio.id);
+                          }}
+                          className="expand-button"
+                        >
+                          {expandedCard === bio.id ? (
+                            <>
+                              <ChevronUp size={20} />
+                              Ocultar todos los genotipos
+                            </>
+                          ) : (
+                            <>
+                              <ChevronDown size={20} />
+                              Ver todos los genotipos posibles
+                            </>
+                          )}
+                        </button>
+                      </div>
+
+                      {expandedCard === bio.id && (
+                        <div className="expanded-table">
+                          <div className="table-wrapper">
+                            <table className="genotypes-table">
+                              <thead>
+                                <tr>
+                                  <th>Genotipo</th>
+                                  <th>Fenotipo</th>
+                                  <th>Nivel de Riesgo</th>
+                                  <th>Frecuencia</th>
+                                  <th>Tu Resultado</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {(bio.allGenotypes || []).map((gen) => (
+                                  <tr
+                                    key={gen.genotype}
+                                    className={gen.genotype === (bio.userGenotype || bio.userResult?.genotype) ? 'user-row' : ''}
+                                  >
+                                    <td>
+                                      <span className="genotype-code">{gen.genotype}</span>
+                                    </td>
+                                    <td>
+                                      <span className="phenotype-desc">{gen.phenotype}</span>
+                                    </td>
+                                    <td>
+                                      <span className={`risk-badge ${getRiskClass(gen.risk)}`}>
+                                        {(gen.risk || '').toUpperCase()}
+                                      </span>
+                                    </td>
+                                    <td>
+                                      <span className="frequency-value">
+                                        {gen.frequency !== undefined ? `${(gen.frequency * 100).toFixed(2)}%` : 'N/A'}
+                                      </span>
+                                    </td>
+                                    <td>
+                                      {gen.genotype === (bio.userGenotype || bio.userResult?.genotype) && (
+                                        <span className="checkmark">✓</span>
+                                      )}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+};
+
+export default Biomarcadores;

@@ -23,6 +23,9 @@ from .snp_views import VariantesAPIView
 from .ancestry_views import AncestryAPIView
 from .indigenous_views import IndigenousPeoplesAPIView
 from .traits_views import TraitsAPIView
+from .biometrics_views import BiometricsAPIView
+from .biomarkers_views import BiomarkersAPIView
+from .pharmacogenetics_views import PharmacogeneticsAPIView
 from .reception_views import (
     ReceptionSearchAPIView,
     ReceptionArrivalAPIView,
@@ -63,6 +66,9 @@ urlpatterns = [
     path('ancestry/', AncestryAPIView.as_view(), name='api_ancestry'),
     path('indigenous/', IndigenousPeoplesAPIView.as_view(), name='api_indigenous'),
     path('traits/', TraitsAPIView.as_view(), name='api_traits'),
+    path('biometrics/', BiometricsAPIView.as_view(), name='api_biometrics'),
+    path('biomarkers/', BiomarkersAPIView.as_view(), name='api_biomarkers'),
+    path('pharmacogenetics/', PharmacogeneticsAPIView.as_view(), name='api_pharmacogenetics'),
     # Recepción (solo identidad, sin datos genéticos)
     path('reception/search/', ReceptionSearchAPIView.as_view(), name='api_reception_search'),
     path('reception/arrival/', ReceptionArrivalAPIView.as_view(), name='api_reception_arrival'),

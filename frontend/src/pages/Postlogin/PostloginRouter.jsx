@@ -8,6 +8,10 @@ import PostloginReception from './PostloginReception';
 import AdminReports from './AdminReports';
 import AdminVariantsDatabase from './AdminVariantsDatabase';
 import AdminAnalystAccess from './AdminAnalystAccess';
+import Biomarcadores from '../Biomarcadores/Biomarcadores';
+import Biometrics from '../Biometrics/Biometrics';
+import Enfermedades from '../Enfermedades/Enfermedades';
+import Farmacogenetica from '../Farmacogenetica/Farmacogenetica';
 
 const PostloginRouter = () => {
   const [user, setUser] = useState(null);
@@ -51,6 +55,10 @@ const PostloginRouter = () => {
         <Route path="admin/reports" element={<AdminReports user={user} />} />
         <Route path="admin/variants" element={<AdminVariantsDatabase user={user} />} />
         <Route path="admin/analysts" element={<AdminAnalystAccess user={user} />} />
+        <Route path="biomarcadores" element={<Biomarcadores />} />
+        <Route path="biometricas" element={<Biometrics />} />
+        <Route path="enfermedades" element={<Enfermedades />} />
+        <Route path="farmacogenetica" element={<Farmacogenetica />} />
       </Routes>
     );
   }
@@ -61,6 +69,10 @@ const PostloginRouter = () => {
         <Route path="/" element={<PostloginAnalyst user={user} mode="analyst" />} />
         <Route path="admin/reports" element={<AdminReports user={user} />} />
         <Route path="admin/variants" element={<AdminVariantsDatabase user={user} />} />
+        <Route path="biomarcadores" element={<Biomarcadores />} />
+        <Route path="biometricas" element={<Biometrics />} />
+        <Route path="enfermedades" element={<Enfermedades />} />
+        <Route path="farmacogenetica" element={<Farmacogenetica />} />
       </Routes>
     );
   }

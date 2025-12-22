@@ -1,0 +1,199 @@
+.farmacogenetica-dashboard {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f7f7f8;
+}
+
+.farmacogenetica-dashboard__sidebar {
+  width: 280px;
+  min-width: 280px;
+  background: transparent;
+  display: flex;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.farmacogenetica-dashboard__sidebar:has(.sidebar--folded) {
+  width: 80px;
+  min-width: 80px;
+}
+
+.farmacogenetica-dashboard__main {
+  flex: 1 1 auto;
+  padding: 2rem;
+  background-color: #f7f7f8;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
+}
+
+.farmacogenetica-dashboard__burger {
+  display: none;
+}
+
+.farmacogenetica-page {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* ==========================
+   LAYOUT PRINCIPAL (2 columnas)
+========================== */
+.farmacogenetica-content-wrapper {
+  display: grid;
+  grid-template-columns: 1fr 2fr; /* derecha más ancha */
+  gap: 2rem;
+  align-items: start;
+  margin-top: 1rem;
+}
+
+/* IZQUIERDA */
+.farmacogenetica-left {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  min-width: 0;
+}
+
+/* Cards arriba */
+.impact-cards {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+
+@media (min-width: 768px) {
+  .impact-cards {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* DERECHA (chart) */
+.farmacogenetica-right {
+  min-width: 0;
+  align-self: start;
+  position: sticky; /* para que quede visible al scrollear */
+  top: 1.25rem;
+}
+
+.farmacogenetica-right > * {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* ==========================
+   SEARCH (si lo usas)
+========================== */
+.search-section {
+  display: flex;
+  gap: 10px;
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+
+.search-input {
+  flex: 1;
+  padding: 14px 20px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.3s;
+}
+
+.search-input:focus {
+  border-color: #4a4a4a;
+}
+
+.search-button {
+  padding: 14px 24px;
+  background-color: #2d1b4e;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.3s;
+}
+
+.search-button:hover {
+  background-color: #3d2a5e;
+}
+
+/* ==========================
+   LISTA DE SISTEMAS (cards)
+========================== */
+.profiles-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.profile-card {
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  background-color: white;
+  border: 1px solid #e0e0e0;
+  border-top: 5px solid var(--group-color, #e0e0e0);
+  border-radius: 8px;
+  transition: box-shadow 0.3s, transform 0.2s;
+}
+
+.profile-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.profile-info {
+  flex: 1;
+  width: 100%;
+}
+
+.profile-info h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 4px;
+}
+
+.profile-info p {
+  font-size: 14px;
+  color: #888;
+}
+
+.drug-list {
+  margin-top: 20px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* ==========================
+   RESPONSIVE
+========================== */
+@media (max-width: 1024px) {
+  .farmacogenetica-content-wrapper {
+    grid-template-columns: 1fr;
+  }
+
+  .farmacogenetica-right {
+    position: static;
+    top: auto;
+  }
+
+  .impact-cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* (si quieres algo extra bajo 768) */
+@media (max-width: 768px) {
+  .profiles-grid {
+    flex-direction: column;
+  }
+}
