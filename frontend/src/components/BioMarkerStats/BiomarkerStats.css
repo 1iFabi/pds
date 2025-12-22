@@ -1,0 +1,117 @@
+/* BiomarkerStats.css */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.stats-container {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    max-width: 320px;
+    width: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.stats-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 20px;
+}
+
+.stat-item {
+    margin-bottom: 20px;
+    position: relative;
+    padding-left: 16px;
+}
+
+.stat-item:last-child {
+    margin-bottom: 0;
+}
+
+.stat-item::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 8px;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: #1e88e5;
+}
+
+.stat-item.level-2::before {
+    left: 12px;
+    background: #43a047;
+}
+
+.stat-item.level-3::before {
+    left: 24px;
+    background: #fb8c00;
+}
+
+.stat-item.level-2 {
+    padding-left: 28px;
+    margin-bottom: 16px;
+}
+
+.stat-item.level-3 {
+    padding-left: 40px;
+    margin-bottom: 0;
+}
+
+.stat-label {
+    font-size: 13px;
+    color: #64748b;
+    margin-bottom: 4px;
+    line-height: 1.4;
+}
+
+.stat-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: #1e293b;
+    line-height: 1;
+}
+
+.stat-item.level-2 .stat-value {
+    font-size: 24px;
+    color: #43a047;
+}
+
+.stat-item.level-3 .stat-value {
+    font-size: 20px;
+    color: #fb8c00;
+}
+
+.divider {
+    height: 1px;
+    background: linear-gradient(to right, #e2e8f0, transparent);
+    margin: 16px 0 16px 16px;
+}
+
+.icon {
+    display: inline-block;
+    margin-right: 6px;
+    font-size: 16px;
+}
+
+.progress-bar {
+    margin-top: 8px;
+    height: 6px;
+    background: #f1f5f9;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(to right, #1e88e5, #43a047);
+    border-radius: 3px;
+    transition: width 0.6s ease;
+}
