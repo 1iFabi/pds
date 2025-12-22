@@ -5,7 +5,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Q
 from .authentication import JWTAuthentication
-from .models import UserSNP
+from .models import UserSNP, SNP
 import sys
 
 
@@ -27,6 +27,10 @@ class BiomarkersAPIView(APIView):
             .filter(biom_filter)
             .select_related("snp")
         )
+
+        # Contar total global de biomarcadores disponibles en la base de datos
+        global_filter = Q(categoria__icontains="biomarc") | Q(grupo__icontains="biomarc")
+        global_total = SNP.objects.filter(global_filter).count()
 
         biomarkers = []
         risk_counts = {"bajo": 0, "medio": 0, "alto": 0}
@@ -71,6 +75,7 @@ class BiomarkersAPIView(APIView):
         return Response({
             "success": True,
             "total": len(biomarkers),
+            "global_total": global_total,
             "risk_distribution": risk_counts,
             "biomarkers": biomarkers,
         })
