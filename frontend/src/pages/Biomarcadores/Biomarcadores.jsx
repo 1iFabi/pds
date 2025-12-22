@@ -5,7 +5,7 @@ import { API_ENDPOINTS, apiRequest, clearToken } from '../../config/api';
 import Sidebar from '../../components/Sidebar/Sidebar';
 import SectionHeader from '../../components/SectionHeader/SectionHeader';
 import SemiGauge from '../../components/SemiGauge/SemiGauge';
-import BiomarkerStats from '../../components/BiomarkerStats/BiomarkerStats';
+import BiomarkerStats from '../../components/BioMarkerStats/BiomarkerStats';
 import './Biomarcadores.css';
 
 const Biomarcadores = () => {
