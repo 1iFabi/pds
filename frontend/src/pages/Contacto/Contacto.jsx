@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { HashLink } from 'react-router-hash-link';
 import { apiRequest, API_ENDPOINTS } from "../../config/api";
 import "./Contacto.css";
 
@@ -114,13 +113,13 @@ export default function Contacto() {
             <nav className="ft__menu" aria-label="Menú">
               <h4 className="ft__title">Menú</h4>
               <ul className="ft__list">
-                <li><HashLink smooth to="/#inicio">Inicio</HashLink></li>
-                <li><HashLink smooth to="/#learn-more">Descubre</HashLink></li>
-                <li><HashLink smooth to="/#conoce">Conoce</HashLink></li>
-                <li><HashLink smooth to="/#obten">Obtén el Tuyo</HashLink></li>
-                <li><HashLink smooth to="/#preguntas">Preguntas Frecuentes</HashLink></li>
-                <li><HashLink smooth to="/#equipo">Equipo</HashLink></li>
-                <li><HashLink smooth to="/#contacto">Contacto</HashLink></li>
+                <li><a href="/#inicio">Inicio</a></li>
+                <li><a href="/#learn-more">Descubre</a></li>
+                <li><a href="/#conoce">Conoce</a></li>
+                <li><a href="/#obten">Obtén el Tuyo</a></li>
+                <li><a href="/#preguntas">Preguntas Frecuentes</a></li>
+                <li><a href="/#equipo">Equipo</a></li>
+                <li><a href="/#contacto">Contacto</a></li>
               </ul>
             </nav>
           </div>
