@@ -2,7 +2,6 @@
 import "./Navbar.css";
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { HashLink } from "react-router-hash-link";
 import SpinningCoin from "../SpinningCoin/SpinningCoin.jsx";
 
 
@@ -182,18 +181,18 @@ const Navbar = ({ theme: forcedTheme }) => {
       >
         {/* izquierda: links desktop */}
         <div className="nav-left nav-desktop">
-          <HashLink smooth to="/#inicio">
+          <a href="/#inicio">
             Inicio
-          </HashLink>
-          <HashLink smooth to="/#learn-more">
+          </a>
+          <a href="/#learn-more">
             Descubre
-          </HashLink>
-          <HashLink smooth to="/#conoce">
+          </a>
+          <a href="/#conoce">
             Conoce
-          </HashLink>
-          <HashLink smooth to="/#obten">
+          </a>
+          <a href="/#obten">
             Obtén el Tuyo
-          </HashLink>
+          </a>
         </div>
 
         {/* centro (logo) */}
@@ -209,9 +208,9 @@ const Navbar = ({ theme: forcedTheme }) => {
 
         {/* derecha: links desktop */}
         <div className="nav-right nav-desktop">
-          <HashLink smooth to="/#preguntas">Preguntas</HashLink>
-          <HashLink smooth to="/#equipo">Equipo</HashLink>
-          <HashLink smooth to="/#contacto">Contacto</HashLink>
+          <a href="/#preguntas">Preguntas</a>
+          <a href="/#equipo">Equipo</a>
+          <a href="/#contacto">Contacto</a>
           <Link to="/login" className="login-btn">Inicia Sesión</Link>
         </div>
 
@@ -285,30 +284,30 @@ const Navbar = ({ theme: forcedTheme }) => {
           </div>
 
           <nav className="drawer-links">
-            <HashLink smooth to="/#inicio" onClick={closeAnd()}>
+            <a href="/#inicio" onClick={closeAnd()}>
               Inicio
-            </HashLink>
-            <HashLink smooth to="/#learn-more" onClick={closeAnd()}>
+            </a>
+            <a href="/#learn-more" onClick={closeAnd()}>
               Descubre
-            </HashLink>
-            <HashLink smooth to="/#conoce" onClick={closeAnd()}>
+            </a>
+            <a href="/#conoce" onClick={closeAnd()}>
               Conoce
-            </HashLink>
-            <HashLink smooth to="/#obten" onClick={closeAnd()}>
+            </a>
+            <a href="/#obten" onClick={closeAnd()}>
               Obtén el Tuyo
-            </HashLink>
+            </a>
 
             <div className="drawer-sep" />
 
-            <HashLink smooth to="/#preguntas" onClick={closeAnd()}>
+            <a href="/#preguntas" onClick={closeAnd()}>
               Preguntas
-            </HashLink>
-            <HashLink smooth to="/#equipo" onClick={closeAnd()}>
+            </a>
+            <a href="/#equipo" onClick={closeAnd()}>
               Equipo
-            </HashLink>
-            <HashLink smooth to="/#contacto" onClick={closeAnd()}>
+            </a>
+            <a href="/#contacto" onClick={closeAnd()}>
               Contacto
-            </HashLink>
+            </a>
 
             <Link to="/login" className="login-btn" onClick={closeAnd()}>
               Inicia Sesión
