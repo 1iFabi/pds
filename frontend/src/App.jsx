@@ -1,6 +1,5 @@
 // src/App.jsx
-import { useEffect } from "react";
-import { Routes, Route, useLocation, Navigate, useNavigate } from "react-router-dom";
+import { Routes, Route, useLocation, Navigate } from "react-router-dom";
 import Navbar from "./components/Navbar/Navbar";
 import Hero from "./pages/Hero/Hero";
 import Descubre from "./pages/Descubre/Descubre";
@@ -19,30 +18,13 @@ import Enfermedades from "./pages/Enfermedades/Enfermedades";
 import AdminReports from "./pages/Postlogin/AdminReports";
 
 export default function App() {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const { pathname } = location;
-  const scrollTarget = location.state?.scrollTo;
+  const { pathname } = useLocation();
   const hideNavbar =
     pathname === "/login" ||
     pathname === "/register" ||
     pathname === "/no-purchased" ||
     pathname === "/pending" ||
     pathname.startsWith("/dashboard");
-
-  useEffect(() => {
-    if (pathname !== "/" || !scrollTarget) return;
-    const target = document.getElementById(scrollTarget);
-    if (target) {
-      const prefersReducedMotion =
-        window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-      target.scrollIntoView({
-        behavior: prefersReducedMotion ? "auto" : "smooth",
-        block: "start",
-      });
-    }
-    navigate(pathname, { replace: true, state: null });
-  }, [navigate, pathname, scrollTarget]);
 
   return (
     <>

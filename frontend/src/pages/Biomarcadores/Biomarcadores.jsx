@@ -100,9 +100,9 @@ const Biomarcadores = () => {
   };
 
   const biomarkerRiskConfig = {
-    alto: { color: '#8b5cf6' },
-    medio: { color: '#06b6d4' },
-    bajo: { color: '#f59e0b' },
+    alto: { color: '#ef4444' }, // Rojo
+    medio: { color: '#f59e0b' }, // Ámbar/Amarillo
+    bajo: { color: '#10b981' }, // Verde
   };
 
   return (
@@ -243,7 +243,7 @@ const Biomarcadores = () => {
                             e.stopPropagation();
                             setExpandedCard(expandedCard === bio.id ? null : bio.id);
                           }}
-                          className="expand-button"
+                          className={`expand-button ${getRiskClass(bio.userResult?.risk)}`}
                         >
                           {expandedCard === bio.id ? (
                             <>

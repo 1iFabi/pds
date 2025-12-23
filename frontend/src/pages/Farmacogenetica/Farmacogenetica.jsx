@@ -63,19 +63,25 @@ const Farmacogenetica = () => {
     gastroenterologia: '#10b981',
     'salud osea y reumatologia': '#f59e0b',
     oncologia: '#ef4444',
+    otros: '#607d8b',
     // Claves con tilde por si el backend las envía acentuadas
     'cardiología': '#3b82f6',
     'salud mental y neurología': '#8b5cf6',
     'gastroenterología': '#10b981',
     'salud ósea y reumatología': '#f59e0b',
     'oncología': '#ef4444',
+    'otros (sin sistema asignado)': '#607d8b',
   };
+
+  const fallbackPalette = ['#0ea5e9', '#f97316', '#22c55e', '#a855f7', '#6366f1', '#14b8a6', '#f43f5e', '#f59e0b'];
 
   const normalizeName = (str = '') => (
     str
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
       .toLowerCase()
+      .replace(/\s+/g, ' ')
+      .trim()
   );
 
   // UMBRALES UNIFICADOS (Deben coincidir con SunburstChart.jsx)
@@ -101,11 +107,23 @@ const Farmacogenetica = () => {
       const uResp = await apiRequest(API_ENDPOINTS.ME, { method: 'GET' });
       if (uResp.ok) setUser(uResp.data.user || uResp.data);
       
+      const hashString = (str) => {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+          hash = ((hash << 5) - hash) + str.charCodeAt(i);
+          hash |= 0; // Convert to 32bit int
+        }
+        return Math.abs(hash);
+      };
+
       const pResp = await apiRequest(API_ENDPOINTS.PHARMACOGENETICS, { method: 'GET' });
       if (pResp.ok && pResp.data && pResp.data.data) {
         setPharmaData(pResp.data.data.map(sys => {
-          const key = normalizeName(sys.name);
-          const color = sys.color || systemColors[key] || '#64748b';
+          const key = normalizeName(sys.name || sys.system_name || '');
+          const apiColor = sys.color || sys.system_color || sys.system?.color;
+          const paletteColor = systemColors[key];
+          const hashedColor = fallbackPalette[hashString(key) % fallbackPalette.length];
+          const color = apiColor || paletteColor || hashedColor || '#64748b';
           return { ...sys, color };
         }));
       }

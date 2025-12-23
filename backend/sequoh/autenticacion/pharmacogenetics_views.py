@@ -1,9 +1,27 @@
+import unicodedata
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.db.models import Q
 from .authentication import JWTAuthentication
 from .models import UserSNP, PharmacogeneticSystem
+
+
+def _normalize(text: str) -> str:
+    """Lowercase, remove diacritics and collapse spaces."""
+    if not text:
+        return ""
+    text = unicodedata.normalize("NFD", text)
+    text = "".join(ch for ch in text if unicodedata.category(ch) != "Mn")
+    return " ".join(text.lower().split())
+
+
+def _hash_color_index(text: str, modulo: int) -> int:
+    h = 0
+    for ch in text:
+        h = ((h << 5) - h) + ord(ch)
+        h &= 0xFFFFFFFF
+    return abs(h) % max(1, modulo)
 
 
 class PharmacogeneticsAPIView(APIView):
@@ -13,29 +31,33 @@ class PharmacogeneticsAPIView(APIView):
     def get(self, request):
         user = request.user
 
-        systems = list(PharmacogeneticSystem.objects.all().order_by('id'))
+        systems = list(PharmacogeneticSystem.objects.all().order_by("id"))
         base_palette = ['#F48FB1', '#00BCD4', '#9C27B0', '#3F51B5', '#FF5722', '#4CAF50', '#FFC107']
+        fallback_palette = ['#0ea5e9', '#f97316', '#22c55e', '#a855f7', '#6366f1', '#14b8a6', '#f43f5e', '#f59e0b']
+
+        # Colores indexados por nombre normalizado
         system_color_by_name = {}
+        system_color_by_id = {}
         for idx, sys in enumerate(systems):
-            system_color_by_name[sys.name.lower()] = base_palette[idx % len(base_palette)]
+            key = _normalize(sys.name)
+            color = base_palette[idx % len(base_palette)]
+            system_color_by_name[key] = color
+            system_color_by_id[sys.id] = color
         system_color_by_name['otros'] = '#607D8B'
 
         heuristics = [
             ('Cardiologia', ['cardio', 'warfar', 'clopidogrel', 'estat', 'asa', 'aspirina', 'anticoag', 'antiagreg']),
-            ('Salud Mental y Neurología', ['psiq', 'depres', 'ansied', 'neurol', 'ssri', 'snri', 'parox', 'sertral', 'fluox', 'antipsi']),
+            ('Salud Mental y Neurologia', ['psiq', 'depres', 'ansied', 'neurol', 'ssri', 'snri', 'parox', 'sertral', 'fluox', 'antipsi']),
             ('Gastroenterologia', ['gastro', 'prazol', 'omepraz', 'pantopraz', 'reflujo', 'ulcera']),
-            ('Salud Ósea y Reumatologia', ['osea', 'hueso', 'reuma', 'osteop', 'vit d', 'calcio']),
+            ('Salud Osea y Reumatologia', ['osea', 'hueso', 'reuma', 'osteop', 'vit d', 'calcio']),
             ('Oncologia', ['onco', 'tumor', 'cancer', 'leucem', 'quimio', 'chemo']),
         ]
-        system_color_by_id = {}
-        for sys in systems:
-            system_color_by_id[sys.id] = system_color_by_name.get(sys.name.lower(), '#607D8B')
-        palette_idx = len(systems)
-        for name, _keys in heuristics:
-            key = name.lower()
-            if key not in system_color_by_name:
-                system_color_by_name[key] = base_palette[palette_idx % len(base_palette)]
-                palette_idx += 1
+        heuristics_norm = [(_normalize(name), [k.lower() for k in keys]) for name, keys in heuristics]
+        # Asegurar color para heurísticas aunque no existan sistemas en DB
+        for name_norm, _ in heuristics_norm:
+            if name_norm not in system_color_by_name:
+                idx = len(system_color_by_name)
+                system_color_by_name[name_norm] = base_palette[idx % len(base_palette)]
 
         pharm_filter = Q(snp__categoria__icontains='farmaco') | Q(snp__grupo__icontains='farmaco')
         user_snps = (
@@ -47,21 +69,33 @@ class PharmacogeneticsAPIView(APIView):
         best_by_key = {}
 
         def resolve_system(snp):
+            # 1) FK explícita
             if snp.pharmacogenetic_system_id:
                 s = next((x for x in systems if x.id == snp.pharmacogenetic_system_id), None)
                 if s:
                     name = s.name
-                    color = system_color_by_id.get(s.id) or system_color_by_name.get(name.lower(), '#607D8B')
-                    return name.lower(), name, s.description or f"Analisis de farmacos para {name}", color
-            text = " ".join([
+                    norm = _normalize(name)
+                    color = system_color_by_id.get(s.id) or system_color_by_name.get(norm, '#607D8B')
+                    return norm, name, s.description or f"Analisis de farmacos para {name}", color
+
+            # 2) Heurística
+            raw_parts = [
                 str(getattr(snp, 'grupo', '') or ''),
                 str(getattr(snp, 'categoria', '') or ''),
                 str(getattr(snp, 'fenotipo', '') or '')
-            ]).lower()
-            for name, keys in heuristics:
-                if any(k in text for k in keys):
-                    return name.lower(), name, f"Analisis de farmacos para {name}", system_color_by_name.get(name.lower(), '#607D8B')
-            return 'otros', 'Otros', 'Farmacos sin sistema asignado', system_color_by_name.get('otros', '#607D8B')
+            ]
+            text_norm = _normalize(" ".join(raw_parts))
+            for name_norm, keys in heuristics_norm:
+                if any(k in text_norm for k in keys):
+                    color = system_color_by_name.get(name_norm) or fallback_palette[_hash_color_index(name_norm, len(fallback_palette))]
+                    pretty = name_norm.title()
+                    return name_norm, pretty, f"Analisis de farmacos para {pretty}", color
+
+            # 3) Usar categoria/grupo como sistema dinámico para evitar colapsar en "Otros"
+            cat = (snp.categoria or snp.grupo or "Otros").strip() or "Otros"
+            name_norm = _normalize(cat)
+            color = system_color_by_name.get(name_norm) or fallback_palette[_hash_color_index(name_norm, len(fallback_palette))]
+            return name_norm or 'otros', cat or 'Otros', cat or 'Farmacos sin sistema asignado', color
 
         for us in user_snps:
             snp = us.snp
