@@ -82,7 +82,10 @@ const Farmacogenetica = () => {
       
       const pResp = await apiRequest(API_ENDPOINTS.PHARMACOGENETICS, { method: 'GET' });
       if (pResp.ok && pResp.data && pResp.data.data) {
-        setPharmaData(pResp.data.data.map(sys => ({ ...sys, color: systemColors[sys.name] || '#64748b' })));
+        setPharmaData(pResp.data.data.map(sys => ({
+          ...sys,
+          color: sys.color || systemColors[sys.name] || '#64748b',
+        })));
       }
       setLoading(false);
     };
