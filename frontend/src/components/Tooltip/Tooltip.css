@@ -7,39 +7,45 @@
 
 .tooltip-content {
     position: absolute;
-    top: calc(100% + 8px); /* Changed from bottom to top */
+    top: calc(100% + 10px);
     left: 50%;
     transform: translateX(-50%);
-    background-color: #1F2937;
-    color: #F3F4F6;
-    padding: 8px 12px;
-    border-radius: 6px;
-    font-size: 12px;
-    line-height: 1.5;
-    z-index: 10;
+    background-color: rgba(15, 23, 42, 0.95); /* Slate-900 with slight transparency */
+    color: #ffffff;
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    line-height: 1.4;
+    z-index: 50;
     width: max-content;
-    max-width: 250px;
-    text-align: center;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    animation: tooltip-fade-in 0.2s ease-out;
+    max-width: 260px;
+    text-align: left;
+    box-shadow: 
+        0 10px 15px -3px rgba(0, 0, 0, 0.1), 
+        0 4px 6px -2px rgba(0, 0, 0, 0.05),
+        0 0 0 1px rgba(255, 255, 255, 0.1); /* Subtle border */
+    backdrop-filter: blur(4px);
+    animation: tooltip-slide-up 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     pointer-events: none;
 }
 
+/* Arrow */
 .tooltip-content::after {
     content: '';
     position: absolute;
-    bottom: 100%; /* Changed from top to bottom */
+    bottom: 100%;
     left: 50%;
     transform: translateX(-50%);
-    border-width: 5px;
+    border-width: 6px;
     border-style: solid;
-    border-color: transparent transparent #1F2937 transparent; /* Changed arrow direction */
+    border-color: transparent transparent rgba(15, 23, 42, 0.95) transparent;
 }
 
-@keyframes tooltip-fade-in {
+@keyframes tooltip-slide-up {
     from {
         opacity: 0;
-        transform: translateX(-50%) translateY(-4px); /* Adjusted for downward animation */
+        transform: translateX(-50%) translateY(4px);
     }
     to {
         opacity: 1;
