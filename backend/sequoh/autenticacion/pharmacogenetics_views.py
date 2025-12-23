@@ -27,6 +27,15 @@ class PharmacogeneticsAPIView(APIView):
             ('Salud Ósea y Reumatologia', ['osea', 'hueso', 'reuma', 'osteop', 'vit d', 'calcio']),
             ('Oncologia', ['onco', 'tumor', 'cancer', 'leucem', 'quimio', 'chemo']),
         ]
+        system_color_by_id = {}
+        for sys in systems:
+            system_color_by_id[sys.id] = system_color_by_name.get(sys.name.lower(), '#607D8B')
+        palette_idx = len(systems)
+        for name, _keys in heuristics:
+            key = name.lower()
+            if key not in system_color_by_name:
+                system_color_by_name[key] = base_palette[palette_idx % len(base_palette)]
+                palette_idx += 1
 
         pharm_filter = Q(snp__categoria__icontains='farmaco') | Q(snp__grupo__icontains='farmaco')
         user_snps = (
@@ -42,7 +51,8 @@ class PharmacogeneticsAPIView(APIView):
                 s = next((x for x in systems if x.id == snp.pharmacogenetic_system_id), None)
                 if s:
                     name = s.name
-                    return name.lower(), name, s.description or f"Analisis de farmacos para {name}", system_color_by_name.get(name.lower(), '#607D8B')
+                    color = system_color_by_id.get(s.id) or system_color_by_name.get(name.lower(), '#607D8B')
+                    return name.lower(), name, s.description or f"Analisis de farmacos para {name}", color
             text = " ".join([
                 str(getattr(snp, 'grupo', '') or ''),
                 str(getattr(snp, 'categoria', '') or ''),
