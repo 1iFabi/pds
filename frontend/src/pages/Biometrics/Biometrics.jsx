@@ -189,7 +189,7 @@ const Biometrics = () => {
       <main className="biometrics-layout__main">
         <div className="biometrics-page">
           <SectionHeader
-            title="Biometricas Geneticas"
+            title="Biométricas"
             subtitle="Analisis de tus predisposiciones geneticas segun datos biometricos"
             icon={Dna}
           />
@@ -213,7 +213,6 @@ const Biometrics = () => {
               {/* Resumen Global */}
               <div className="bio-summary-card">
                 <div className="bio-summary-title">
-                  <Sparkles size={20} />
                   <h3>Resumen Global de Factores</h3>
                 </div>
                 <div className="bio-summary-grid">
