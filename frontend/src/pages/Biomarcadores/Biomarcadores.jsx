@@ -210,13 +210,6 @@ const Biomarcadores = () => {
                           </div>
                         </div>
 
-                        <div className="phenotype-box">
-                          <p className="phenotype-text">
-                            <Activity size={20} className="icon-activity" />
-                            {bio.userResult?.phenotype || 'Sin descripción'}
-                          </p>
-                        </div>
-
                         <div className="gauge-container">
                           <div className="gauge-labels">
                             <span>Baja</span>
