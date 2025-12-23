@@ -1,0 +1,254 @@
+/* DiseaseCard.css - Adapted from Biomarcadores.css */
+
+.disease-card {
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  border: 2px solid;
+  transition: all 0.3s ease;
+  margin-bottom: 1.5rem;
+}
+
+.disease-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 25px rgba(0, 0, 0, 0.15);
+}
+
+.disease-card.risk-low {
+  background-color: #fffbeb;
+  border-color: #fde68a;
+}
+
+.disease-card.risk-medium {
+  background-color: #ecfeff;
+  border-color: #a5f3fc;
+}
+
+.disease-card.risk-high {
+  background-color: #f5f3ff;
+  border-color: #c4b5fd;
+}
+
+.dc-content {
+  padding: 1.5rem;
+}
+
+/* Header */
+.dc-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.dc-info {
+  flex: 1;
+}
+
+.dc-title {
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: #1e293b;
+  margin: 0 0 0.5rem 0;
+}
+
+.dc-meta {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #64748b;
+  margin-bottom: 0.25rem;
+}
+
+.dc-location {
+  font-size: 0.8rem;
+  color: #94a3b8;
+}
+
+/* Badge */
+.dc-badge {
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+  color: white;
+  font-weight: 600;
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.dc-badge.risk-low { background-color: #f59e0b; }
+.dc-badge.risk-medium { background-color: #06b6d4; }
+.dc-badge.risk-high { background-color: #8b5cf6; }
+
+/* Phenotype Box */
+.dc-phenotype-box {
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  margin-bottom: 1.25rem;
+  border: 1px solid rgba(0,0,0,0.05);
+}
+
+.dc-phenotype-text {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #334155;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.dc-icon-activity {
+  color: #3b82f6;
+  flex-shrink: 0;
+}
+
+/* Gauge */
+.dc-gauge-container {
+  margin-bottom: 1.5rem;
+}
+
+.dc-gauge-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.7rem;
+  color: #94a3b8;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.dc-gauge-bar {
+  position: relative;
+  height: 0.75rem;
+  background: linear-gradient(to right, #fde68a, #a5f3fc, #c4b5fd); /* Gradient matched to risks */
+  border-radius: 999px;
+}
+
+.dc-gauge-indicator {
+  position: absolute;
+  top: 50%;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 50%;
+  border: 3px solid white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  transform: translate(-50%, -50%);
+  transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.disease-card.risk-low .dc-gauge-indicator { left: 20%; background-color: #f59e0b; }
+.disease-card.risk-medium .dc-gauge-indicator { left: 50%; background-color: #06b6d4; }
+.disease-card.risk-high .dc-gauge-indicator { left: 80%; background-color: #8b5cf6; }
+
+/* Stats Grid */
+.dc-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.dc-stat-box {
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  text-align: center;
+}
+
+.dc-stat-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.dc-stat-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+.dc-stat-value {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.dc-magnitude-bars {
+  display: flex;
+  gap: 0.35rem;
+  justify-content: center;
+  margin-top: 0.5rem;
+}
+
+.dc-magnitude-bar {
+  height: 0.5rem;
+  flex: 1;
+  border-radius: 999px;
+  background-color: #e2e8f0;
+}
+
+.disease-card.risk-low .dc-magnitude-bar.active { background-color: #f59e0b; }
+.disease-card.risk-medium .dc-magnitude-bar.active { background-color: #06b6d4; }
+.disease-card.risk-high .dc-magnitude-bar.active { background-color: #8b5cf6; }
+
+/* Expand Button */
+.dc-expand-btn {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: #f1f5f9;
+  color: #64748b;
+  border: none;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.2s;
+  font-size: 0.85rem;
+}
+
+.dc-expand-btn:hover {
+  background-color: #e2e8f0;
+  color: #1e293b;
+}
+
+/* Expanded Area */
+.dc-expanded {
+  border-top: 1px solid #f1f5f9;
+  background: rgba(255, 255, 255, 0.8);
+  padding: 1.5rem;
+}
+
+.dc-expanded h4 {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #94a3b8;
+  margin-bottom: 0.5rem;
+}
+
+.dc-description {
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: #475569;
+  margin-bottom: 1.5rem;
+}
+
+.dc-ancestry-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: white;
+  border: 1px solid #e2e8f0;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  color: #334155;
+  font-weight: 500;
+}
