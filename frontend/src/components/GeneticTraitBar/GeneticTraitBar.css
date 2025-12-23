@@ -150,14 +150,22 @@
   box-shadow: 0 1px 2px rgba(0,0,0,0.03);
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.35rem;
   transition: transform 0.2s, box-shadow 0.2s;
+  position: relative;
 }
 
 .genetic-trait-bar__grid-item:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
   border-color: #e2e8f0;
+}
+
+.genetic-trait-bar__label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
 }
 
 .genetic-trait-bar__label {

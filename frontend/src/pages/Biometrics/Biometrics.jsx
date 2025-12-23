@@ -4,6 +4,7 @@ import { Dna, ChevronDown, Sparkles, Menu, X } from 'lucide-react';
 import Sidebar from '../../components/Sidebar/Sidebar';
 import SectionHeader from '../../components/SectionHeader/SectionHeader';
 import { API_ENDPOINTS, apiRequest, clearToken } from '../../config/api';
+import NalaTipButton from '../../components/Nala/NalaTipButton';
 import './Biometrics.css';
 
 const Biometrics = () => {
@@ -307,6 +308,18 @@ const Biometrics = () => {
                       ? Math.min(Math.round((item.magnitud / 3) * 100), 100)
                       : (baseScore / 3) * 100;
 
+                  const nalaQueries = {
+                    rsid: item.rsid ? `¿Qué es un rsID? (${item.rsid})` : "rsid",
+                    genotype: item.genotipo ? `¿Qué significa el genotipo ${item.genotipo}?` : "genotipo",
+                    impacto: item.impact ? `¿Qué significa impacto ${impactLabel(item.impact)}?` : "impacto",
+                    cromopos: "¿Qué significa cromosoma y posición?",
+                    categoria: item.categoria ? `¿Qué significa la categoría ${item.categoria}?` : "categoría",
+                    magnitud:
+                      item.magnitud !== null && item.magnitud !== undefined
+                        ? `¿Qué significa magnitud ${item.magnitud}?`
+                        : "magnitud",
+                  };
+
                   return (
                     <div key={item.id} className={`trait-bar ${isExpanded ? 'trait-bar--open' : ''}`}>
                       {/* Header */}
@@ -411,44 +424,62 @@ const Biometrics = () => {
                               className="grid"
                               style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}
                             >
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                                <span style={{ color: '#64748b', fontSize: '0.8rem', fontWeight: '600' }}>
-                                  RS ID
-                                </span>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                                <div className="bio-detail-label-row">
+                                  <span style={{ color: '#64748b', fontSize: '0.8rem', fontWeight: '600' }}>
+                                    RS ID
+                                  </span>
+                                  <NalaTipButton query={nalaQueries.rsid} ariaLabel="Pregúntale a Nala sobre RS ID" />
+                                </div>
                                 <span style={{ color: '#1e293b', fontWeight: '700' }}>{item.rsid}</span>
                               </div>
                               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                                <span style={{ color: '#64748b', fontSize: '0.8rem', fontWeight: '600' }}>
-                                  Genotipo
-                                </span>
+                                <div className="bio-detail-label-row">
+                                  <span style={{ color: '#64748b', fontSize: '0.8rem', fontWeight: '600' }}>
+                                    Genotipo
+                                  </span>
+                                  <NalaTipButton query={nalaQueries.genotype} ariaLabel="Pregúntale a Nala sobre genotipo" />
+                                </div>
                                 <span style={{ color: '#1e293b', fontWeight: '700' }}>{item.genotipo || 'NA'}</span>
                               </div>
                               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                                <span style={{ color: '#64748b', fontSize: '0.8rem', fontWeight: '600' }}>
-                                  Impacto
-                                </span>
+                                <div className="bio-detail-label-row">
+                                  <span style={{ color: '#64748b', fontSize: '0.8rem', fontWeight: '600' }}>
+                                    Impacto
+                                  </span>
+                                  <NalaTipButton query={nalaQueries.impacto} ariaLabel="Pregúntale a Nala sobre impacto" />
+                                </div>
                                 <span style={{ color, fontWeight: '700' }}>{impactLabel(item.impact)}</span>
                               </div>
                               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                                <span style={{ color: '#64748b', fontSize: '0.8rem', fontWeight: '600' }}>
-                                  Cromosoma / Posicion
-                                </span>
+                                <div className="bio-detail-label-row">
+                                  <span style={{ color: '#64748b', fontSize: '0.8rem', fontWeight: '600' }}>
+                                    Cromosoma / Posicion
+                                  </span>
+                                  <NalaTipButton query={nalaQueries.cromopos} ariaLabel="Pregúntale a Nala sobre cromosoma y posición" />
+                                </div>
                                 <span style={{ color: '#1e293b', fontWeight: '700' }}>
                                   {item.cromosoma || 'NA'} {item.posicion || ''}
                                 </span>
                               </div>
                               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                                <span style={{ color: '#64748b', fontSize: '0.8rem', fontWeight: '600' }}>
-                                  Categoria
-                                </span>
+                                <div className="bio-detail-label-row">
+                                  <span style={{ color: '#64748b', fontSize: '0.8rem', fontWeight: '600' }}>
+                                    Categoria
+                                  </span>
+                                  <NalaTipButton query={nalaQueries.categoria} ariaLabel="Pregúntale a Nala sobre categoría" />
+                                </div>
                                 <span style={{ color: '#1e293b', fontWeight: '700' }}>
                                   {item.categoria || 'Sin categoria'}
                                 </span>
                               </div>
                               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                                <span style={{ color: '#64748b', fontSize: '0.8rem', fontWeight: '600' }}>
-                                  Magnitud
-                                </span>
+                                <div className="bio-detail-label-row">
+                                  <span style={{ color: '#64748b', fontSize: '0.8rem', fontWeight: '600' }}>
+                                    Magnitud
+                                  </span>
+                                  <NalaTipButton query={nalaQueries.magnitud} ariaLabel="Pregúntale a Nala sobre magnitud" />
+                                </div>
                                 <span style={{ color: '#1e293b', fontWeight: '700' }}>
                                   {item.magnitud !== null && item.magnitud !== undefined ? item.magnitud : 'N/A'}
                                 </span>

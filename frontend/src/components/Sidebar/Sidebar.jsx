@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { createPortal } from 'react-dom'
-import { LogOut, Dna, Activity, Heart, Globe, Pill, TestTube, User, ChevronDown, ChevronUp, KeyRound, UserX, Bot, MessageCircle, Grid3x3, Menu, X, Settings, Upload } from 'lucide-react'
+import { LogOut, Dna, Activity, Heart, Globe, Pill, TestTube, User, ChevronDown, ChevronUp, KeyRound, UserX, MessageCircle, Grid3x3, Menu, X, Settings, Upload } from 'lucide-react'
 import ChangePasswordModal from '../ChangePasswordModal/ChangePasswordModal.jsx'
 import DeleteAccountModal from '../DeleteAccountModal/DeleteAccountModal.jsx'
 import UploadFileModal from '../UploadFileModal/UploadFileModal.jsx'
@@ -11,6 +11,7 @@ const defaultIcons = [Dna, Activity, Heart, Globe, Pill, TestTube]
 
 const Sidebar = ({ items = [], onLogout, user, isMobileMenuOpen = false, setIsMobileMenuOpen = () => {} }) => {
   const navigate = useNavigate()
+  const location = useLocation()
   const [isHovered, setIsHovered] = useState(false)
   const [isProfileExpanded, setIsProfileExpanded] = useState(false)
   const [isCategoriesExpanded, setIsCategoriesExpanded] = useState(false)
@@ -20,6 +21,8 @@ const Sidebar = ({ items = [], onLogout, user, isMobileMenuOpen = false, setIsMo
   const [isDeleteAccountModalOpen, setIsDeleteAccountModalOpen] = useState(false)
   const [isUploadFileModalOpen, setIsUploadFileModalOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+  const base = import.meta.env.BASE_URL || '/'
+  const nalaImg = `${base}nala.png`
 
   useEffect(() => {
     const checkMobile = () => {
@@ -34,7 +37,6 @@ const Sidebar = ({ items = [], onLogout, user, isMobileMenuOpen = false, setIsMo
     return () => window.removeEventListener('resize', checkMobile)
   }, [setIsMobileMenuOpen])
 
-  // Bloquear scroll del body cuando el menú está abierto en móviles
   useEffect(() => {
     if (!isMobile) return
     const html = document.documentElement
@@ -44,6 +46,13 @@ const Sidebar = ({ items = [], onLogout, user, isMobileMenuOpen = false, setIsMo
       html.style.overflow = prev || ''
     }
   }, [isMobileMenuOpen, isMobile])
+
+  useEffect(() => {
+    // Close mobile overlay on route change to avoid a stuck dark screen
+    if (isMobileMenuOpen) {
+      setIsMobileMenuOpen(false)
+    }
+  }, [location.pathname])
 
   const navItems = useMemo(() => {
     return items.map((it, idx) => {
@@ -92,7 +101,6 @@ const Sidebar = ({ items = [], onLogout, user, isMobileMenuOpen = false, setIsMo
 
   return (
     <>
-      {/* Overlay para cerrar el menú en móviles */}
       <div 
         className={`sidebar__overlay ${isMobile && isMobileMenuOpen ? 'sidebar__overlay--open' : ''}`}
         onClick={() => setIsMobileMenuOpen(false)}
@@ -226,7 +234,11 @@ const Sidebar = ({ items = [], onLogout, user, isMobileMenuOpen = false, setIsMo
             onClick={toggleAI}
             title={!isExpanded && !isMobile ? 'Pregúntale a Nala' : undefined}
           >
-            <Bot size={20} className="sidebar__nav-icon" />
+            <span
+              className="sidebar__nav-icon sidebar__nav-avatar"
+              style={{ backgroundImage: `url(${nalaImg})` }}
+              aria-hidden
+            />
             {(isExpanded || isMobile) && (
               <>
                 <span className="sidebar__nav-label">Pregúntale a Nala</span>
@@ -253,7 +265,6 @@ const Sidebar = ({ items = [], onLogout, user, isMobileMenuOpen = false, setIsMo
           )}
         </div>
 
-        {/* Sección de Administrador - Solo visible para staff */}
         {user?.is_staff && (
           <>
             {(isExpanded || isMobile) && <div className="sidebar__divider" />}

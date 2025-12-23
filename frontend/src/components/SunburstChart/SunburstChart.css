@@ -30,16 +30,19 @@
 }
 
 .center-label-top {
-  font-size: 12px;
-  font-weight: 800;
-  fill: #94a3b8;
-  letter-spacing: 0.1em;
+  font-size: 13px;
+  font-weight: 700;
+  fill: #334155;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
 .center-label-bottom {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
-  fill: #1e293b;
+  fill: #334155;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
 .sunburst-legend-integrated {
