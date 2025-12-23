@@ -1,12 +1,34 @@
 import React, { useState } from "react";
-import { HashLink } from 'react-router-hash-link';
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { apiRequest, API_ENDPOINTS } from "../../config/api";
 import "./Contacto.css";
 
 export default function Contacto() {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [showTermsModal, setShowTermsModal] = useState(false);
   const handleTermsClick = (e) => { e.preventDefault(); setShowTermsModal(true); };
   const handleCloseTermsModal = () => setShowTermsModal(false);
+
+  const scrollToSection = (id) => {
+    const target = document.getElementById(id);
+    if (!target) return;
+    const prefersReducedMotion =
+      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    target.scrollIntoView({
+      behavior: prefersReducedMotion ? "auto" : "smooth",
+      block: "start",
+    });
+  };
+
+  const handleNavClick = (id) => (event) => {
+    event.preventDefault();
+    if (location.pathname === "/") {
+      scrollToSection(id);
+      return;
+    }
+    navigate("/", { state: { scrollTo: id } });
+  };
   
   // Estados para el formulario de contacto
   const [formData, setFormData] = useState({
@@ -114,13 +136,13 @@ export default function Contacto() {
             <nav className="ft__menu" aria-label="Menú">
               <h4 className="ft__title">Menú</h4>
               <ul className="ft__list">
-                <li><HashLink smooth to="/#inicio">Inicio</HashLink></li>
-                <li><HashLink smooth to="/#learn-more">Descubre</HashLink></li>
-                <li><HashLink smooth to="/#conoce">Conoce</HashLink></li>
-                <li><HashLink smooth to="/#obten">Obtén el Tuyo</HashLink></li>
-                <li><HashLink smooth to="/#preguntas">Preguntas Frecuentes</HashLink></li>
-                <li><HashLink smooth to="/#equipo">Equipo</HashLink></li>
-                <li><HashLink smooth to="/#contacto">Contacto</HashLink></li>
+                <li><Link to="/" onClick={handleNavClick("inicio")}>Inicio</Link></li>
+                <li><Link to="/" onClick={handleNavClick("learn-more")}>Descubre</Link></li>
+                <li><Link to="/" onClick={handleNavClick("conoce")}>Conoce</Link></li>
+                <li><Link to="/" onClick={handleNavClick("obten")}>Obtén el Tuyo</Link></li>
+                <li><Link to="/" onClick={handleNavClick("preguntas")}>Preguntas Frecuentes</Link></li>
+                <li><Link to="/" onClick={handleNavClick("equipo")}>Equipo</Link></li>
+                <li><Link to="/" onClick={handleNavClick("contacto")}>Contacto</Link></li>
               </ul>
             </nav>
           </div>
