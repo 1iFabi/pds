@@ -31,10 +31,6 @@ const DiseaseCard = ({ disease, level }) => {
         <div className="dc-header">
           <div className="dc-info">
             <h2 className="dc-title">{disease.title}</h2>
-            <p className="dc-meta">{disease.rsId || 'N/A'}</p>
-            <p className="dc-location">
-              Cromosoma {disease.cromosoma || '-'} | Posición: {disease.posicion || '-'}
-            </p>
           </div>
           <div className={`dc-badge ${riskClass}`}>
             TU RIESGO: {riskLabel}
