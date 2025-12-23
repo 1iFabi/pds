@@ -1,147 +1,236 @@
 /* Farmacogenetica.css */
-.farmacogenetica-dashboard {
+.farmacogenetica-layout-new {
   display: flex;
   min-height: 100vh;
   background: #f8fafc;
-  font-family: 'Inter', system-ui, sans-serif;
 }
 
-.farmacogenetica-dashboard__main {
+.farmaco-main-content {
   flex: 1;
   padding: 1.5rem 2.5rem;
   overflow-y: auto;
 }
 
-.farmacogenetica-page {
+.farmaco-page-container {
   max-width: 1400px;
   margin: 0 auto;
 }
 
-.farmacogenetica-content-wrapper {
+.farmaco-grid-wrapper {
   display: grid;
   grid-template-columns: 1.2fr 1fr;
-  gap: 2.5rem;
+  gap: 3rem;
   margin-top: 2rem;
   align-items: start;
 }
 
-/* Sección Izquierda: Tarjetas e Impacto */
-.farmacogenetica-left {
+/* Listado de Sistemas */
+.farmaco-list-section {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1.5rem;
 }
 
-/* Tarjetas de Impacto Superior */
-.impact-cards {
+.impact-summary-row {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 1rem;
+  margin-bottom: 0.5rem;
 }
 
-/* Grid de Perfiles (Sistemas) */
-.profiles-grid {
+/* Nuevas Tarjetas Minimalistas de Impacto */
+.impact-summary-card-minimal {
+  background: white;
+  padding: 1rem 1.25rem;
+  border-radius: 0.75rem;
+  border: 1px solid #f1f5f9;
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 0.5rem;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+  transition: all 0.2s ease;
 }
 
-.profile-card {
-  background: white;
-  border-radius: 1.25rem;
-  border: 1px solid #e2e8f0;
-  border-left: 6px solid var(--group-color);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-  transition: all 0.3s ease;
-  overflow: hidden;
-}
-
-.profile-card:hover {
+.impact-summary-card-minimal:hover {
   transform: translateY(-2px);
-  box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  border-color: #e2e8f0;
 }
 
-.profile-info {
-  padding: 1.5rem;
-  background: linear-gradient(to right, white, #f8fafc);
+.impact-minimal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.profile-info h3 {
-  font-size: 1.25rem;
+.impact-minimal-count {
+  font-size: 1.5rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.impact-minimal-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.impact-minimal-label {
+  font-size: 0.85rem;
   font-weight: 700;
-  color: #1e293b;
-  margin: 0;
+  color: #334155;
+}
+
+.impact-minimal-sub {
+  font-size: 0.7rem;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+
+/* Tarjetas de Sistemas (Existentes pero pulidas) */
+.systems-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.system-card-new {
+  background: white;
+  border-radius: 1rem;
+  border: 1px solid #f1f5f9;
+  overflow: hidden;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+}
+
+.system-card-new:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.system-card-header {
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  background: white; /* Clean background */
+  transition: background 0.2s ease;
+}
+
+.system-card-header:hover {
+  background: #f8fafc;
+}
+
+.system-card-title-group {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 1rem;
 }
 
-.profile-info h3::before {
-  content: '';
-  width: 12px;
-  height: 12px;
+.system-dot {
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
-  background-color: var(--group-color);
-  box-shadow: 0 0 10px var(--group-color);
+  background-color: var(--accent);
+  box-shadow: 0 0 0 2px white, 0 0 0 3px var(--accent-light, #f1f5f9);
 }
 
-.profile-info p {
-  font-size: 0.9rem;
-  color: #64748b;
-  margin-top: 0.5rem;
-  line-height: 1.5;
+.system-card-new h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
 }
 
-/* Lista de Fármacos */
-.drug-list {
+.drug-count-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.75rem;
+  border-radius: 99px;
+  transition: transform 0.2s;
+}
+
+.chevron-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: #cbd5e1;
+  transition: transform 0.3s ease;
+}
+
+.chevron-icon.open { transform: rotate(180deg); color: #64748b; }
+
+.system-drug-list {
   padding: 0 1.5rem 1.5rem;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  background: white;
-  animation: slideDown 0.3s ease-out;
+  border-top: 1px solid #f1f5f9;
+  padding-top: 1.25rem;
+  background: #ffffff;
 }
 
-@keyframes slideDown {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* Sección Derecha: Gráfico */
-.farmacogenetica-right {
+/* Panel Derecho: Gráfico */
+.farmaco-chart-section {
   position: sticky;
   top: 2rem;
+}
+
+.chart-sticky-box {
   background: white;
   padding: 2rem;
-  border-radius: 2rem;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+  border-radius: 1.5rem;
+  border: 1px solid #f1f5f9;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
   display: flex;
   flex-direction: column;
   align-items: center;
-  min-height: 600px;
-  justify-content: center;
 }
 
-/* Responsive */
+.chart-header-minimal {
+  width: 100%;
+  margin-bottom: 2rem;
+  padding-bottom: 0.5rem;
+  /* border-bottom: 1px solid #f1f5f9; Optional: removed for cleaner look */
+  display: flex;
+  justify-content: center; /* Centered */
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+}
+
+.chart-header-minimal h4 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #475569;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.help-icon-minimal {
+  color: #cbd5e1;
+  cursor: help;
+  transition: color 0.2s;
+}
+
+.help-icon-minimal:hover {
+  color: #64748b;
+}
+
+.chart-tooltip-content {
+  text-align: left;
+  min-width: 200px;
+}
+
+/* Spinner */
+.loading-state { display: flex; justify-content: center; padding: 5rem; width: 100%; }
+.spinner-blue { width: 40px; height: 40px; border: 4px solid #f1f5f9; border-top-color: #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
 @media (max-width: 1200px) {
-  .farmacogenetica-content-wrapper {
-    grid-template-columns: 1fr;
-  }
-  
-  .farmacogenetica-right {
-    position: static;
-    order: -1;
-    min-height: auto;
-  }
-}
-
-@media (max-width: 768px) {
-  .impact-cards {
-    grid-template-columns: 1fr;
-  }
-  
-  .farmacogenetica-dashboard__main {
-    padding: 1.5rem 1rem;
-  }
+  .farmaco-grid-wrapper { grid-template-columns: 1fr; }
+  .farmaco-chart-section { order: -1; position: static; margin-bottom: 2rem; }
+  .chart-sticky-box { flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 2rem; }
+  .chart-header-minimal { width: 100%; justify-content: space-between; margin-bottom: 0; }
 }

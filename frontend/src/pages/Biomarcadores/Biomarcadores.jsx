@@ -193,7 +193,6 @@ const Biomarcadores = () => {
                     <div
                       key={bio.id}
                       className={`biomarker-card ${getRiskClass(bio.userResult?.risk)}`}
-                      onClick={() => setExpandedCard(expandedCard === bio.id ? null : bio.id)}
                     >
                       <div className="card-content">
                         <div className="card-header">
@@ -203,19 +202,12 @@ const Biomarcadores = () => {
                             </div>
                             <p className="card-id">{bio.id} — {bio.gene}</p>
                             <p className="card-location">
-                              Cromosoma {bio.chromosome || '-'} | Posicion: {bio.position || '-'}
+                              Cromosoma {bio.chromosome || '-'} | Posición: {bio.position || '-'}
                             </p>
                           </div>
                           <div className={`result-badge ${getRiskClass(bio.userResult?.risk)}`}>
                             TU RESULTADO: {bio.userGenotype || bio.userResult?.genotype || '-'}
                           </div>
-                        </div>
-
-                        <div className="phenotype-box">
-                          <p className="phenotype-text">
-                            <Activity size={20} className="icon-activity" />
-                            {bio.userResult?.phenotype || 'Sin descripcion'}
-                          </p>
                         </div>
 
                         <div className="gauge-container">
@@ -261,7 +253,7 @@ const Biomarcadores = () => {
                           ) : (
                             <>
                               <ChevronDown size={20} />
-                              Ver todos los genotipos posibles
+                              Ver tu genotipo detectado
                             </>
                           )}
                         </button>

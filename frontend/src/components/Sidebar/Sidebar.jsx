@@ -224,12 +224,12 @@ const Sidebar = ({ items = [], onLogout, user, isMobileMenuOpen = false, setIsMo
             type="button" 
             className="sidebar__nav-item sidebar__ai-toggle"
             onClick={toggleAI}
-            title={!isExpanded && !isMobile ? 'Pregunta a la IA' : undefined}
+            title={!isExpanded && !isMobile ? 'Pregúntale a Nala' : undefined}
           >
             <Bot size={20} className="sidebar__nav-icon" />
             {(isExpanded || isMobile) && (
               <>
-                <span className="sidebar__nav-label">Pregunta a la IA</span>
+                <span className="sidebar__nav-label">Pregúntale a Nala</span>
                 {isAIExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
               </>
             )}

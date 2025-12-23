@@ -1,8 +1,7 @@
 // src/components/Navbar/Navbar.jsx
 import "./Navbar.css";
 import { useEffect, useRef, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
-import { HashLink } from "react-router-hash-link";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import SpinningCoin from "../SpinningCoin/SpinningCoin.jsx";
 
 
@@ -16,6 +15,7 @@ const Navbar = ({ theme: forcedTheme }) => {
   const btnRef = useRef(null);
   const navRef = useRef(null);
   const location = useLocation();
+  const navigate = useNavigate();
 
 
   const activeTheme = forcedTheme || autoTheme;
@@ -173,6 +173,27 @@ const Navbar = ({ theme: forcedTheme }) => {
     if (typeof fn === "function") fn();
   };
 
+  const scrollToSection = (id) => {
+    const target = document.getElementById(id);
+    if (!target) return;
+    const prefersReducedMotion =
+      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    target.scrollIntoView({
+      behavior: prefersReducedMotion ? "auto" : "smooth",
+      block: "start",
+    });
+  };
+
+  const handleSectionClick = (id, { closeDrawer = false } = {}) => (event) => {
+    event.preventDefault();
+    if (closeDrawer) setIsOpen(false);
+    if (location.pathname === "/") {
+      scrollToSection(id);
+      return;
+    }
+    navigate("/", { state: { scrollTo: id } });
+  };
+
   return (
     <>
       <nav
@@ -182,18 +203,18 @@ const Navbar = ({ theme: forcedTheme }) => {
       >
         {/* izquierda: links desktop */}
         <div className="nav-left nav-desktop">
-          <HashLink smooth to="/#inicio">
+          <Link to="/" onClick={handleSectionClick("inicio")}>
             Inicio
-          </HashLink>
-          <HashLink smooth to="/#learn-more">
+          </Link>
+          <Link to="/" onClick={handleSectionClick("learn-more")}>
             Descubre
-          </HashLink>
-          <HashLink smooth to="/#conoce">
+          </Link>
+          <Link to="/" onClick={handleSectionClick("conoce")}>
             Conoce
-          </HashLink>
-          <HashLink smooth to="/#obten">
+          </Link>
+          <Link to="/" onClick={handleSectionClick("obten")}>
             Obtén el Tuyo
-          </HashLink>
+          </Link>
         </div>
 
         {/* centro (logo) */}
@@ -209,9 +230,9 @@ const Navbar = ({ theme: forcedTheme }) => {
 
         {/* derecha: links desktop */}
         <div className="nav-right nav-desktop">
-          <HashLink smooth to="/#preguntas">Preguntas</HashLink>
-          <HashLink smooth to="/#equipo">Equipo</HashLink>
-          <HashLink smooth to="/#contacto">Contacto</HashLink>
+          <Link to="/" onClick={handleSectionClick("preguntas")}>Preguntas</Link>
+          <Link to="/" onClick={handleSectionClick("equipo")}>Equipo</Link>
+          <Link to="/" onClick={handleSectionClick("contacto")}>Contacto</Link>
           <Link to="/login" className="login-btn">Inicia Sesión</Link>
         </div>
 
@@ -285,30 +306,30 @@ const Navbar = ({ theme: forcedTheme }) => {
           </div>
 
           <nav className="drawer-links">
-            <HashLink smooth to="/#inicio" onClick={closeAnd()}>
+            <Link to="/" onClick={handleSectionClick("inicio", { closeDrawer: true })}>
               Inicio
-            </HashLink>
-            <HashLink smooth to="/#learn-more" onClick={closeAnd()}>
+            </Link>
+            <Link to="/" onClick={handleSectionClick("learn-more", { closeDrawer: true })}>
               Descubre
-            </HashLink>
-            <HashLink smooth to="/#conoce" onClick={closeAnd()}>
+            </Link>
+            <Link to="/" onClick={handleSectionClick("conoce", { closeDrawer: true })}>
               Conoce
-            </HashLink>
-            <HashLink smooth to="/#obten" onClick={closeAnd()}>
+            </Link>
+            <Link to="/" onClick={handleSectionClick("obten", { closeDrawer: true })}>
               Obtén el Tuyo
-            </HashLink>
+            </Link>
 
             <div className="drawer-sep" />
 
-            <HashLink smooth to="/#preguntas" onClick={closeAnd()}>
+            <Link to="/" onClick={handleSectionClick("preguntas", { closeDrawer: true })}>
               Preguntas
-            </HashLink>
-            <HashLink smooth to="/#equipo" onClick={closeAnd()}>
+            </Link>
+            <Link to="/" onClick={handleSectionClick("equipo", { closeDrawer: true })}>
               Equipo
-            </HashLink>
-            <HashLink smooth to="/#contacto" onClick={closeAnd()}>
+            </Link>
+            <Link to="/" onClick={handleSectionClick("contacto", { closeDrawer: true })}>
               Contacto
-            </HashLink>
+            </Link>
 
             <Link to="/login" className="login-btn" onClick={closeAnd()}>
               Inicia Sesión
