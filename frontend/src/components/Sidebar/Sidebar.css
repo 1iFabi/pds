@@ -154,6 +154,17 @@
   opacity: 1;
 }
 
+.sidebar__nav-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  border: none;
+  box-shadow: none;
+}
+
 .sidebar__nav-label {
   white-space: nowrap;
   overflow: hidden;

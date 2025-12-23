@@ -60,12 +60,16 @@
     font-weight: 500;
 }
 
+.stat-item .stat-value {
+    color: #3b82f6; /* Azul por defecto para Base Global */
+}
+
 .stat-item.level-2 .stat-value {
-    color: #059669;
+    color: #10b981; /* Verde */
 }
 
 .stat-item.level-3 .stat-value {
-    color: #d97706;
+    color: #f59e0b; /* Ámbar */
 }
 
 .progress-bar {
