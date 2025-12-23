@@ -12,6 +12,7 @@ import Biomarcadores from '../Biomarcadores/Biomarcadores';
 import Biometrics from '../Biometrics/Biometrics';
 import Enfermedades from '../Enfermedades/Enfermedades';
 import Farmacogenetica from '../Farmacogenetica/Farmacogenetica';
+import NalaWidget from '../../components/Nala/NalaWidget';
 
 const PostloginRouter = () => {
   const [user, setUser] = useState(null);
@@ -85,7 +86,12 @@ const PostloginRouter = () => {
     );
   }
 
-  return <PostloginUser user={user} />;
+  return (
+    <>
+      <PostloginUser user={user} />
+      <NalaWidget />
+    </>
+  );
 };
 
 export default PostloginRouter;

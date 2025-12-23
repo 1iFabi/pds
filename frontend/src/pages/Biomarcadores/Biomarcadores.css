@@ -122,18 +122,18 @@
 }
 
 .biomarker-card.risk-bajo { 
-  background-color: #fffbeb; 
-  border-color: #fde68a; 
+  background-color: #f0fdf4; 
+  border-color: #bbf7d0; 
 }
 
 .biomarker-card.risk-medio { 
-  background-color: #ecfeff; 
-  border-color: #a5f3fc; 
+  background-color: #fffbeb; 
+  border-color: #fef08a; 
 }
 
 .biomarker-card.risk-alto { 
-  background-color: #f5f3ff; 
-  border-color: #c4b5fd; 
+  background-color: #fef2f2; 
+  border-color: #fecaca; 
 }
 
 .card-content { 
@@ -184,15 +184,15 @@
 }
 
 .result-badge.risk-bajo { 
-  background-color: #f59e0b; 
+  background-color: #10b981; 
 }
 
 .result-badge.risk-medio { 
-  background-color: #06b6d4; 
+  background-color: #f59e0b; 
 }
 
 .result-badge.risk-alto { 
-  background-color: #8b5cf6; 
+  background-color: #ef4444; 
 }
 
 .phenotype-box {
@@ -234,7 +234,7 @@
 .gauge-bar { 
   position: relative; 
   height: 2rem; 
-  background: linear-gradient(to right, #fde68a, #a5f3fc, #c4b5fd); 
+  background: linear-gradient(to right, #bbf7d0, #fef08a, #fecaca); 
   border-radius: 9999px;
   overflow: visible;
 }
@@ -254,17 +254,17 @@
 
 .risk-bajo .gauge-indicator { 
   left: 20%; 
-  background-color: #f59e0b; 
+  background-color: #10b981; 
 }
 
 .risk-medio .gauge-indicator { 
   left: 50%; 
-  background-color: #06b6d4; 
+  background-color: #f59e0b; 
 }
 
 .risk-alto .gauge-indicator { 
   left: 80%; 
-  background-color: #8b5cf6; 
+  background-color: #ef4444; 
 }
 
 .stats-grid { 
@@ -313,15 +313,15 @@
 }
 
 .risk-bajo .magnitude-bar.active { 
-  background-color: #f59e0b; 
+  background-color: #10b981; 
 }
 
 .risk-medio .magnitude-bar.active { 
-  background-color: #06b6d4; 
+  background-color: #f59e0b; 
 }
 
 .risk-alto .magnitude-bar.active { 
-  background-color: #8b5cf6; 
+  background-color: #ef4444; 
 }
 
 .stat-value { 
@@ -347,7 +347,6 @@
 .expand-button {
   width: 100%;
   padding: 0.75rem;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
   color: white;
   border: none;
   border-radius: 0.75rem;
@@ -359,13 +358,36 @@
   gap: 0.5rem;
   transition: all 0.3s;
   font-size: 0.85rem;
-  box-shadow: 0 4px 6px rgba(99, 102, 241, 0.3);
 }
 
-.expand-button:hover { 
-  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+.expand-button.risk-bajo {
+  background: #10b981;
+  box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3);
+}
+.expand-button.risk-bajo:hover {
+  background: #059669;
   transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 6px 12px rgba(16, 185, 129, 0.4);
+}
+
+.expand-button.risk-medio {
+  background: #f59e0b;
+  box-shadow: 0 4px 6px rgba(245, 158, 11, 0.3);
+}
+.expand-button.risk-medio:hover {
+  background: #d97706;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(245, 158, 11, 0.4);
+}
+
+.expand-button.risk-alto {
+  background: #ef4444;
+  box-shadow: 0 4px 6px rgba(239, 68, 68, 0.3);
+}
+.expand-button.risk-alto:hover {
+  background: #dc2626;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(239, 68, 68, 0.4);
 }
 
 .expanded-table { 
@@ -417,15 +439,15 @@
 }
 
 .risk-badge.risk-bajo { 
-  background-color: #f59e0b; 
+  background-color: #10b981; 
 }
 
 .risk-badge.risk-medio { 
-  background-color: #06b6d4; 
+  background-color: #f59e0b; 
 }
 
 .risk-badge.risk-alto { 
-  background-color: #8b5cf6; 
+  background-color: #ef4444; 
 }
 
 /* Loading and Error States */
