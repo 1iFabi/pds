@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Menu, X, ChevronDown, AlertCircle, AlertTriangle, Info, Zap, Activity, HelpCircle } from 'lucide-react';
+import { Menu, X, ChevronDown, AlertCircle, AlertTriangle, Info, Zap, Activity, HelpCircle, FilterX } from 'lucide-react';
 import { API_ENDPOINTS, apiRequest, clearToken } from '../../config/api';
 import Sidebar from '../../components/Sidebar/Sidebar';
 import SectionHeader from '../../components/SectionHeader/SectionHeader';
@@ -23,11 +23,18 @@ const farmacoPriorityConfig = {
   bajo: { icon: Info, accentColor: "#10b981", label: "Uso Estándar", sub: "Respuesta típica esperada" },
 };
 
-const ImpactSummaryCard = ({ level, count }) => {
+const ImpactSummaryCard = ({ level, count, onClick, isActive }) => {
   const config = farmacoPriorityConfig[level];
   const Icon = config.icon;
   return (
-    <div className="impact-summary-card-minimal">
+    <div 
+      className={cn(
+        `impact-summary-card-minimal impact-summary-card-minimal--${level}`,
+        isActive && "impact-card-active"
+      )}
+      onClick={onClick}
+      style={{ cursor: 'pointer' }}
+    >
       <div className="impact-minimal-header">
         <Icon size={20} color={config.accentColor} />
         <span className="impact-minimal-count" style={{ color: config.accentColor }}>{count}</span>
@@ -48,14 +55,28 @@ const Farmacogenetica = () => {
   const [expandedGroups, setExpandedGroups] = useState({});
   const [pharmaData, setPharmaData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedRiskFilter, setSelectedRiskFilter] = useState('all');
 
   const systemColors = {
-    'Cardiología': '#3b82f6',
-    'Salud Mental y Neurología': '#8b5cf6',
-    'Gastroenterología': '#10b981',
-    'Salud Ósea y Reumatología': '#f59e0b',
-    'Oncología': '#ef4444',
+    cardiologia: '#3b82f6',
+    'salud mental y neurologia': '#8b5cf6',
+    gastroenterologia: '#10b981',
+    'salud osea y reumatologia': '#f59e0b',
+    oncologia: '#ef4444',
+    // Claves con tilde por si el backend las envía acentuadas
+    'cardiología': '#3b82f6',
+    'salud mental y neurología': '#8b5cf6',
+    'gastroenterología': '#10b981',
+    'salud ósea y reumatología': '#f59e0b',
+    'oncología': '#ef4444',
   };
+
+  const normalizeName = (str = '') => (
+    str
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+  );
 
   // UMBRALES UNIFICADOS (Deben coincidir con SunburstChart.jsx)
   const getImpactLevel = (magnitud) => {
@@ -82,10 +103,11 @@ const Farmacogenetica = () => {
       
       const pResp = await apiRequest(API_ENDPOINTS.PHARMACOGENETICS, { method: 'GET' });
       if (pResp.ok && pResp.data && pResp.data.data) {
-        setPharmaData(pResp.data.data.map(sys => ({
-          ...sys,
-          color: sys.color || systemColors[sys.name] || '#64748b',
-        })));
+        setPharmaData(pResp.data.data.map(sys => {
+          const key = normalizeName(sys.name);
+          const color = sys.color || systemColors[key] || '#64748b';
+          return { ...sys, color };
+        }));
       }
       setLoading(false);
     };
@@ -105,6 +127,16 @@ const Farmacogenetica = () => {
     }); });
     return { alto, medio, bajo };
   }, [pharmaData]);
+
+  const filteredData = useMemo(() => {
+    if (selectedRiskFilter === 'all') return pharmaData;
+
+    return pharmaData.map(system => {
+      const filteredDrugs = system.drugs.filter(drug => getImpactLevel(drug.magnitud) === selectedRiskFilter);
+      if (filteredDrugs.length === 0) return null;
+      return { ...system, drugs: filteredDrugs };
+    }).filter(Boolean);
+  }, [pharmaData, selectedRiskFilter]);
 
   return (
     <div className="farmacogenetica-layout-new">
@@ -135,50 +167,94 @@ const Farmacogenetica = () => {
             ) : (
               <>
                 <section className="farmaco-list-section">
+                  <div className="filter-header">
+                    <Tooltip content="Haz clic en las tarjetas para filtrar los resultados por nivel de riesgo.">
+                      <div className="filter-help-trigger">
+                        <Info size={14} />
+                        <span>Filtros interactivos</span>
+                      </div>
+                    </Tooltip>
+                    {selectedRiskFilter !== 'all' && (
+                      <button className="filter-reset-btn" onClick={() => setSelectedRiskFilter('all')}>
+                        <FilterX size={14} />
+                        Mostrar todos
+                      </button>
+                    )}
+                  </div>
                   <div className="impact-summary-row">
-                    <ImpactSummaryCard level="alto" count={riskSummary.alto} />
-                    <ImpactSummaryCard level="medio" count={riskSummary.medio} />
-                    <ImpactSummaryCard level="bajo" count={riskSummary.bajo} />
+                    <ImpactSummaryCard 
+                      level="alto" 
+                      count={riskSummary.alto} 
+                      onClick={() => setSelectedRiskFilter(selectedRiskFilter === 'alto' ? 'all' : 'alto')}
+                      isActive={selectedRiskFilter === 'alto'}
+                    />
+                    <ImpactSummaryCard 
+                      level="medio" 
+                      count={riskSummary.medio} 
+                      onClick={() => setSelectedRiskFilter(selectedRiskFilter === 'medio' ? 'all' : 'medio')}
+                      isActive={selectedRiskFilter === 'medio'}
+                    />
+                    <ImpactSummaryCard 
+                      level="bajo" 
+                      count={riskSummary.bajo} 
+                      onClick={() => setSelectedRiskFilter(selectedRiskFilter === 'bajo' ? 'all' : 'bajo')}
+                      isActive={selectedRiskFilter === 'bajo'}
+                    />
                   </div>
 
                   <div className="systems-stack">
-                    {pharmaData.map((system, idx) => (
-                      <div key={idx} className="system-card-new" style={{ '--accent': system.color }}>
-                        <div className="system-card-header" onClick={() => toggleGroup(system.name)}>
-                          <div className="system-card-title-group">
-                            <div className="system-dot" />
-                            <h3>{system.name}</h3>
+                    {filteredData.length > 0 ? (
+                      filteredData.map((system, idx) => (
+                        <div key={idx} className="system-card-new" style={{ '--accent': system.color }}>
+                          <div className="system-card-header" onClick={() => toggleGroup(system.name)}>
+                            <div className="system-card-title-group">
+                              <div className="system-dot" />
+                              <h3>{system.name}</h3>
+                            </div>
+                            <div className="system-card-meta">
+                              <span
+                                className="drug-count-badge"
+                                style={{ color: system.color, backgroundColor: hexToRgba(system.color, 0.1) }}
+                              >
+                                <strong style={{ fontWeight: 800 }}>{system.drugs.length}</strong>
+                                <span style={{ opacity: 0.85 }}>fármacos</span>
+                              </span>
+
+                              <span className="system-toggle-icon" aria-hidden="true">
+                                <ChevronDown className={cn("chevron-icon", expandedGroups[system.name] && "open")} />
+                              </span>
+                            </div>
                           </div>
-                          <div className="system-card-meta">
-                            <span className="drug-count-badge" style={{ color: system.color, backgroundColor: hexToRgba(system.color, 0.1) }}>{system.drugs.length} fármacos</span>
-                            <ChevronDown className={cn("chevron-icon", expandedGroups[system.name] && "open")} />
-                          </div>
+                          {expandedGroups[system.name] && (
+                            <div className="system-drug-list">
+                              {system.drugs.map((drug, dIdx) => (
+                                <GeneticTraitBar 
+                                  key={dIdx} 
+                                  title={drug.name}
+                                  rsid={drug.rsid}
+                                  genotype={drug.genotipo}
+                                  percentage={drug.percentage}
+                                  impactLabel={getImpactLabel(drug.magnitud)}
+                                  impactColor={system.color}
+                                  details={{
+                                      cromosoma: drug.cromosoma,
+                                      posicion: drug.posicion,
+                                      categoria: system.name,
+                                      magnitud: drug.magnitud
+                                  }}
+                                  explanation={drug.fenotipo || "Sin descripción adicional."}
+                                  delay={dIdx * 50}
+                                />
+                              ))}
+                            </div>
+                          )}
                         </div>
-                        {expandedGroups[system.name] && (
-                          <div className="system-drug-list">
-                            {system.drugs.map((drug, dIdx) => (
-                              <GeneticTraitBar 
-                                key={dIdx} 
-                                title={drug.name}
-                                rsid={drug.rsid}
-                                genotype={drug.genotipo}
-                                percentage={drug.percentage}
-                                impactLabel={getImpactLabel(drug.magnitud)}
-                                impactColor={system.color}
-                                details={{
-                                    cromosoma: drug.cromosoma,
-                                    posicion: drug.posicion,
-                                    categoria: system.name,
-                                    magnitud: drug.magnitud
-                                }}
-                                explanation={drug.fenotipo || "Sin descripción adicional."}
-                                delay={dIdx * 50}
-                              />
-                            ))}
-                          </div>
-                        )}
+                      ))
+                    ) : (
+                      <div className="no-results-message">
+                        <p>No se encontraron resultados para el filtro seleccionado.</p>
                       </div>
-                    ))}
+                    )}
                   </div>
                 </section>
 
