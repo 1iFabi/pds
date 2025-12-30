@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Reporte Genético</title>
+    <style>
+        @font-face {
+            font-family: "Inter";
+            src: url("/static/fonts/Inter_18pt-Regular.ttf");
+            font-weight: normal;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: "Inter";
+            src: url("/static/fonts/Inter_18pt-Bold.ttf");
+            font-weight: bold;
+            font-style: normal;
+        }
+        @page {
+            size: letter portrait;
+            margin: 2cm;
+        }
+        body {
+            font-family: "Inter", Helvetica, Arial, sans-serif;
+            font-size: 12px;
+        }
+        .header {
+            margin-bottom: 20px;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+        .header-table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+            margin-top: 0;
+        }
+        .header-table td {
+            border: none;
+            padding: 0;
+        }
+        .header-left {
+            text-align: left;
+            vertical-align: middle;
+        }
+        .header-right {
+            text-align: right;
+            vertical-align: middle;
+        }
+        .logo {
+            height: 48px;
+            width: auto;
+        }
+        .title {
+            font-size: 24px;
+            color: #333;
+            margin: 0;
+            font-weight: bold;
+        }
+        .header-date {
+            margin: 6px 0 0 0;
+        }
+        .user-info {
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: #f8f9fa;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <table class="header-table">
+            <tr>
+                <td class="header-left">
+                    <h1 class="title">Reporte Genetico Genomia</h1>
+                </td>
+                <td class="header-right">
+                    {% if logo_uri %}
+                    <img src="{{ logo_uri }}" class="logo" alt="GenomIA" />
+                    {% endif %}
+                </td>
+            </tr>
+        </table>
+        <p class="header-date">Fecha de emision: {{ fecha|date:"d/m/Y" }}</p>
+    </div>
+
+    <div class="user-info">
+        <h3>Información del Paciente</h3>
+        <p><strong>Nombre:</strong> {{ user.first_name }} {{ user.last_name }}</p>
+        <p><strong>Email:</strong> {{ user.email }}</p>
+        {% if profile and profile.rut %}
+        <p><strong>RUT:</strong> {{ profile.rut }}</p>
+        {% endif %}
+    </div>
+
+    <h3>Resultados de SNPs</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>RSID</th>
+                <th>Genotipo</th>
+                <th>Fenotipo</th>
+                <th>Riesgo</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in snps %}
+            <tr>
+                <td>{{ item.snp.rsid }}</td>
+                <td>{{ item.snp.genotipo }}</td>
+                <td>{{ item.snp.fenotipo }}</td>
+                <td>{{ item.snp.nivel_riesgo }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4" style="text-align:center;">No se encontraron resultados genéticos.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div style="position: fixed; bottom: 0; width: 100%; text-align: center; font-size: 10px; color: #777;">
+        <p>Generado por GenomIA - Este reporte es informativo y no sustituye un consejo médico profesional.</p>
+    </div>
+</body>
+</html>

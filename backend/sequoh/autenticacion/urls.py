@@ -32,6 +32,7 @@ from .reception_views import (
     ReceptionSampleCodeAPIView,
     ReceptionSampleStatusAPIView,
 )
+from .report_views import UserReportPDFView
 
 urlpatterns = [
     path('login/', LoginAPIView.as_view(), name='api_login'),
@@ -69,6 +70,7 @@ urlpatterns = [
     path('biometrics/', BiometricsAPIView.as_view(), name='api_biometrics'),
     path('biomarkers/', BiomarkersAPIView.as_view(), name='api_biomarkers'),
     path('pharmacogenetics/', PharmacogeneticsAPIView.as_view(), name='api_pharmacogenetics'),
+    path('report/pdf/', UserReportPDFView.as_view(), name='api_report_pdf'),
     # Recepción (solo identidad, sin datos genéticos)
     path('reception/search/', ReceptionSearchAPIView.as_view(), name='api_reception_search'),
     path('reception/arrival/', ReceptionArrivalAPIView.as_view(), name='api_reception_arrival'),
