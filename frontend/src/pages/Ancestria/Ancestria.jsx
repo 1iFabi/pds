@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Menu, X, Dna } from 'lucide-react';
 import { ComposableMap, Geographies, Geography, ZoomableGroup } from 'react-simple-maps';
@@ -223,6 +223,114 @@ const countryInfo = {
   "548": { continent: "Oceania", code: "VU", name: "Vanuatu" }
 };
 
+const normalizeCountryText = (value) => {
+  if (!value) return "";
+  return value
+    .toString()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[().,]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+};
+
+
+const normalizeGeoId = (value) => {
+  if (value === null || value === undefined) return "";
+  const raw = value.toString().trim();
+  if (!raw) return "";
+  const numeric = Number(raw);
+  if (Number.isFinite(numeric)) {
+    const padded = numeric.toString().padStart(3, "0");
+    return padded;
+  }
+  return raw;
+};
+
+const countryNameMapping = {
+        "Chile": "Chile",
+        "España": "Spain",
+        "Mexico": "Mexico",
+        "México": "Mexico",
+        "Finlandia": "Finland",
+        "Finland": "Finland",
+        "Nigeria": "Nigeria",
+        "China": "China",
+        "Estados Unidos": "United States",
+        "USA": "United States",
+        "Rusia": "Russia",
+        "Alemania": "Germany",
+        "Francia": "France",
+        "Italia": "Italy",
+        "Reino Unido": "United Kingdom",
+        "Brasil": "Brazil",
+        "Peru": "Peru",
+        "Perú": "Peru",
+        "Colombia": "Colombia",
+        "Argentina": "Argentina",
+        "Bolivia": "Bolivia",
+        "Venezuela": "Venezuela",
+        "Ecuador": "Ecuador",
+        "Paraguay": "Paraguay",
+        "Uruguay": "Uruguay",
+        "Guayana Francesa": "French Guiana",
+        "Guyana Francesa": "French Guiana",
+        "Guiana Francesa": "French Guiana",
+        "Guyane": "French Guiana",
+        "Kazajistán": "Kazakhstan",
+        "Kazajistan": "Kazakhstan",
+        "KAZ": "Kazakhstan",
+        "Kazakhstan": "Kazakhstan",
+        "Kazahistan": "Kazakhstan",
+        "Kazakstan": "Kazakhstan",
+        "Republic of Kazakhstan": "Kazakhstan",
+        "Mongolia": "Mongolia",
+        "MNG": "Mongolia",
+        "Mongolie": "Mongolia"
+    };
+
+const countryNameMappingNormalized = Object.entries(countryNameMapping).reduce((acc, [key, value]) => {
+    acc[normalizeCountryText(key)] = value;
+    return acc;
+}, {});
+
+const countryInfoById = Object.entries(countryInfo).reduce((acc, [id, info]) => {
+    const normalizedId = normalizeGeoId(id);
+    acc[id] = info;
+    acc[normalizedId] = info;
+    return acc;
+}, {});
+
+const countryInfoByName = Object.values(countryInfo).reduce((acc, info) => {
+    acc[normalizeCountryText(info.name)] = info;
+    acc[normalizeCountryText(info.code)] = info;
+    return acc;
+}, {});
+
+const getGeoCountryInfo = (geo) => {
+    if (!geo) return null;
+
+    const geoId = normalizeGeoId(geo.id);
+    
+    // Fallback explícito para IDs de Kazakhstan y Mongolia si el mapeo falla
+    if (geoId === "398") return countryInfo["398"];
+    if (geoId === "496") return countryInfo["496"];
+
+    const direct = countryInfoById[geoId] || countryInfoById[String(geo.id)];
+    if (direct) return direct;
+
+    const geoName = geo?.properties?.name || "";
+    const normalizedName = normalizeCountryText(geoName);
+    const mappedName = countryNameMapping[geoName] || countryNameMappingNormalized[normalizedName];
+    const lookup = mappedName ? normalizeCountryText(mappedName) : normalizedName;
+
+    return countryInfoByName[lookup] || null;
+};
+
+const getGeoContinentName = (geo) => getGeoCountryInfo(geo)?.continent || "Otros";
+
+
 const Ancestria = () => {
   const [user, setUser] = useState(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -234,7 +342,6 @@ const Ancestria = () => {
   // Estado del mapa (solo activo/inactivo, sin coordenadas)
   const [activeContinent, setActiveContinent] = useState(null); 
   const [hoveredContinent, setHoveredContinent] = useState(null);
-  const hoverTimeoutRef = useRef(null);
 
   const navigate = useNavigate();
 
@@ -308,43 +415,26 @@ const Ancestria = () => {
     if (!ancestryData?.countries) return null;
     
     // Mapeo de nombres de API (Español/Variados) a nombres del Mapa (Inglés TopoJSON)
-    const nameMapping = {
-        "Chile": "Chile",
-        "España": "Spain",
-        "Mexico": "Mexico",
-        "México": "Mexico",
-        "Finlandia": "Finland",
-        "Finland": "Finland",
-        "Nigeria": "Nigeria",
-        "China": "China",
-        "Estados Unidos": "United States",
-        "USA": "United States",
-        "Rusia": "Russia",
-        "Alemania": "Germany",
-        "Francia": "France",
-        "Italia": "Italy",
-        "Reino Unido": "United Kingdom",
-        "Brasil": "Brazil",
-        "Peru": "Peru",
-        "Perú": "Peru",
-        "Colombia": "Colombia",
-        "Argentina": "Argentina",
-        "Bolivia": "Bolivia",
-        "Venezuela": "Venezuela",
-        "Ecuador": "Ecuador",
-        "Paraguay": "Paraguay",
-        "Uruguay": "Uruguay"
-    };
 
     const info = Object.values(countryInfo).find(i => i.code === isoCode);
     if (!info) return null;
 
+    const infoNameNormalized = normalizeCountryText(info.name);
+    const infoCodeNormalized = normalizeCountryText(info.code);
+
     return ancestryData.countries.find(c => {
         // 1. Coincidencia directa con el nombre en inglés del mapa
-        if (c.name === info.name) return true;
+        const normalizedName = normalizeCountryText(c.name);
+        const mappedName = countryNameMapping[c.name] || countryNameMappingNormalized[normalizedName];
+        const mappedNormalized = mappedName ? normalizeCountryText(mappedName) : "";
+        if (normalizedName === infoNameNormalized) return true;
+        if (normalizedName === infoCodeNormalized) return true;
         
         // 2. Coincidencia a través del mapeo (Nombre API -> Nombre Mapa)
-        if (nameMapping[c.name] === info.name) return true;
+        if (mappedNormalized === infoNameNormalized) return true;
+        if (mappedNormalized === infoCodeNormalized) return true;
+        if (normalizedName.includes(infoNameNormalized)) return true;
+        if (mappedNormalized && mappedNormalized.includes(infoNameNormalized)) return true;
 
         return false;
     });
@@ -357,10 +447,20 @@ const Ancestria = () => {
     const active = new Set();
     const totals = {};
     
+    // Mapeo inverso para normalizar nombres antes de buscar
+
     ancestryData.countries.forEach(c => {
+        const normalizedName = normalizeCountryText(c.name);
+        const mappedName = countryNameMapping[c.name] || countryNameMappingNormalized[normalizedName] || c.name;
+        const mappedNormalized = normalizeCountryText(mappedName);
+
+        // Buscar en countryInfo usando el nombre normalizado
         const found = Object.values(countryInfo).find(info => 
-            c.name.includes(info.name) || c.name === info.code || 
-            (info.code === 'CL' && c.name === 'Chile') 
+            mappedNormalized === normalizeCountryText(info.name) || 
+            mappedNormalized === normalizeCountryText(info.code) ||
+            normalizedName === normalizeCountryText(info.name) ||
+            normalizedName === normalizeCountryText(info.code) ||
+            normalizedName.includes(normalizeCountryText(info.name)) // Fallback al original
         );
         
         if (found) {
@@ -372,11 +472,20 @@ const Ancestria = () => {
     return { active, totals };
   }, [ancestryData]);
 
-  const handleGeographyClick = (geo) => {
-    const info = countryInfo[geo.id];
+  const handleGeographyClick = (geo, e) => {
+    e.stopPropagation();
+    const info = getGeoCountryInfo(geo);
     if (!info) return;
 
-    // Solo permitir clic si hay datos para este país
+    // Si estamos en vista mundial y hacemos clic en un país, entramos a su continente
+    if (!activeContinent || activeContinent !== info.continent) {
+        if (continentData.active.has(info.continent)) {
+             setActiveContinent(info.continent);
+        }
+        return;
+    }
+
+    // Si ya estamos en el continente, mostramos los detalles del país si tiene datos
     const data = getCountryData(info.code);
     
     // Validación extra: asegurarse de que data y percentage existan
@@ -394,6 +503,7 @@ const Ancestria = () => {
     setActiveContinent(null);
     setSelectedCountry(null);
   };
+
 
   const sidebarItems = useMemo(() => [
     { label: 'Ancestría', href: '/dashboard/ancestria' },
@@ -414,32 +524,33 @@ const Ancestria = () => {
                 zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center'
             }}>
                 <div className="modal-content" onClick={e => e.stopPropagation()} style={{
-                    background: 'white', padding: '2rem', borderRadius: '20px', 
-                    maxWidth: '500px', width: '90%', fontFamily: '"Inter", sans-serif',
-                    boxShadow: '0 10px 40px rgba(0,0,0,0.2)', position: 'relative'
+                    background: 'white', padding: isMobile ? '1.5rem' : '2rem', borderRadius: '20px', 
+                    maxWidth: '500px', width: '95%', fontFamily: '"Inter", sans-serif',
+                    boxShadow: '0 10px 40px rgba(0,0,0,0.2)', position: 'relative',
+                    maxHeight: '90vh', overflowY: 'auto'
                 }}>
                     <button onClick={() => setSelectedCountry(null)} style={{
-                        position: 'absolute', top: '20px', right: '20px', background: 'none', border: 'none', 
-                        fontSize: '24px', color: '#888', cursor: 'pointer'
+                        position: 'absolute', top: '15px', right: '15px', background: 'none', border: 'none', 
+                        fontSize: '24px', color: '#888', cursor: 'pointer', zIndex: 10
                     }}>&times;</button>
 
-                    <h2 style={{ color: '#1976D2', marginTop: 0, fontSize: '28px', marginBottom: '1rem' }}>{selectedCountry.name}</h2>
+                    <h2 style={{ color: '#1976D2', marginTop: 0, fontSize: isMobile ? '22px' : '28px', marginBottom: '1rem' }}>{selectedCountry.name}</h2>
                     
-                    <p style={{ color: '#555', lineHeight: '1.6', fontSize: '15px', marginBottom: '1.5rem' }}>
+                    <p style={{ color: '#555', lineHeight: '1.6', fontSize: isMobile ? '14px' : '15px', marginBottom: '1.5rem' }}>
                         Tu ascendencia de {selectedCountry.name} es {(selectedCountry.percentage || 0) > 20 ? 'predominante' : 'parte'} en tu perfil genético, 
                         representando una parte significativa de tu herencia.
                     </p>
 
                     <div style={{ 
                         background: '#E3F2FD', borderLeft: '5px solid #1976D2', borderRadius: '8px', 
-                        padding: '1.5rem', marginBottom: '1.5rem', color: '#1565C0', fontWeight: 'bold', fontSize: '16px'
+                        padding: isMobile ? '1rem' : '1.5rem', marginBottom: '1.5rem', color: '#1565C0', fontWeight: 'bold', fontSize: isMobile ? '14px' : '16px'
                     }}>
-                        Porcentaje de ascendencia: <span style={{ fontSize: '18px' }}>{(selectedCountry.percentage || 0).toFixed(1)}%</span>
+                        Porcentaje de ascendencia: <span style={{ fontSize: isMobile ? '16px' : '18px' }}>{(selectedCountry.percentage || 0).toFixed(1)}%</span>
                     </div>
 
                     <div style={{ 
                         border: '1px solid #E0E0E0', borderRadius: '12px', padding: '1rem', marginBottom: '1.5rem',
-                        display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: '#666'
+                        display: 'flex', justifyContent: 'space-between', fontSize: isMobile ? '13px' : '14px', color: '#666'
                     }}>
                         <div>
                             <span>Continente:</span>
@@ -449,8 +560,8 @@ const Ancestria = () => {
                         </div>
                     </div>
 
-                    <h4 style={{ color: '#1976D2', marginBottom: '1rem', fontSize: '16px' }}>Información Genética:</h4>
-                    <ul style={{ listStyle: 'none', padding: 0, color: '#555', fontSize: '14px', lineHeight: '1.8' }}>
+                    <h4 style={{ color: '#1976D2', marginBottom: '1rem', fontSize: isMobile ? '15px' : '16px' }}>Información Genética:</h4>
+                    <ul style={{ listStyle: 'none', padding: 0, color: '#555', fontSize: isMobile ? '13px' : '14px', lineHeight: '1.8' }}>
                         <li>• Continente de origen: {selectedCountry.continent || "Desconocido"}</li>
                         <li>• Basado en {selectedCountry.variants || 20} variante(s) genética(s) analizada(s)</li>
                         <li>• Frecuencia alélica promedio: {selectedCountry.alleleFrequency || "33.10"}%</li>
@@ -458,9 +569,9 @@ const Ancestria = () => {
                     </ul>
 
                     <button onClick={() => setSelectedCountry(null)} style={{
-                        marginTop: '2rem', padding: '1rem', width: '100%', 
+                        marginTop: '1.5rem', padding: isMobile ? '0.8rem' : '1rem', width: '100%', 
                         background: '#1976D2', color: 'white', border: 'none', borderRadius: '8px', 
-                        cursor: 'pointer', fontSize: '16px', fontWeight: 'bold', transition: 'background 0.2s'
+                        cursor: 'pointer', fontSize: isMobile ? '14px' : '16px', fontWeight: 'bold', transition: 'background 0.2s'
                     }}
                     onMouseOver={(e) => e.target.style.background = '#1565C0'}
                     onMouseOut={(e) => e.target.style.background = '#1976D2'}
@@ -489,28 +600,65 @@ const Ancestria = () => {
             <div 
                 ref={mapContainerRef}
                 className="ancestria-page__chart-card" 
+                onClick={handleResetZoom}
                 style={{ 
-                    gridColumn: '1 / -1', position: 'relative', height: '600px', background: '#FFFFFF', 
+                    gridColumn: '1 / -1', position: 'relative', 
+                    height: isMobile ? '400px' : '600px', 
+                    background: '#FFFFFF', 
                     borderRadius: '16px', overflow: 'hidden', border: '1px solid #E0E0E0',
-                    userSelect: 'none', WebkitUserSelect: 'none', MozUserSelect: 'none', msUserSelect: 'none' // Evitar selección azul
+                    userSelect: 'none', WebkitUserSelect: 'none', MozUserSelect: 'none', msUserSelect: 'none',
+                    cursor: activeContinent ? 'zoom-out' : 'default'
             }}>
               
-              <img src="/cNormal.png" alt="Logo" style={{ position: 'absolute', top: '40px', right: '40px', width: '40px', filter: 'grayscale(100%)', zIndex: 10, opacity: 0.8, pointerEvents: 'none' }} />
-              <img src={compassRose} alt="Brújula" style={{ position: 'absolute', top: '40px', left: '40px', width: '40px', opacity: 0.8, zIndex: 10, pointerEvents: 'none' }} />
+              <img src="/cNormal.png" alt="Logo" style={{ position: 'absolute', top: isMobile ? '20px' : '40px', right: isMobile ? '20px' : '40px', width: isMobile ? '30px' : '40px', filter: 'grayscale(100%)', zIndex: 10, opacity: 0.8, pointerEvents: 'none' }} />
+              <img src={compassRose} alt="Brújula" style={{ position: 'absolute', top: isMobile ? '20px' : '40px', left: isMobile ? '20px' : '40px', width: isMobile ? '30px' : '40px', opacity: 0.8, zIndex: 10, pointerEvents: 'none' }} />
+
+              {/* Indicador flotante del continente al hacer hover */}
+              {!activeContinent && hoveredContinent && (
+                <div style={{
+                    position: 'absolute', top: isMobile ? '20px' : '40px', left: '50%', transform: 'translateX(-50%)',
+                    zIndex: 20, background: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(8px)',
+                    padding: isMobile ? '6px 20px' : '10px 32px', borderRadius: '30px',
+                    boxShadow: '0 8px 24px rgba(25, 118, 210, 0.15)',
+                    border: '1px solid rgba(25, 118, 210, 0.15)',
+                    pointerEvents: 'none',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    transition: 'all 0.3s ease'
+                }}>
+                    <span style={{ 
+                        color: '#0D47A1', fontWeight: '700', fontSize: isMobile ? '12px' : '15px', 
+                        letterSpacing: '1px', textTransform: 'uppercase' 
+                    }}>
+                        {hoveredContinent === "South America" ? "América del Sur" :
+                         hoveredContinent === "North America" ? "América del Norte" :
+                         hoveredContinent === "Europe" ? "Europa" :
+                         hoveredContinent === "Africa" ? "África" :
+                         hoveredContinent === "Asia" ? "Asia" :
+                         hoveredContinent === "Oceania" ? "Oceanía" : hoveredContinent}
+                    </span>
+                </div>
+              )}
 
               {ancestryData?.countries && (
                 <div style={{
-                    position: 'absolute', bottom: '20px', left: '20px', zIndex: 10,
-                    background: 'white', padding: '15px', borderRadius: '12px',
-                    boxShadow: '0 4px 20px rgba(0,0,0,0.08)', width: '280px',
+                    position: 'absolute', 
+                    bottom: isMobile ? '10px' : '20px', 
+                    left: isMobile ? '10px' : '20px', 
+                    zIndex: 10,
+                    background: 'white', 
+                    padding: isMobile ? '10px' : '15px', 
+                    borderRadius: '12px',
+                    boxShadow: '0 4px 20px rgba(0,0,0,0.08)', 
+                    width: isMobile ? 'calc(100% - 20px)' : '280px',
+                    maxWidth: isMobile ? '280px' : 'none',
                     fontFamily: '"Inter", sans-serif', border: '1px solid #F0F0F0'
-                }}>
-                    <h4 style={{ color: '#1976D2', margin: '0 0 12px 0', fontSize: '13px', letterSpacing: '0.5px', fontWeight: '700' }}>ASCENDENCIA</h4>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 12px' }}>
+                }} onClick={(e) => e.stopPropagation()}>
+                    <h4 style={{ color: '#1976D2', margin: '0 0 8px 0', fontSize: isMobile ? '11px' : '13px', letterSpacing: '0.5px', fontWeight: '700' }}>ASCENDENCIA</h4>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: isMobile ? '4px 8px' : '8px 12px' }}>
                         {ancestryData.countries.map((country, idx) => (
-                            <div key={idx} style={{ display: 'flex', alignItems: 'center', fontSize: '11px', color: '#555' }}>
+                            <div key={idx} style={{ display: 'flex', alignItems: 'center', fontSize: isMobile ? '9px' : '11px', color: '#555' }}>
                                 <div style={{ 
-                                    width: '10px', height: '10px', borderRadius: '2px', 
+                                    width: isMobile ? '8px' : '10px', height: isMobile ? '8px' : '10px', borderRadius: '2px', 
                                     background: colorScale(country.percentage), marginRight: '6px' 
                                 }}></div>
                                 <span style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{country.name}</span>
@@ -522,23 +670,25 @@ const Ancestria = () => {
               )}
 
               {/* Barra de leyenda minimalista abajo a la derecha */}
-              <div style={{
-                  position: 'absolute', bottom: '40px', right: '40px', zIndex: 10,
-                  display: 'flex', flexDirection: 'column', alignItems: 'center'
-              }}>
-                  <div style={{ 
-                      width: '200px', height: '8px', borderRadius: '4px', 
-                      background: 'linear-gradient(to right, #E1F5FE, #01579B)',
-                      marginBottom: '4px'
-                  }}></div>
-                  <div style={{ 
-                      display: 'flex', justifyContent: 'space-between', width: '100%', 
-                      fontSize: '11px', color: '#666', fontWeight: 'bold'
-                  }}>
-                      <span>0</span>
-                      <span>100</span>
-                  </div>
-              </div>
+              {!isMobile && (
+                <div style={{
+                    position: 'absolute', bottom: '40px', right: '40px', zIndex: 10,
+                    display: 'flex', flexDirection: 'column', alignItems: 'center'
+                }}>
+                    <div style={{ 
+                        width: '200px', height: '8px', borderRadius: '4px', 
+                        background: 'linear-gradient(to right, #E1F5FE, #01579B)',
+                        marginBottom: '4px'
+                    }}></div>
+                    <div style={{ 
+                        display: 'flex', justifyContent: 'space-between', width: '100%', 
+                        fontSize: '11px', color: '#666', fontWeight: 'bold'
+                    }}>
+                        <span>0</span>
+                        <span>100</span>
+                    </div>
+                </div>
+              )}
 
               <ComposableMap 
                 projection="geoMercator" 
@@ -551,8 +701,6 @@ const Ancestria = () => {
                 style={{ width: "100%", height: "100%", background: '#FFFFFF' }}
               >
                   <ZoomableGroup 
-                    center={[0, 0]} 
-                    zoom={1} 
                     minZoom={1} 
                     maxZoom={4} 
                     filterZoomEvent={(evt) => evt.type !== 'dblclick'}
@@ -562,68 +710,110 @@ const Ancestria = () => {
                     ]}
                   >
                   <Geographies geography={GEO_URL}>
-                    {({ geographies }) =>
-                      geographies
-                        .filter(geo => geo.id !== "010") // Excluir la Antártida
-                        .map((geo) => {
-                          const info = countryInfo[geo.id];
-                        
-                        // Buscar si este país tiene datos de ancestría
-                        const countryData = info ? getCountryData(info.code) : null;
+                    {({ geographies }) => {
+                      // Agrupar geografías por continente para aplicar efectos de grupo (como escala)
+                      const groups = geographies.reduce((acc, geo) => {
+                        if (normalizeGeoId(geo.id) === "010") return acc; // Saltar Antártida
+                        const cont = getGeoContinentName(geo);
+                        if (!acc[cont]) acc[cont] = [];
+                        acc[cont].push(geo);
+                        return acc;
+                      }, {});
 
-                        let fillColor = "#F9F9F9"; // Color base muy claro (casi blanco)
-                        let strokeColor = "#333333"; // Bordes negros definidos para delimitar países
-
-                        if (countryData) {
-                            fillColor = colorScale(countryData.percentage);
-                        } else if (info && hoveredContinent === info.continent) {
-                            // Efecto sutil al pasar por países del mismo continente (opcional)
-                           // fillColor = "#F0F0F0"; 
-                        }
+                      return Object.entries(groups).map(([continentName, geos]) => {
+                        const hasData = continentData.active.has(continentName);
+                        const isHovered = !activeContinent && hasData && hoveredContinent === continentName;
 
                         return (
-                          <Geography
-                            key={geo.rsmKey}
-                            geography={geo}
-                            
-                            // Activar el clic para abrir el nuevo modal
-                            onClick={() => handleGeographyClick(geo)} 
-                            
-                            onMouseEnter={() => {
-                                // Simple tooltip trigger
-                            }}
-                            onMouseLeave={() => {
-                                setHoveredContinent(null);
-                            }}
-
-                            data-tooltip-id="my-tooltip"
-                            data-tooltip-content={
-                                countryData ? `${countryData.name}: ${countryData.percentage.toFixed(1)}%` : (info?.name || "")
-                            }
+                          <g 
+                            key={continentName}
                             style={{
-                              default: { 
-                                  fill: fillColor, 
-                                  stroke: strokeColor, 
-                                  strokeWidth: 0.5, 
-                                  outline: "none", 
-                                  transition: "all 250ms ease"
-                              },
-                              hover: { 
-                                  fill: countryData ? fillColor : "#F0F0F0", 
-                                  stroke: "#D0D0D0",
-                                  strokeWidth: 0.8,
-                                  outline: "none", 
-                                  cursor: "grab" 
-                              },
-                              pressed: { 
-                                outline: "none",
-                                cursor: "grabbing"
-                              },
+                                transform: isHovered ? 'scale(1.03)' : 'scale(1)',
+                                transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                transformOrigin: 'center',
+                                transformBox: 'fill-box',
+                                cursor: (!activeContinent && hasData) ? 'pointer' : 'default'
                             }}
-                          />
+                            onMouseEnter={() => {
+                                if (!activeContinent && hasData) setHoveredContinent(continentName);
+                            }}
+                            onMouseLeave={() => setHoveredContinent(null)}
+                          >
+                            {geos.map((geo) => {
+                              const info = getGeoCountryInfo(geo);
+                              const continent = continentName;
+                              const countryData = info ? getCountryData(info.code) : null;
+
+                              let fillColor = "#F9F9F9"; 
+                              let strokeColor = "#E0E0E0"; 
+                              let strokeWidth = 0.5;
+                              let isClickable = false;
+                              if (!activeContinent) {
+                                  const totalContinent = continentData.totals[continent];
+                                  if (totalContinent > 0) {
+                                      fillColor = colorScale(totalContinent);
+                                      strokeColor = "#D0D0D0"; 
+                                      strokeWidth = 0.5; 
+                                      isClickable = true;
+                                  }
+                              } else {
+                                  if (continent === activeContinent) {
+                                      strokeColor = "#333333";
+                                      strokeWidth = 0.8;
+                                      if (countryData) {
+                                          fillColor = colorScale(countryData.percentage);
+                                          isClickable = true;
+                                      } else {
+                                          fillColor = "#F9F9F9";
+                                      }
+                                  } else {
+                                      fillColor = "#F5F5F5";
+                                      strokeColor = "#E0E0E0"; 
+                                      strokeWidth = 0.5;
+                                  }
+                              }
+
+                              return (
+                                <Geography
+                                  key={geo.rsmKey}
+                                  geography={geo}
+                                  onClick={(e) => {
+                                      if (isClickable || (activeContinent && info?.continent === activeContinent)) {
+                                          handleGeographyClick(geo, e);
+                                      }
+                                  }}
+                                  data-tooltip-id="my-tooltip"
+                                  data-tooltip-content={
+                                      activeContinent 
+                                          ? (countryData ? `${countryData.name}: ${countryData.percentage.toFixed(1)}%` : null)
+                                          : null
+                                  }
+                                                                    style={{
+                                                                      default: { 
+                                                                          fill: fillColor, 
+                                                                          stroke: strokeColor, 
+                                                                          strokeWidth: strokeWidth, 
+                                                                          outline: "none", 
+                                                                          transition: "fill 250ms ease, stroke 250ms ease",
+                                                                          cursor: isClickable ? 'pointer' : 'default'
+                                                                      },
+                                                                      hover: { 
+                                                                          fill: fillColor, 
+                                                                          stroke: strokeColor, 
+                                                                          strokeWidth: strokeWidth, 
+                                                                          outline: "none", 
+                                                                          cursor: isClickable ? 'pointer' : 'default'
+                                                                      },
+                                                                      pressed: { 
+                                                                        outline: "none",
+                                                                      },
+                                                                    }}                                />
+                              );
+                            })}
+                          </g>
                         );
-                      })
-                    }
+                      });
+                    }}
                   </Geographies>
                   </ZoomableGroup>
               </ComposableMap>
