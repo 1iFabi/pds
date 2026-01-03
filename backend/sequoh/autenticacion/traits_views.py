@@ -5,6 +5,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from .authentication import JWTAuthentication
 from .models import UserSNP, SNP
+from .utils import build_rsid_extra_info_map
 import random
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -23,11 +24,22 @@ class TraitsAPIView(APIView):
             user=user,
             snp__categoria='rasgos'
         ).select_related('snp')
+
+        snp_list = [us.snp for us in user_snps if us.snp]
+        extra_info_map = build_rsid_extra_info_map(snp_list)
         
         traits_list = []
         
         for user_snp in user_snps:
             snp = user_snp.snp
+            phenotype_name = (snp.fenotipo or "N/D").strip() or "N/D"
+            extra_info = extra_info_map.get((snp.rsid, snp.genotipo, phenotype_name))
+            freq_chile = None
+            if extra_info and extra_info.freq_chile_percent is not None:
+                try:
+                    freq_chile = float(extra_info.freq_chile_percent)
+                except (TypeError, ValueError):
+                    freq_chile = None
             
             magnitud_efecto = float(snp.magnitud_efecto) if snp.magnitud_efecto else 0.0
             percentage = int(min(100, (magnitud_efecto / 5.0) * 100))
@@ -44,7 +56,9 @@ class TraitsAPIView(APIView):
                 'posicion': snp.posicion,
                 'magnitud_efecto': magnitud_efecto,
                 'group': group,
-                'percentage': percentage
+                'percentage': percentage,
+                'freq_chile_percent': freq_chile,
+                'phenotype_description': extra_info.phenotype_description if extra_info else None,
             }
             traits_list.append(trait_obj)
         

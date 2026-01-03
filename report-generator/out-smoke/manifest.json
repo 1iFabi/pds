@@ -1,0 +1,22 @@
+{
+  "reports": [
+    {
+      "reportId": "GNM-2025-0001",
+      "files": [
+        "C:\\Users\\Webito\\Desktop\\GenomIA\\pds\\report-generator\\out-smoke\\GNM-2025-0001_portada.pdf",
+        "C:\\Users\\Webito\\Desktop\\GenomIA\\pds\\report-generator\\out-smoke\\GNM-2025-0001_intro.pdf",
+        "C:\\Users\\Webito\\Desktop\\GenomIA\\pds\\report-generator\\out-smoke\\GNM-2025-0001_reporte.pdf",
+        "C:\\Users\\Webito\\Desktop\\GenomIA\\pds\\report-generator\\out-smoke\\GNM-2025-0001_ancestria.pdf",
+        "C:\\Users\\Webito\\Desktop\\GenomIA\\pds\\report-generator\\out-smoke\\GNM-2025-0001_summary_enfermedades.pdf",
+        "C:\\Users\\Webito\\Desktop\\GenomIA\\pds\\report-generator\\out-smoke\\GNM-2025-0001_rsid_enfermedades_rs429358.pdf",
+        "C:\\Users\\Webito\\Desktop\\GenomIA\\pds\\report-generator\\out-smoke\\GNM-2025-0001_rsid_enfermedades_rs7903146.pdf",
+        "C:\\Users\\Webito\\Desktop\\GenomIA\\pds\\report-generator\\out-smoke\\GNM-2025-0001_summary_farmacogenetica.pdf",
+        "C:\\Users\\Webito\\Desktop\\GenomIA\\pds\\report-generator\\out-smoke\\GNM-2025-0001_summary_biometricas.pdf",
+        "C:\\Users\\Webito\\Desktop\\GenomIA\\pds\\report-generator\\out-smoke\\GNM-2025-0001_summary_biomarcadores.pdf",
+        "C:\\Users\\Webito\\Desktop\\GenomIA\\pds\\report-generator\\out-smoke\\GNM-2025-0001_rsid_biomarcadores_rs1801282.pdf",
+        "C:\\Users\\Webito\\Desktop\\GenomIA\\pds\\report-generator\\out-smoke\\GNM-2025-0001_summary_rasgos.pdf",
+        "C:\\Users\\Webito\\Desktop\\GenomIA\\pds\\report-generator\\out-smoke\\GNM-2025-0001_rsid_rasgos_rs4988235.pdf"
+      ]
+    }
+  ]
+}

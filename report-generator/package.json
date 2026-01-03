@@ -1,0 +1,13 @@
+{
+  "name": "report-generator",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "gen": "node generate.js"
+  },
+  "dependencies": {
+    "puppeteer": "^24.22.0",
+    "qrcode": "^1.5.4"
+  }
+}

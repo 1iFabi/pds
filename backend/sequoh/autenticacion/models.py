@@ -225,6 +225,34 @@ class SNP(models.Model):
         return f"SNP({self.rsid}, {self.genotipo})"
 
 
+class RsidExtraInfo(models.Model):
+    """
+    Extra info for rsid/genotype/phenotype combos used in reports.
+    """
+    rs_id = models.CharField(max_length=20, verbose_name="rsID")
+    genotype = models.CharField(max_length=10, verbose_name="Genotype")
+    phenotype_name = models.TextField(verbose_name="Phenotype name")
+    freq_chile_percent = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        verbose_name="Chile frequency percent",
+    )
+    phenotype_description = models.TextField(verbose_name="Phenotype description")
+
+    class Meta:
+        db_table = 'rsid_extra_info'
+        verbose_name = 'RSID extra info'
+        verbose_name_plural = 'RSID extra info'
+        unique_together = [('rs_id', 'genotype', 'phenotype_name')]
+        indexes = [
+            models.Index(fields=['rs_id'], name='rsid_extra_rsid_idx'),
+            models.Index(fields=['phenotype_name'], name='rsid_extra_pheno_idx'),
+        ]
+
+    def __str__(self):
+        return f"RsidExtraInfo({self.rs_id}, {self.genotype})"
+
+
 class UserSNP(models.Model):
     """
     Modelo de relación entre usuarios y sus SNPs

@@ -1,7 +1,16 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import User
-from .models import Profile, EmailVerification, WelcomeStatus, PasswordResetToken, ServiceStatus, SNP, UserSNP
+from .models import (
+    Profile,
+    EmailVerification,
+    WelcomeStatus,
+    PasswordResetToken,
+    ServiceStatus,
+    SNP,
+    UserSNP,
+    RsidExtraInfo,
+)
 
 
 class ProfileInline(admin.StackedInline):
@@ -161,3 +170,10 @@ class UserSNPAdmin(admin.ModelAdmin):
     def get_categoria(self, obj):
         return obj.snp.categoria or '-'
     get_categoria.short_description = 'Categoría'
+
+
+@admin.register(RsidExtraInfo)
+class RsidExtraInfoAdmin(admin.ModelAdmin):
+    list_display = ('rs_id', 'genotype', 'phenotype_name', 'freq_chile_percent')
+    search_fields = ('rs_id', 'genotype', 'phenotype_name')
+    ordering = ('rs_id', 'genotype')
