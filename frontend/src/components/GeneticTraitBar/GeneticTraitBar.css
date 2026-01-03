@@ -179,6 +179,11 @@
   font-weight: 700;
 }
 
+.genetic-trait-bar__note {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
 .genetic-trait-bar__interpretation {
   display: flex;
   justify-content: space-between;

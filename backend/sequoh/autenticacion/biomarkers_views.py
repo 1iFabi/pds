@@ -6,6 +6,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Q
 from .authentication import JWTAuthentication
 from .models import UserSNP, SNP
+from .utils import build_rsid_extra_info_map
 import sys
 
 
@@ -27,6 +28,8 @@ class BiomarkersAPIView(APIView):
             .filter(biom_filter)
             .select_related("snp")
         )
+        snp_list = [us.snp for us in user_snps if us.snp]
+        extra_info_map = build_rsid_extra_info_map(snp_list)
 
         # Contar total global de biomarcadores disponibles en la base de datos
         global_filter = Q(categoria__icontains="biomarc") | Q(grupo__icontains="biomarc")
@@ -49,14 +52,14 @@ class BiomarkersAPIView(APIView):
             if risk in risk_counts:
                 risk_counts[risk] += 1
 
+            phenotype_name = (snp.fenotipo or "N/D").strip() or "N/D"
+            extra_info = extra_info_map.get((snp.rsid, snp.genotipo, phenotype_name))
             frequency_val = None
-            try:
-                if snp.af_pais is not None:
-                    frequency_val = float(snp.af_pais)
-                elif snp.af_continente is not None:
-                    frequency_val = float(snp.af_continente)
-            except Exception:
-                frequency_val = None
+            if extra_info and extra_info.freq_chile_percent is not None:
+                try:
+                    frequency_val = float(extra_info.freq_chile_percent)
+                except (TypeError, ValueError):
+                    frequency_val = None
 
             biomarkers.append({
                 "id": snp.rsid,
@@ -76,15 +79,18 @@ class BiomarkersAPIView(APIView):
                     "risk": risk or "medio",
                     "magnitude": magnitude,
                     "frequency": frequency_val,
+                    "phenotype_description": extra_info.phenotype_description if extra_info else None,
                     "continent": snp.continente,
                     "country": snp.pais,
                 },
+                "freq_chile_percent": frequency_val,
+                "phenotype_description": extra_info.phenotype_description if extra_info else None,
                 "allGenotypes": [
                     {
                         "genotype": snp.genotipo,
                         "phenotype": snp.fenotipo,
                         "risk": (risk or "medio"),
-                        "frequency": frequency_val if frequency_val is not None else 0,
+                        "frequency": frequency_val,
                     }
                 ],
             })

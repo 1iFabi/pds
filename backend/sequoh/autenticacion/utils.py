@@ -5,7 +5,7 @@ from urllib.parse import unquote
 from django.conf import settings
 from django.contrib.staticfiles import finders
 from django.utils import timezone
-from .models import Profile
+from .models import Profile, RsidExtraInfo
 
 def ensure_sample_code(profile: Profile) -> str:
     """Genera un SampleCode si no existe."""
@@ -61,3 +61,29 @@ def render_to_pdf(template_src, context_dict={}):
     if not pdf.err:
         return HttpResponse(result.getvalue(), content_type='application/pdf')
     return None
+
+
+def build_rsid_extra_info_map(snps):
+    rs_ids = set()
+    genotypes = set()
+    phenotypes = set()
+
+    for snp in snps:
+        if not snp:
+            continue
+        if snp.rsid:
+            rs_ids.add(snp.rsid)
+        if snp.genotipo:
+            genotypes.add(snp.genotipo)
+        phenotype = (snp.fenotipo or "N/D").strip() or "N/D"
+        phenotypes.add(phenotype)
+
+    if not rs_ids or not genotypes or not phenotypes:
+        return {}
+
+    extras = RsidExtraInfo.objects.filter(
+        rs_id__in=rs_ids,
+        genotype__in=genotypes,
+        phenotype_name__in=phenotypes,
+    )
+    return {(row.rs_id, row.genotype, row.phenotype_name): row for row in extras}

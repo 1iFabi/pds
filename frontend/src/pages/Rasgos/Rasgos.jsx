@@ -158,7 +158,8 @@ const RasgosContent = ({ traits, groupedData, isMobile }) => {
                           categoria: group.name,
                           magnitud: Number.isFinite(parseFloat(magnitude)) ? parseFloat(magnitude).toFixed(1) : 'N/A'
                         }}
-                        explanation={trait.description || trait.explicacion || 'Sin descripción disponible.'}
+                        freqChile={trait.freq_chile_percent}
+                        explanation={trait.phenotype_description || trait.description || trait.explicacion || 'Sin descripción disponible.'}
                         delay={index * 50}
                       />
                     );

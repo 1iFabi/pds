@@ -260,7 +260,8 @@ const Farmacogenetica = () => {
                                       categoria: system.name,
                                       magnitud: drug.magnitud
                                   }}
-                                  explanation={drug.fenotipo || "Sin descripción adicional."}
+                                  freqChile={drug.freq_chile_percent}
+                                  explanation={drug.phenotype_description || drug.fenotipo || "Sin descripción adicional."}
                                   delay={dIdx * 50}
                                 />
                               ))}

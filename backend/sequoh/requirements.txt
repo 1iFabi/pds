@@ -36,3 +36,4 @@ PyJWT==2.10.1
 psycopg2-binary==2.9.10
 python-dotenv==1.0.0
 xhtml2pdf==0.2.15
+pypdf==5.2.0

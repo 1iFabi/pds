@@ -177,6 +177,13 @@
   color: #1e293b;
 }
 
+.dc-stat-note {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.7rem;
+  color: #94a3b8;
+}
+
 .dc-magnitude-bars {
   display: flex;
   gap: 0.35rem;
