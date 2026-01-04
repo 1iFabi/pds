@@ -236,6 +236,27 @@ const normalizeCountryText = (value) => {
 };
 
 
+const containsTokenSequence = (haystack, needle) => {
+  if (!haystack || !needle) return false;
+  if (haystack === needle) return true;
+  const hayTokens = haystack.split(" ");
+  const needleTokens = needle.split(" ");
+  if (needleTokens.length === 1) {
+    return hayTokens.includes(needleTokens[0]);
+  }
+  for (let i = 0; i <= hayTokens.length - needleTokens.length; i += 1) {
+    let match = true;
+    for (let j = 0; j < needleTokens.length; j += 1) {
+      if (hayTokens[i + j] !== needleTokens[j]) {
+        match = false;
+        break;
+      }
+    }
+    if (match) return true;
+  }
+  return false;
+};
+
 const normalizeGeoId = (value) => {
   if (value === null || value === undefined) return "";
   const raw = value.toString().trim();
@@ -433,8 +454,8 @@ const Ancestria = () => {
         // 2. Coincidencia a través del mapeo (Nombre API -> Nombre Mapa)
         if (mappedNormalized === infoNameNormalized) return true;
         if (mappedNormalized === infoCodeNormalized) return true;
-        if (normalizedName.includes(infoNameNormalized)) return true;
-        if (mappedNormalized && mappedNormalized.includes(infoNameNormalized)) return true;
+        if (containsTokenSequence(normalizedName, infoNameNormalized)) return true;
+        if (mappedNormalized && containsTokenSequence(mappedNormalized, infoNameNormalized)) return true;
 
         return false;
     });
@@ -455,13 +476,18 @@ const Ancestria = () => {
         const mappedNormalized = normalizeCountryText(mappedName);
 
         // Buscar en countryInfo usando el nombre normalizado
-        const found = Object.values(countryInfo).find(info => 
-            mappedNormalized === normalizeCountryText(info.name) || 
-            mappedNormalized === normalizeCountryText(info.code) ||
-            normalizedName === normalizeCountryText(info.name) ||
-            normalizedName === normalizeCountryText(info.code) ||
-            normalizedName.includes(normalizeCountryText(info.name)) // Fallback al original
-        );
+        const found = Object.values(countryInfo).find(info => {
+            const infoNameNormalized = normalizeCountryText(info.name);
+            const infoCodeNormalized = normalizeCountryText(info.code);
+            return (
+                mappedNormalized === infoNameNormalized ||
+                mappedNormalized === infoCodeNormalized ||
+                normalizedName === infoNameNormalized ||
+                normalizedName === infoCodeNormalized ||
+                containsTokenSequence(normalizedName, infoNameNormalized) ||
+                (mappedNormalized && containsTokenSequence(mappedNormalized, infoNameNormalized))
+            );
+        });
         
         if (found) {
             const cont = found.continent;
