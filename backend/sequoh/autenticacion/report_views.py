@@ -263,6 +263,7 @@ class UserReportPDFView(APIView):
         if env_dir:
             candidate_dirs.append(Path(env_dir))
         candidate_dirs.extend([
+            settings.BASE_DIR / "report-generator",
             settings.BASE_DIR.parent / "report-generator",
             settings.BASE_DIR.parent.parent / "report-generator",
         ])
