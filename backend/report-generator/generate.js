@@ -27,14 +27,14 @@ const maxItemsPerCategoryRaw = Number.parseInt(
   process.env.REPORT_MAX_ITEMS_PER_CATEGORY || "0",
   10
 );
-const maxItemsPerCategory =
+const maxItemsPerCategory = 
   Number.isFinite(maxItemsPerCategoryRaw) && maxItemsPerCategoryRaw > 0
     ? maxItemsPerCategoryRaw
     : 0;
 const skipRsidPages = process.env.REPORT_SKIP_RSID_PAGES === "1";
 
 const pdfScaleRaw = Number.parseFloat(process.env.REPORT_PDF_SCALE || "1");
-const pdfScale =
+const pdfScale = 
   Number.isFinite(pdfScaleRaw) && pdfScaleRaw > 0 ? pdfScaleRaw : 1;
 
 const enableSingleProcess = process.env.REPORT_SINGLE_PROCESS === "1";
@@ -146,7 +146,7 @@ function normalizeText(value) {
   if (!value) return "";
   return String(value)
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[̀-ͯ]/g, "")
     .toLowerCase();
 }
 
@@ -529,6 +529,22 @@ async function renderPdf(browser, html, options = {}) {
   }
 }
 
+// === TEMPLATE PARSING HELPERS ===
+function parseHtmlTemplate(htmlContent) {
+  const headMatch = htmlContent.match(/<head>([\s\S]*?)<\/head>/i);
+  const bodyMatch = htmlContent.match(/<body>([\s\S]*?)<\/body>/i);
+  const headContent = headMatch ? headMatch[1] : "";
+  const bodyContent = bodyMatch ? bodyMatch[1] : "";
+
+  // Extract style
+  const styleMatch = headContent.match(/<style>([\s\S]*?)<\/style>/i);
+  const styleContent = styleMatch ? styleMatch[1] : "";
+  const otherHead = headContent.replace(/<style>[\s\S]*?<\/style>/i, "");
+
+  return { otherHead, styleContent, bodyContent };
+}
+
+// === MAIN ===
 const args = parseArgs(process.argv.slice(2));
 const inputPath = args.input || defaultDataPath;
 const outDir = args.outDir || path.join(__dirname, "out");
@@ -551,6 +567,36 @@ const bgDataUrl = fileToDataUrl(bgPath, "image/png");
 const coverBgDataUrl = fileToDataUrl(coverBgPath, "image/png") || bgDataUrl;
 const logoDataUrl = fileToDataUrl(logoPath, "image/png") || fileToDataUrl(logoColorPath, "image/png");
 const logoColorDataUrl = fileToDataUrl(logoColorPath, "image/png") || logoDataUrl;
+
+// Parse RSID Template for batching
+const { otherHead: rsidHead, styleContent: rsidStyle, bodyContent: rsidBody } = parseHtmlTemplate(rsidTemplate);
+const rsidMultiPageStyle = `
+  ${rsidStyle}
+  
+  /* Overrides for multi-page batching */
+  html, body {
+    height: auto !important;
+    display: block !important;
+    background: #f8fafc;
+  }
+  .rsid-page {
+    width: 210mm;
+    height: 297mm;
+    position: relative;
+    overflow: hidden;
+    background: #f8fafc;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    page-break-after: always;
+  }
+  .rsid-page:last-child {
+    page-break-after: auto;
+  }
+`;
+const rsidMasterTemplateStart = `<!doctype html><html lang="es"><head>${rsidHead}<style>${rsidMultiPageStyle}</style></head><body>`;
+const rsidMasterTemplateEnd = `</body></html>`;
 
 (async () => {
   const executablePath = resolveBrowserExecutablePath();
@@ -854,37 +900,44 @@ const logoColorDataUrl = fileToDataUrl(logoColorPath, "image/png") || logoDataUr
         files.push(path.resolve(summaryOutPath));
       }
 
-      for (const rawItem of data.rsidItems) {
-        const item = rawItem || {};
-        const pctInfo = formatPercent(item.porcentajeChilenos);
-        const risk = formatRisk(item.riesgo ?? item.risk);
-        const categoryLabel = data.sectionMeta.label || safeText(item.categoria, "Sin clasificar");
+      // === OPTIMIZED RSID GENERATION ===
+      if (data.rsidItems.length > 0) {
+        let combinedInnerHtml = "";
+        for (const rawItem of data.rsidItems) {
+          const item = rawItem || {};
+          const pctInfo = formatPercent(item.porcentajeChilenos);
+          const risk = formatRisk(item.riesgo ?? item.risk);
+          const categoryLabel = data.sectionMeta.label || safeText(item.categoria, "Sin clasificar");
 
-        const rsidHtml = fillTemplate(rsidTemplate, {
-          heroNumber: "RS",
-          rsid: escapeHtml(safeText(item.rsid)),
-          phenotype: escapeHtml(safeText(item.fenotipo)),
-          phenotypeDescription: escapeHtml(safeText(item.phenotypeDescription, "N/D")),
-          category: escapeHtml(categoryLabel),
-          riskLabel: escapeHtml(risk.label),
-          riskClass: risk.className,
-          source: escapeHtml(safeText(item.fuente)),
-          chilePercentDisplay: pctInfo.display,
-          chilePercentWidth: pctInfo.width,
-          chilePercentPos: pctInfo.pos,
-          refAllele: escapeHtml(safeText(item.aleloReferencia)),
-          altAllele: escapeHtml(safeText(item.aleloAlternativo)),
-          chromosome: escapeHtml(safeText(item.cromosoma)),
-          position: escapeHtml(safeText(item.posicion)),
-          pageNumber: nextNumberedPage(),
-          pageTotal: totalNumberedPages,
-        });
+          const filledPage = fillTemplate(rsidBody, {
+            heroNumber: "RS",
+            rsid: escapeHtml(safeText(item.rsid)),
+            phenotype: escapeHtml(safeText(item.fenotipo)),
+            phenotypeDescription: escapeHtml(safeText(item.phenotypeDescription, "N/D")),
+            category: escapeHtml(categoryLabel),
+            riskLabel: escapeHtml(risk.label),
+            riskClass: risk.className,
+            source: escapeHtml(safeText(item.fuente)),
+            chilePercentDisplay: pctInfo.display,
+            chilePercentWidth: pctInfo.width,
+            chilePercentPos: pctInfo.pos,
+            refAllele: escapeHtml(safeText(item.aleloReferencia)),
+            altAllele: escapeHtml(safeText(item.aleloAlternativo)),
+            chromosome: escapeHtml(safeText(item.cromosoma)),
+            position: escapeHtml(safeText(item.posicion)),
+            pageNumber: nextNumberedPage(),
+            pageTotal: totalNumberedPages,
+          });
 
-        const rsidPdf = await renderPdfWithRetry(rsidHtml);
-        const rsidLabel = safeFileSegment(item.rsid, "rsid");
+          combinedInnerHtml += `<div class="rsid-page">${filledPage}</div>`;
+        }
+
+        const fullRsidHtml = `${rsidMasterTemplateStart}${combinedInnerHtml}${rsidMasterTemplateEnd}`;
+        
+        const rsidPdf = await renderPdfWithRetry(fullRsidHtml);
         const rsidOutPath = path.join(
           outDir,
-          `${reportId}_rsid_${data.categoryKey}_${rsidLabel}.pdf`
+          `${reportId}_rsid_${data.categoryKey}_combined.pdf`
         );
         fs.writeFileSync(rsidOutPath, rsidPdf);
         files.push(path.resolve(rsidOutPath));
