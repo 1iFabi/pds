@@ -171,7 +171,10 @@ function escapeHtml(value) {
 }
 
 function fillTemplate(tpl, vars) {
-  let html = tpl;
+  // OPTIMIZATION: Remove external fonts to prevent load timeouts
+  let html = tpl.replace(/<link[^>]*fonts\.googleapis[^>]*>/gi, "")
+                .replace(/<link[^>]*fonts\.gstatic[^>]*>/gi, "");
+  
   for (const [key, value] of Object.entries(vars)) {
     const safeValue = value === undefined || value === null ? "" : String(value);
     html = html.replaceAll(`{{${key}}}`, safeValue);
@@ -655,7 +658,24 @@ const rsidMasterTemplateEnd = `</body></html>`;
       Math.min(100, Math.round(100 - (highPct * 1.5 + midPct * 0.3)))
     );
     const markerBorderColor = interpolateColor(geneticScore);
-    const donutUrl = getQuickChartUrl({ high: highCount, mid: midCount, low: lowCount });
+    
+    // OPTIMIZATION: Fetch chart in Node to avoid Puppeteer network timeout
+    const chartUrl = getQuickChartUrl({ high: highCount, mid: midCount, low: lowCount });
+    let donutUrl = "";
+    try {
+      const chartRes = await fetch(chartUrl);
+      if (chartRes.ok) {
+        const arrayBuffer = await chartRes.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+        donutUrl = `data:image/png;base64,${buffer.toString("base64")}`;
+      } else {
+        console.warn("QuickChart fetch failed:", chartRes.status);
+      }
+    } catch (err) {
+      console.warn("QuickChart fetch error:", err.message);
+    }
+    // Fallback
+    if (!donutUrl) donutUrl = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
 
     const ancestryInfo = buildAncestrySummary(person.ancestryTop5 || []);
     const highlightsHtml = buildHighlights(person.rsids || []);
