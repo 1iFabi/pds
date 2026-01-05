@@ -23,6 +23,34 @@ const coverBgPath = path.join(__dirname, "assets", "dna-bg.png");
 const logoColorPath = path.join(__dirname, "assets", "genomiacolor.png");
 const logoPath = path.join(__dirname, "assets", "genomia.png");
 
+const maxItemsPerCategoryRaw = Number.parseInt(
+  process.env.REPORT_MAX_ITEMS_PER_CATEGORY || "0",
+  10
+);
+const maxItemsPerCategory =
+  Number.isFinite(maxItemsPerCategoryRaw) && maxItemsPerCategoryRaw > 0
+    ? maxItemsPerCategoryRaw
+    : 0;
+const skipRsidPages = process.env.REPORT_SKIP_RSID_PAGES === "1";
+
+const chromiumArgs = [
+  "--no-sandbox",
+  "--disable-setuid-sandbox",
+  "--disable-dev-shm-usage",
+  "--no-zygote",
+  "--single-process",
+  "--disable-gpu",
+  "--disable-extensions",
+  "--disable-background-networking",
+  "--disable-default-apps",
+  "--disable-sync",
+  "--metrics-recording-only",
+  "--mute-audio",
+  "--no-first-run",
+  "--no-default-browser-check",
+  "--disable-features=IsolateOrigins,site-per-process",
+];
+
 const browserExecutableCandidates = [
   process.env.PUPPETEER_EXECUTABLE_PATH,
   "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
@@ -494,13 +522,14 @@ const logoColorDataUrl = fileToDataUrl(logoColorPath, "image/png") || logoDataUr
 (async () => {
   const executablePath = resolveBrowserExecutablePath();
   const launchOptions = {
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    args: chromiumArgs,
   };
   if (executablePath) {
     launchOptions.executablePath = executablePath;
   }
   const browser = await puppeteer.launch(launchOptions);
   const page = await browser.newPage();
+  await page.setCacheEnabled(false);
 
   const manifest = { reports: [] };
 
@@ -571,7 +600,10 @@ const logoColorDataUrl = fileToDataUrl(logoColorPath, "image/png") || logoDataUr
           return magB - magA;
         });
 
-      const summaryChunks = rebalanceChunks(chunkItems(sortedItems, summaryPageSize));
+      const limitedItems =
+        maxItemsPerCategory > 0 ? sortedItems.slice(0, maxItemsPerCategory) : sortedItems;
+      const rsidItems = skipRsidPages ? [] : limitedItems;
+      const summaryChunks = rebalanceChunks(chunkItems(limitedItems, summaryPageSize));
       const sectionMeta = categoryMeta[categoryKey] || { label: categoryKey };
       const sectionNumber = formatSectionNumber(3 + index);
 
@@ -579,6 +611,7 @@ const logoColorDataUrl = fileToDataUrl(logoColorPath, "image/png") || logoDataUr
         categoryKey,
         counts,
         sortedItems,
+        rsidItems,
         summaryChunks,
         sectionMeta,
         sectionNumber,
@@ -590,7 +623,7 @@ const logoColorDataUrl = fileToDataUrl(logoColorPath, "image/png") || logoDataUr
       1 +
       1 +
       categoryData.reduce(
-        (sum, entry) => sum + 1 + entry.summaryChunks.length + entry.sortedItems.length,
+        (sum, entry) => sum + 1 + entry.summaryChunks.length + entry.rsidItems.length,
         0
       ) +
       1;
@@ -631,7 +664,7 @@ const logoColorDataUrl = fileToDataUrl(logoColorPath, "image/png") || logoDataUr
         number: data.sectionNumber,
         page: displayPage,
       });
-      displayPage += 1 + data.summaryChunks.length + data.sortedItems.length;
+      displayPage += 1 + data.summaryChunks.length + data.rsidItems.length;
     }
 
     tocEntries.push({
@@ -767,7 +800,7 @@ const logoColorDataUrl = fileToDataUrl(logoColorPath, "image/png") || logoDataUr
         files.push(path.resolve(summaryOutPath));
       }
 
-      for (const rawItem of data.sortedItems) {
+      for (const rawItem of data.rsidItems) {
         const item = rawItem || {};
         const pctInfo = formatPercent(item.porcentajeChilenos);
         const risk = formatRisk(item.riesgo ?? item.risk);
