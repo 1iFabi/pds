@@ -33,6 +33,10 @@ const maxItemsPerCategory =
     : 0;
 const skipRsidPages = process.env.REPORT_SKIP_RSID_PAGES === "1";
 
+const pdfScaleRaw = Number.parseFloat(process.env.REPORT_PDF_SCALE || "1");
+const pdfScale =
+  Number.isFinite(pdfScaleRaw) && pdfScaleRaw > 0 ? pdfScaleRaw : 1;
+
 const chromiumArgs = [
   "--no-sandbox",
   "--disable-setuid-sandbox",
@@ -479,21 +483,29 @@ function rebalanceChunks(chunks) {
   return [...chunks.slice(0, -2), balancedPrev, balancedLast];
 }
 
-async function renderPdf(page, html, options = {}) {
+async function renderPdf(browser, html, options = {}) {
   const { waitForSelector } = options;
-  await page.setContent(html, { waitUntil: "load", timeout: 60000 });
-  if (waitForSelector) {
-    try {
-      await page.waitForSelector(waitForSelector, { timeout: 30000 });
-    } catch {
-      // Ignore render wait timeouts to keep PDF output
+  const page = await browser.newPage();
+  await page.setCacheEnabled(false);
+  try {
+    await page.setContent(html, { waitUntil: "load", timeout: 60000 });
+    if (waitForSelector) {
+      try {
+        await page.waitForSelector(waitForSelector, { timeout: 30000 });
+      } catch {
+        // Ignore render wait timeouts to keep PDF output
+      }
     }
+    const pdf = await page.pdf({
+      format: "A4",
+      printBackground: true,
+      scale: pdfScale,
+      margin: { top: 0, right: 0, bottom: 0, left: 0 },
+    });
+    return pdf;
+  } finally {
+    await page.close();
   }
-  return page.pdf({
-    format: "A4",
-    printBackground: true,
-    margin: { top: 0, right: 0, bottom: 0, left: 0 },
-  });
 }
 
 const args = parseArgs(process.argv.slice(2));
@@ -528,8 +540,6 @@ const logoColorDataUrl = fileToDataUrl(logoColorPath, "image/png") || logoDataUr
     launchOptions.executablePath = executablePath;
   }
   const browser = await puppeteer.launch(launchOptions);
-  const page = await browser.newPage();
-  await page.setCacheEnabled(false);
 
   const manifest = { reports: [] };
 
@@ -684,7 +694,7 @@ const logoColorDataUrl = fileToDataUrl(logoColorPath, "image/png") || logoDataUr
       date: escapeHtml(person.date ?? ""),
       qrDataUrl,
     });
-    const coverPdf = await renderPdf(page, coverHtml);
+    const coverPdf = await renderPdf(browser, coverHtml);
     const coverOutPath = path.join(outDir, `${reportId}_portada.pdf`);
     fs.writeFileSync(coverOutPath, coverPdf);
     files.push(path.resolve(coverOutPath));
@@ -692,7 +702,7 @@ const logoColorDataUrl = fileToDataUrl(logoColorPath, "image/png") || logoDataUr
     const indexHtml = fillTemplate(indexTemplate, {
       indexRowsHtml,
     });
-    const indexPdf = await renderPdf(page, indexHtml);
+    const indexPdf = await renderPdf(browser, indexHtml);
     const indexOutPath = path.join(outDir, `${reportId}_indice.pdf`);
     fs.writeFileSync(indexOutPath, indexPdf);
     files.push(path.resolve(indexOutPath));
@@ -706,7 +716,7 @@ const logoColorDataUrl = fileToDataUrl(logoColorPath, "image/png") || logoDataUr
       pageNumber: nextNumberedPage(),
       pageTotal: totalNumberedPages,
     });
-    const introPdf = await renderPdf(page, introHtml);
+    const introPdf = await renderPdf(browser, introHtml);
     const introOutPath = path.join(outDir, `${reportId}_intro.pdf`);
     fs.writeFileSync(introOutPath, introPdf);
     files.push(path.resolve(introOutPath));
@@ -739,7 +749,7 @@ const logoColorDataUrl = fileToDataUrl(logoColorPath, "image/png") || logoDataUr
       pageTotal: totalNumberedPages,
     });
 
-    const reportPdf = await renderPdf(page, reportHtmlFilled);
+    const reportPdf = await renderPdf(browser, reportHtmlFilled);
     const reportOutPath = path.join(outDir, `${reportId}_reporte.pdf`);
     fs.writeFileSync(reportOutPath, reportPdf);
     files.push(path.resolve(reportOutPath));
@@ -757,7 +767,7 @@ const logoColorDataUrl = fileToDataUrl(logoColorPath, "image/png") || logoDataUr
       pageNumber: nextNumberedPage(),
       pageTotal: totalNumberedPages,
     });
-    const ancestryPdf = await renderPdf(page, ancestryHtml, { waitForSelector: ".country" });
+    const ancestryPdf = await renderPdf(browser, ancestryHtml, { waitForSelector: ".country" });
     const ancestryOutPath = path.join(outDir, `${reportId}_ancestria.pdf`);
     fs.writeFileSync(ancestryOutPath, ancestryPdf);
     files.push(path.resolve(ancestryOutPath));
@@ -770,7 +780,7 @@ const logoColorDataUrl = fileToDataUrl(logoColorPath, "image/png") || logoDataUr
         pageTotal: totalNumberedPages,
       });
       const sectionOutPath = path.join(outDir, `${reportId}_section_${data.categoryKey}.pdf`);
-      const sectionPdf = await renderPdf(page, sectionHtml);
+      const sectionPdf = await renderPdf(browser, sectionHtml);
       fs.writeFileSync(sectionOutPath, sectionPdf);
       files.push(path.resolve(sectionOutPath));
 
@@ -795,7 +805,7 @@ const logoColorDataUrl = fileToDataUrl(logoColorPath, "image/png") || logoDataUr
           ? `_summary_${data.categoryKey}_${index + 1}`
           : `_summary_${data.categoryKey}`;
         const summaryOutPath = path.join(outDir, `${reportId}${summarySuffix}.pdf`);
-        const summaryPdf = await renderPdf(page, summaryHtml);
+        const summaryPdf = await renderPdf(browser, summaryHtml);
         fs.writeFileSync(summaryOutPath, summaryPdf);
         files.push(path.resolve(summaryOutPath));
       }
@@ -826,7 +836,7 @@ const logoColorDataUrl = fileToDataUrl(logoColorPath, "image/png") || logoDataUr
           pageTotal: totalNumberedPages,
         });
 
-        const rsidPdf = await renderPdf(page, rsidHtml);
+        const rsidPdf = await renderPdf(browser, rsidHtml);
         const rsidLabel = safeFileSegment(item.rsid, "rsid");
         const rsidOutPath = path.join(
           outDir,
@@ -848,7 +858,7 @@ const logoColorDataUrl = fileToDataUrl(logoColorPath, "image/png") || logoDataUr
       pageNumber: nextNumberedPage(),
       pageTotal: totalNumberedPages,
     });
-    const closingPdf = await renderPdf(page, closingHtml);
+    const closingPdf = await renderPdf(browser, closingHtml);
     const closingOutPath = path.join(outDir, `${reportId}_cierre.pdf`);
     fs.writeFileSync(closingOutPath, closingPdf);
     files.push(path.resolve(closingOutPath));
