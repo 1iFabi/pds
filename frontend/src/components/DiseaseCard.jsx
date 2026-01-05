@@ -23,6 +23,13 @@ const DiseaseCard = ({ disease, level }) => {
   // Magnitude 0-5
   const magnitude = disease.magnitud_efecto ? parseFloat(disease.magnitud_efecto) : 0;
   const roundedMagnitude = Math.round(magnitude);
+  const formatFrequency = (value) => {
+    if (value === null || value === undefined || value === '') return 'N/D';
+    const parsed = Number(value);
+    if (Number.isNaN(parsed)) return 'N/D';
+    const percent = parsed <= 1 ? parsed * 100 : parsed;
+    return `${percent.toFixed(2)}%`;
+  };
 
   return (
     <div className={`disease-card ${riskClass}`}>
@@ -73,6 +80,15 @@ const DiseaseCard = ({ disease, level }) => {
               ))}
             </div>
           </div>
+
+          <div className="dc-stat-box">
+            <div className="dc-stat-header">
+              <Globe size={16} className="text-gray-400" />
+              <span className="dc-stat-label">FRECUENCIA CHILE</span>
+            </div>
+            <span className="dc-stat-value">{formatFrequency(disease.freq_chile_percent)}</span>
+            <span className="dc-stat-note">Frecuencia estimada para este genotipo.</span>
+          </div>
           
           {disease.ancestria_pais && (
              <div className="dc-stat-box">
@@ -109,7 +125,7 @@ const DiseaseCard = ({ disease, level }) => {
         <div className="dc-expanded">
           <h4>Explicación</h4>
           <p className="dc-description">
-            {disease.description || "No hay una descripción detallada disponible para esta variante."}
+            {disease.description || disease.phenotype_description || "No hay una descripción detallada disponible para esta variante."}
           </p>
         </div>
       )}

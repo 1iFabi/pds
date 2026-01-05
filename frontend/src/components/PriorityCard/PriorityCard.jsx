@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ChevronDown, AlertCircle, AlertTriangle, Info } from "lucide-react";
 import { cn } from "../../lib/utils";
-import DiseaseCard from "../DiseaseCard";
+import GeneticTraitBar from "../GeneticTraitBar/GeneticTraitBar";
 import "./PriorityCard.css";
 
 const priorityConfig = {
@@ -26,6 +26,18 @@ const priorityConfig = {
     accentColor: "text-blue-600",
     iconBgColor: "bg-blue-100",
   },
+};
+
+const impactColors = {
+  high: "#8b5cf6",
+  medium: "#06b6d4",
+  low: "#f59e0b",
+};
+
+const impactLabels = {
+  high: "Alto",
+  medium: "Medio",
+  low: "Bajo",
 };
 
 const PriorityCard = ({ level, title, diseases }) => {
@@ -68,9 +80,37 @@ const PriorityCard = ({ level, title, diseases }) => {
       {isExpanded && (
         <div className="px-6 pb-4 space-y-2 max-h-[calc(100vh-300px)] overflow-y-auto">
           {diseases.length > 0 ? (
-            diseases.map((disease) => (
-              <DiseaseCard key={disease.id} disease={disease} level={level} />
-            ))
+            diseases.map((disease, index) => {
+              const magnitude = Number(disease.magnitud_efecto);
+              const hasMagnitude = Number.isFinite(magnitude) && magnitude > 0;
+              const percentage = hasMagnitude
+                ? Math.min(100, Math.round((magnitude / 5) * 100))
+                : level === "high"
+                  ? 80
+                  : level === "medium"
+                    ? 55
+                    : 30;
+              return (
+                <GeneticTraitBar
+                  key={disease.id}
+                  title={disease.title}
+                  rsid={disease.rsId || disease.rsid}
+                  genotype={disease.genotype}
+                  percentage={percentage}
+                  impactLabel={impactLabels[level] || "Bajo"}
+                  impactColor={impactColors[level] || "#64748b"}
+                  details={{
+                    cromosoma: disease.cromosoma || "N/A",
+                    posicion: disease.posicion || "N/A",
+                    categoria: "Enfermedades",
+                    magnitud: hasMagnitude ? magnitude.toFixed(2) : "N/A",
+                  }}
+                  freqChile={disease.freq_chile_percent}
+                  explanation={disease.description || "Sin descripcion disponible."}
+                  delay={index * 50}
+                />
+              );
+            })
           ) : (
             <p className="text-center text-gray-500 py-4">No hay enfermedades en esta categoría</p>
           )}

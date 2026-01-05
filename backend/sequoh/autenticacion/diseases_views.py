@@ -5,6 +5,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from .authentication import JWTAuthentication
 from .models import UserSNP, SNP
+from .utils import build_rsid_extra_info_map
 from collections import defaultdict
 import re
 
@@ -43,6 +44,9 @@ class DiseasesAPIView(APIView):
             user=user,
             snp__categoria='enfermedades'
         ).select_related('snp')
+
+        snp_list = [us.snp for us in user_snps if us.snp]
+        extra_info_map = build_rsid_extra_info_map(snp_list)
         
         # Organizar SNPs por prioridad basado en nivel_riesgo
         # Clasificación simple: Alto, Intermedio, Bajo
@@ -54,6 +58,14 @@ class DiseasesAPIView(APIView):
         
         for user_snp in user_snps:
             snp = user_snp.snp
+            phenotype_name = (snp.fenotipo or "N/D").strip() or "N/D"
+            extra_info = extra_info_map.get((snp.rsid, snp.genotipo, phenotype_name))
+            freq_chile = None
+            if extra_info and extra_info.freq_chile_percent is not None:
+                try:
+                    freq_chile = float(extra_info.freq_chile_percent)
+                except (TypeError, ValueError):
+                    freq_chile = None
             
             # Usar nivel_riesgo y magnitud_efecto
             nivel_riesgo = snp.nivel_riesgo or 'Bajo'
@@ -72,7 +84,9 @@ class DiseasesAPIView(APIView):
                 'nivel_riesgo': nivel_riesgo,
                 'magnitud_efecto': magnitud_efecto,
                 'fuente': snp.fuente_base_datos,
-                'tipo_evidencia': snp.tipo_evidencia
+                'tipo_evidencia': snp.tipo_evidencia,
+                'freq_chile_percent': freq_chile,
+                'phenotype_description': extra_info.phenotype_description if extra_info else None,
             }
             
             # Clasificar por prioridad basado en nivel_riesgo

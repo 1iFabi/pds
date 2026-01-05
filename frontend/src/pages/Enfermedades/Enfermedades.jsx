@@ -540,11 +540,13 @@ const Enfermedades = () => {
         cromosoma: snp.cromosoma,
         posicion: snp.posicion || snp.position,
         description:
+          snp.phenotype_description ||
           snp.fenotipo ||
           snp.phenotype ||
           snp.description ||
           snp.disease ||
           'Sin descripción disponible',
+        freq_chile_percent: snp.freq_chile_percent,
       }));
       return { level, title, diseases };
     });
