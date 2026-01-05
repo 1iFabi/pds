@@ -37,12 +37,12 @@ const pdfScaleRaw = Number.parseFloat(process.env.REPORT_PDF_SCALE || "1");
 const pdfScale =
   Number.isFinite(pdfScaleRaw) && pdfScaleRaw > 0 ? pdfScaleRaw : 1;
 
+const enableSingleProcess = process.env.REPORT_SINGLE_PROCESS === "1";
+
 const chromiumArgs = [
   "--no-sandbox",
   "--disable-setuid-sandbox",
   "--disable-dev-shm-usage",
-  "--no-zygote",
-  "--single-process",
   "--disable-gpu",
   "--disable-extensions",
   "--disable-background-networking",
@@ -54,6 +54,10 @@ const chromiumArgs = [
   "--no-default-browser-check",
   "--disable-features=IsolateOrigins,site-per-process",
 ];
+
+if (enableSingleProcess) {
+  chromiumArgs.push("--no-zygote", "--single-process");
+}
 
 const browserExecutableCandidates = [
   process.env.PUPPETEER_EXECUTABLE_PATH,
@@ -72,6 +76,19 @@ function resolveBrowserExecutablePath() {
   return "";
 }
 
+function shouldRetryBrowser(err) {
+  if (!err) return false;
+  const message = [
+    err.message,
+    err.cause?.message,
+    typeof err === "string" ? err : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+  return /Target closed|TargetCloseError|Connection closed|ConnectionClosedError|Protocol error/i.test(
+    message
+  );
+}
 
 function parseArgs(argv) {
   const args = {};
@@ -504,7 +521,11 @@ async function renderPdf(browser, html, options = {}) {
     });
     return pdf;
   } finally {
-    await page.close();
+    try {
+      await page.close();
+    } catch {
+      // Ignore page close errors (browser may have crashed)
+    }
   }
 }
 
@@ -539,7 +560,28 @@ const logoColorDataUrl = fileToDataUrl(logoColorPath, "image/png") || logoDataUr
   if (executablePath) {
     launchOptions.executablePath = executablePath;
   }
-  const browser = await puppeteer.launch(launchOptions);
+  const createBrowser = () => puppeteer.launch(launchOptions);
+  const safeCloseBrowser = async (browserInstance) => {
+    if (!browserInstance) return;
+    try {
+      await browserInstance.close();
+    } catch {
+      // Ignore close errors
+    }
+  };
+  const browserRef = { current: await createBrowser() };
+  const renderPdfWithRetry = async (html, options) => {
+    try {
+      return await renderPdf(browserRef.current, html, options);
+    } catch (err) {
+      if (!shouldRetryBrowser(err)) {
+        throw err;
+      }
+      await safeCloseBrowser(browserRef.current);
+      browserRef.current = await createBrowser();
+      return await renderPdf(browserRef.current, html, options);
+    }
+  };
 
   const manifest = { reports: [] };
 
@@ -694,7 +736,7 @@ const logoColorDataUrl = fileToDataUrl(logoColorPath, "image/png") || logoDataUr
       date: escapeHtml(person.date ?? ""),
       qrDataUrl,
     });
-    const coverPdf = await renderPdf(browser, coverHtml);
+    const coverPdf = await renderPdfWithRetry(coverHtml);
     const coverOutPath = path.join(outDir, `${reportId}_portada.pdf`);
     fs.writeFileSync(coverOutPath, coverPdf);
     files.push(path.resolve(coverOutPath));
@@ -702,7 +744,7 @@ const logoColorDataUrl = fileToDataUrl(logoColorPath, "image/png") || logoDataUr
     const indexHtml = fillTemplate(indexTemplate, {
       indexRowsHtml,
     });
-    const indexPdf = await renderPdf(browser, indexHtml);
+    const indexPdf = await renderPdfWithRetry(indexHtml);
     const indexOutPath = path.join(outDir, `${reportId}_indice.pdf`);
     fs.writeFileSync(indexOutPath, indexPdf);
     files.push(path.resolve(indexOutPath));
@@ -716,7 +758,7 @@ const logoColorDataUrl = fileToDataUrl(logoColorPath, "image/png") || logoDataUr
       pageNumber: nextNumberedPage(),
       pageTotal: totalNumberedPages,
     });
-    const introPdf = await renderPdf(browser, introHtml);
+    const introPdf = await renderPdfWithRetry(introHtml);
     const introOutPath = path.join(outDir, `${reportId}_intro.pdf`);
     fs.writeFileSync(introOutPath, introPdf);
     files.push(path.resolve(introOutPath));
@@ -749,7 +791,7 @@ const logoColorDataUrl = fileToDataUrl(logoColorPath, "image/png") || logoDataUr
       pageTotal: totalNumberedPages,
     });
 
-    const reportPdf = await renderPdf(browser, reportHtmlFilled);
+    const reportPdf = await renderPdfWithRetry(reportHtmlFilled);
     const reportOutPath = path.join(outDir, `${reportId}_reporte.pdf`);
     fs.writeFileSync(reportOutPath, reportPdf);
     files.push(path.resolve(reportOutPath));
@@ -767,7 +809,9 @@ const logoColorDataUrl = fileToDataUrl(logoColorPath, "image/png") || logoDataUr
       pageNumber: nextNumberedPage(),
       pageTotal: totalNumberedPages,
     });
-    const ancestryPdf = await renderPdf(browser, ancestryHtml, { waitForSelector: ".country" });
+    const ancestryPdf = await renderPdfWithRetry(ancestryHtml, {
+      waitForSelector: ".country",
+    });
     const ancestryOutPath = path.join(outDir, `${reportId}_ancestria.pdf`);
     fs.writeFileSync(ancestryOutPath, ancestryPdf);
     files.push(path.resolve(ancestryOutPath));
@@ -780,7 +824,7 @@ const logoColorDataUrl = fileToDataUrl(logoColorPath, "image/png") || logoDataUr
         pageTotal: totalNumberedPages,
       });
       const sectionOutPath = path.join(outDir, `${reportId}_section_${data.categoryKey}.pdf`);
-      const sectionPdf = await renderPdf(browser, sectionHtml);
+      const sectionPdf = await renderPdfWithRetry(sectionHtml);
       fs.writeFileSync(sectionOutPath, sectionPdf);
       files.push(path.resolve(sectionOutPath));
 
@@ -805,7 +849,7 @@ const logoColorDataUrl = fileToDataUrl(logoColorPath, "image/png") || logoDataUr
           ? `_summary_${data.categoryKey}_${index + 1}`
           : `_summary_${data.categoryKey}`;
         const summaryOutPath = path.join(outDir, `${reportId}${summarySuffix}.pdf`);
-        const summaryPdf = await renderPdf(browser, summaryHtml);
+        const summaryPdf = await renderPdfWithRetry(summaryHtml);
         fs.writeFileSync(summaryOutPath, summaryPdf);
         files.push(path.resolve(summaryOutPath));
       }
@@ -836,7 +880,7 @@ const logoColorDataUrl = fileToDataUrl(logoColorPath, "image/png") || logoDataUr
           pageTotal: totalNumberedPages,
         });
 
-        const rsidPdf = await renderPdf(browser, rsidHtml);
+        const rsidPdf = await renderPdfWithRetry(rsidHtml);
         const rsidLabel = safeFileSegment(item.rsid, "rsid");
         const rsidOutPath = path.join(
           outDir,
@@ -858,7 +902,7 @@ const logoColorDataUrl = fileToDataUrl(logoColorPath, "image/png") || logoDataUr
       pageNumber: nextNumberedPage(),
       pageTotal: totalNumberedPages,
     });
-    const closingPdf = await renderPdf(browser, closingHtml);
+    const closingPdf = await renderPdfWithRetry(closingHtml);
     const closingOutPath = path.join(outDir, `${reportId}_cierre.pdf`);
     fs.writeFileSync(closingOutPath, closingPdf);
     files.push(path.resolve(closingOutPath));
@@ -866,7 +910,7 @@ const logoColorDataUrl = fileToDataUrl(logoColorPath, "image/png") || logoDataUr
     manifest.reports.push({ reportId, files, tocEntries });
   }
 
-  await browser.close();
+  await safeCloseBrowser(browserRef.current);
 
   if (manifestPath) {
     fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
