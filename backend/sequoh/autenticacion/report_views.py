@@ -1,4 +1,5 @@
 import json
+import os
 import subprocess
 import tempfile
 import unicodedata
@@ -255,10 +256,25 @@ class UserReportPDFView(APIView):
         user = request.user
         payload = _build_report_payload(user)
 
-        report_generator_dir = settings.BASE_DIR.parent.parent / "report-generator"
-        script_path = report_generator_dir / "generate.js"
+        report_generator_dir = None
+        script_path = None
+        candidate_dirs = []
+        env_dir = os.environ.get("REPORT_GENERATOR_DIR")
+        if env_dir:
+            candidate_dirs.append(Path(env_dir))
+        candidate_dirs.extend([
+            settings.BASE_DIR.parent / "report-generator",
+            settings.BASE_DIR.parent.parent / "report-generator",
+        ])
 
-        if not script_path.exists():
+        for candidate in candidate_dirs:
+            candidate_path = candidate / "generate.js"
+            if candidate_path.exists():
+                report_generator_dir = candidate
+                script_path = candidate_path
+                break
+
+        if not script_path:
             return HttpResponse("Report generator no encontrado", status=500)
 
         with tempfile.TemporaryDirectory() as tmp_dir:

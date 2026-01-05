@@ -23,6 +23,24 @@ const coverBgPath = path.join(__dirname, "assets", "dna-bg.png");
 const logoColorPath = path.join(__dirname, "assets", "genomiacolor.png");
 const logoPath = path.join(__dirname, "assets", "genomia.png");
 
+const browserExecutableCandidates = [
+  process.env.PUPPETEER_EXECUTABLE_PATH,
+  "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+  "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
+  "C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe",
+  "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+];
+
+function resolveBrowserExecutablePath() {
+  for (const candidate of browserExecutableCandidates) {
+    if (candidate && fs.existsSync(candidate)) {
+      return candidate;
+    }
+  }
+  return "";
+}
+
+
 function parseArgs(argv) {
   const args = {};
   for (let i = 0; i < argv.length; i += 1) {
@@ -474,9 +492,14 @@ const logoDataUrl = fileToDataUrl(logoPath, "image/png") || fileToDataUrl(logoCo
 const logoColorDataUrl = fileToDataUrl(logoColorPath, "image/png") || logoDataUrl;
 
 (async () => {
-  const browser = await puppeteer.launch({
+  const executablePath = resolveBrowserExecutablePath();
+  const launchOptions = {
     args: ["--no-sandbox", "--disable-setuid-sandbox"],
-  });
+  };
+  if (executablePath) {
+    launchOptions.executablePath = executablePath;
+  }
+  const browser = await puppeteer.launch(launchOptions);
   const page = await browser.newPage();
 
   const manifest = { reports: [] };
