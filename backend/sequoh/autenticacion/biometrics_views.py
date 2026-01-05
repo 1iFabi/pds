@@ -5,6 +5,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from .authentication import JWTAuthentication
 from .models import UserSNP
+from .utils import build_rsid_extra_info_map
 import random
 import sys
 
@@ -36,6 +37,7 @@ class BiometricsAPIView(APIView):
         for us in user_snps:
             if us.snp:
                 snp_pool.append(us.snp)
+        extra_info_map = build_rsid_extra_info_map(snp_pool)
 
         has_real_data = len(snp_pool) > 0
         print(f"BiometricsAPIView: Found {len(snp_pool)} SNPs for user {user.id}", file=sys.stdout)
@@ -68,6 +70,14 @@ class BiometricsAPIView(APIView):
         if has_real_data:
             for snp in snp_pool:
                 impact_level, magnitude = compute_impact(snp)
+                phenotype_name = (snp.fenotipo or "N/D").strip() or "N/D"
+                extra_info = extra_info_map.get((snp.rsid, snp.genotipo, phenotype_name))
+                freq_chile = None
+                if extra_info and extra_info.freq_chile_percent is not None:
+                    try:
+                        freq_chile = float(extra_info.freq_chile_percent)
+                    except (TypeError, ValueError):
+                        freq_chile = None
                 variants.append({
                     "rsid": snp.rsid,
                     "genotipo": snp.genotipo,
@@ -80,6 +90,8 @@ class BiometricsAPIView(APIView):
                     "nivel_riesgo": snp.nivel_riesgo,
                     "impact": impact_level,
                     "explanation": snp.fenotipo or f"Variante {snp.rsid}",
+                    "freq_chile_percent": freq_chile,
+                    "phenotype_description": extra_info.phenotype_description if extra_info else None,
                 })
 
             for row_idx, row in enumerate(rows):

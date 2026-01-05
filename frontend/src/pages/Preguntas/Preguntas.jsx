@@ -7,35 +7,35 @@ const Preguntas = () => {
   const faqData = [
     {
       pregunta: '¿Qué tipo de pruebas genéticas realiza el servicio?',
-      respuesta: 'Realizamos análisis genéticos completos que incluyen predisposición a enfermedades, farmacogenética, rasgos personales, ancestría étnica y compatibilidad nutricional. Nuestras pruebas analizan más de 700,000 marcadores genéticos para brindarte información integral sobre tu ADN.'
+      respuesta: 'Realizamos un análisis genético amplio que incluye predisposición a enfermedades comunes, farmacogenética, rasgos biológicos, ancestría, biomarcadores y biométricas. El estudio se basa en el análisis de cientos de miles de marcadores genéticos relevantes, seleccionados por su respaldo científico, lo que permite entregar información útil y accionable sobre el ADN del usuario.'
     },
     {
       pregunta: '¿Los resultados genéticos garantizan que desarrollaré la enfermedad indicada?',
-      respuesta: 'No, los resultados genéticos indican predisposición o riesgo, no certeza. La genética es solo uno de los factores que influyen en tu salud. El estilo de vida, el ambiente y otros factores también son determinantes. Siempre recomendamos consultar con profesionales de la salud para interpretar correctamente los resultados.'
+      respuesta: 'No. Los resultados genéticos no garantizan que una persona desarrollará una enfermedad. Indican predisposición o riesgo relativo, no certezas. La salud depende de múltiples factores como el estilo de vida, el ambiente y los antecedentes personales. Los resultados deben interpretarse como una herramienta informativa y preventiva, idealmente junto a un profesional de la salud.'
     },
     {
       pregunta: '¿Cuánto tiempo toma recibir los resultados de mi prueba genética?',
-      respuesta: 'Una vez que recibimos tu muestra en nuestro laboratorio, el proceso de análisis toma entre 4 a 6 semanas. Te notificaremos por correo electrónico cuando tus resultados estén listos y podrás acceder a ellos a través de nuestra plataforma web segura.'
+      respuesta: 'Una vez que la muestra llega al laboratorio, el proceso de análisis y validación de resultados suele tomar algunas semanas. Cuando el reporte está listo, el usuario recibe una notificación por correo electrónico con acceso a sus resultados a través de la plataforma.'
     },
     {
       pregunta: '¿Mis resultados genéticos están seguros y protegidos?',
-      respuesta: 'Sí, la seguridad de tu información genética es nuestra máxima prioridad. Utilizamos encriptación de grado militar, cumplimos con estándares internacionales de protección de datos y nunca compartimos tu información personal con terceros sin tu consentimiento explícito.'
+      respuesta: 'Sí. El sistema está diseñado para minimizar el uso de datos personales. Cada muestra se procesa utilizando un SampleID único, que es enviado al usuario por correo al momento del registro. El laboratorio trabaja únicamente con este identificador, sin acceso a nombres, RUT u otros datos sensibles. De esta forma, los resultados genéticos no están directamente asociados a información personal identificable dentro del flujo de análisis.'
     },
     {
       pregunta: '¿Puedo hacer cambios en mi estilo de vida basados en los resultados de la prueba genética?',
-      respuesta: 'Los resultados pueden proporcionar información valiosa para personalizar tu estilo de vida, especialmente en áreas como nutrición y ejercicio. Sin embargo, recomendamos siempre consultar con profesionales de la salud antes de hacer cambios significativos en tu dieta, rutina de ejercicios o medicamentos.'
-    },
-    {
-      pregunta: '¿Puedo compartir mis resultados con familiares o con mi médico?',
-      respuesta: 'Absolutamente. Puedes descargar e imprimir tus resultados para compartirlos con tu médico, nutricionista u otros profesionales de la salud. También puedes compartir información relevante con familiares, ya que algunos hallazgos genéticos pueden ser importantes para la salud familiar.'
-    },
-    {
-      pregunta: '¿Qué tipos de ancestros se pueden identificar con el análisis genético?',
-      respuesta: 'Nuestro análisis de ancestría puede identificar tu composición étnica a través de más de 1,000 regiones geográficas worldwide. Incluimos ancestría europea, africana, asiática, nativa americana y oceánica, con subdivisiones específicas por países y regiones para darte un panorama detallado de tus orígenes.'
+      respuesta: 'Los resultados pueden servir como una guía orientativa para tomar decisiones informadas sobre nutrición, actividad física y hábitos generales. Sin embargo, no reemplazan la evaluación clínica. Siempre se recomienda consultar con profesionales de la salud antes de realizar cambios importantes en dieta, ejercicio o tratamientos médicos.'
     },
     {
       pregunta: '¿Las pruebas genéticas cubren todas las mutaciones posibles?',
-      respuesta: 'Nuestras pruebas cubren las variaciones genéticas más relevantes y estudiadas científicamente. Analizamos cientos de miles de marcadores genéticos, pero no todas las mutaciones posibles. La ciencia genética está en constante evolución, por lo que actualizamos regularmente nuestros análisis con los últimos descubrimientos científicos.'
+      respuesta: 'No. El análisis se enfoca en las variantes genéticas más estudiadas y relevantes según la evidencia científica actual. Si bien se analizan cientos de miles de marcadores, no es posible cubrir todas las mutaciones existentes. La genética es un campo en constante evolución, por lo que los análisis se actualizan progresivamente a medida que surgen nuevos descubrimientos validados.'
+    },
+    {
+      pregunta: '¿Puedo compartir mis resultados con familiares o con mi médico?',
+      respuesta: 'Sí, los resultados son propiedad del usuario, ya que corresponden a su información genética personal. Puedes mostrarlos o compartirlos con quien estimes conveniente. Sin embargo, este reporte está diseñado exclusivamente para el análisis individual y no debe utilizarse como referencia clínica ni genética para otras personas, incluidos familiares. La empresa no se hace responsable por interpretaciones, decisiones o conclusiones realizadas por terceros a partir de un reporte que fue generado para una persona específica.'
+    },
+    {
+      pregunta: '¿Qué tipos de ancestros se pueden identificar con el análisis genético?',
+      respuesta: 'El análisis de ancestría estima la composición genética del usuario mediante la comparación con poblaciones de referencia de distintas regiones del mundo, incluyendo componentes europeos, africanos, asiáticos, nativos americanos y oceánicos, con subdivisiones regionales. Además, el análisis se apoya en una base de datos genética gestionada y contextualizada para población chilena, lo que permite interpretar ancestría, rasgos y predisposiciones considerando el contexto genético y estilo de vida predominante a nivel nacional, entregando resultados más acordes a la realidad local.'
     }
   ];
 

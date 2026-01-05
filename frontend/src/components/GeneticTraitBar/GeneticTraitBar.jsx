@@ -11,6 +11,7 @@ const GeneticTraitBar = ({
   impactLabel,
   impactColor,
   details = {},
+  freqChile,
   explanation,
   delay = 0,
 }) => {
@@ -35,6 +36,13 @@ const GeneticTraitBar = ({
       details.magnitud !== null && details.magnitud !== undefined
         ? `¿Qué significa magnitud ${details.magnitud}?`
         : "magnitud",
+  };
+  const formatFrequency = (value) => {
+    if (value === null || value === undefined || value === '') return 'N/D';
+    const parsed = Number(value);
+    if (Number.isNaN(parsed)) return 'N/D';
+    const percent = parsed <= 1 ? parsed * 100 : parsed;
+    return `${percent.toFixed(2)}%`;
   };
 
   return (
@@ -131,6 +139,13 @@ const GeneticTraitBar = ({
                 <span className="genetic-trait-bar__value">
                   {details.magnitud !== null && details.magnitud !== undefined ? details.magnitud : "N/A"}
                 </span>
+              </div>
+              <div className="genetic-trait-bar__grid-item">
+                <div className="genetic-trait-bar__label-row">
+                  <span className="genetic-trait-bar__label">Frecuencia Chile</span>
+                </div>
+                <span className="genetic-trait-bar__value">{formatFrequency(freqChile)}</span>
+                <span className="genetic-trait-bar__note">Frecuencia estimada en poblacion chilena.</span>
               </div>
             </div>
           </div>

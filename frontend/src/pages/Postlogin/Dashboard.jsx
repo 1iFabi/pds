@@ -1,12 +1,14 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { Download, Menu, X } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import GridBento from '../../components/GridBento/GridBento';
 import Sidebar from '../../components/Sidebar/Sidebar';
+import Buttondownload from '../../components/Buttondownload';
 import './Dashboard.css';
 
-const Dashboard = ({ user, onLogout, onDownload }) => {
+const Dashboard = ({ user, onLogout }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -187,8 +189,6 @@ const Dashboard = ({ user, onLogout, onDownload }) => {
     [cards]
   );
 
-  const handleDownload = onDownload ?? (() => {});
-
   return (
     <div className="dashboard">
       {/* Burger button para móviles */}
@@ -226,12 +226,14 @@ const Dashboard = ({ user, onLogout, onDownload }) => {
             </p>
           </div>
           <div className="dashboard__actions">
-            <button type="button" className="dashboard__download" onClick={handleDownload}>
-              <Download size={18} />
-              Descargar PDF
-            </button>
+            <Buttondownload 
+              userName={displayName} 
+              isDownloading={isDownloading} 
+              setIsDownloading={setIsDownloading} 
+            />
           </div>
         </header>
+
 
         <section className="dashboard__grid" aria-label="Resumen postprueba">
           <GridBento

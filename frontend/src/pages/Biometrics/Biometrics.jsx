@@ -104,6 +104,14 @@ const Biometrics = () => {
     return '#10b981';
   };
 
+  const formatFrequency = (value) => {
+    if (value === null || value === undefined || value === '') return 'N/D';
+    const parsed = Number(value);
+    if (Number.isNaN(parsed)) return 'N/D';
+    const percent = parsed <= 1 ? parsed * 100 : parsed;
+    return `${percent.toFixed(2)}%`;
+  };
+
   const variants = useMemo(() => {
     if (biometrics?.variants?.length) {
       return biometrics.variants.map((v, idx) => ({
@@ -116,7 +124,8 @@ const Biometrics = () => {
         categoria: v.categoria || v.grupo || '',
         magnitud: typeof v.magnitud_efecto === 'number' ? v.magnitud_efecto : null,
         impact: v.impact || 'low',
-        explanation: v.explanation || 'Sin detalles.',
+        freq_chile_percent: v.freq_chile_percent,
+        explanation: v.phenotype_description || v.explanation || v.fenotipo || 'Sin detalles.',
       }));
     }
 
@@ -482,6 +491,19 @@ const Biometrics = () => {
                                 </div>
                                 <span style={{ color: '#1e293b', fontWeight: '700' }}>
                                   {item.magnitud !== null && item.magnitud !== undefined ? item.magnitud : 'N/A'}
+                                </span>
+                              </div>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                                <div className="bio-detail-label-row">
+                                  <span style={{ color: '#64748b', fontSize: '0.8rem', fontWeight: '600' }}>
+                                    Frecuencia Chile
+                                  </span>
+                                </div>
+                                <span style={{ color: '#1e293b', fontWeight: '700' }}>
+                                  {formatFrequency(item.freq_chile_percent)}
+                                </span>
+                                <span style={{ color: '#94a3b8', fontSize: '0.75rem' }}>
+                                  Frecuencia estimada en poblacion chilena.
                                 </span>
                               </div>
                             </div>

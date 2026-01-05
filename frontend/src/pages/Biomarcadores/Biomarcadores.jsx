@@ -99,6 +99,14 @@ const Biomarcadores = () => {
     return classes[risk] || 'risk-default';
   };
 
+  const formatFrequency = (value) => {
+    if (value === null || value === undefined || value === '') return 'N/A';
+    const parsed = Number(value);
+    if (Number.isNaN(parsed)) return 'N/A';
+    const percent = parsed <= 1 ? parsed * 100 : parsed;
+    return `${percent.toFixed(2)}%`;
+  };
+
   const biomarkerRiskConfig = {
     alto: { color: '#ef4444' }, // Rojo
     medio: { color: '#f59e0b' }, // Ámbar/Amarillo
@@ -236,6 +244,16 @@ const Biomarcadores = () => {
                               ))}
                             </div>
                           </div>
+                          <div className="stat-box">
+                            <div className="stat-header">
+                              <MapPin size={16} className="stat-icon" />
+                              <span className="stat-label">FRECUENCIA CHILE</span>
+                            </div>
+                            <div className="stat-value">
+                              {formatFrequency(bio.userResult?.frequency ?? bio.freq_chile_percent)}
+                            </div>
+                            <div className="stat-note">Frecuencia estimada en poblacion chilena.</div>
+                          </div>
                         </div>
 
                         <button
@@ -287,7 +305,7 @@ const Biomarcadores = () => {
                                     </td>
                                     <td>
                                       <span className="frequency-value">
-                                        {gen.frequency !== undefined ? `${(gen.frequency * 100).toFixed(2)}%` : 'N/A'}
+                                        {formatFrequency(gen.frequency)}
                                       </span>
                                     </td>
                                     <td>

@@ -5,6 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 from django.db.models import Q
 from .authentication import JWTAuthentication
 from .models import UserSNP, PharmacogeneticSystem
+from .utils import build_rsid_extra_info_map
 
 
 def _normalize(text: str) -> str:
@@ -65,6 +66,8 @@ class PharmacogeneticsAPIView(APIView):
             .filter(pharm_filter)
             .select_related('snp', 'snp__pharmacogenetic_system')
         )
+        snp_list = [us.snp for us in user_snps if us.snp]
+        extra_info_map = build_rsid_extra_info_map(snp_list)
 
         best_by_key = {}
 
@@ -102,6 +105,15 @@ class PharmacogeneticsAPIView(APIView):
             if not snp:
                 continue
 
+            phenotype_name = (snp.fenotipo or "N/D").strip() or "N/D"
+            extra_info = extra_info_map.get((snp.rsid, snp.genotipo, phenotype_name))
+            freq_chile = None
+            if extra_info and extra_info.freq_chile_percent is not None:
+                try:
+                    freq_chile = float(extra_info.freq_chile_percent)
+                except (TypeError, ValueError):
+                    freq_chile = None
+
             raw = (snp.fenotipo or "").strip()
             name = raw.split("(")[0].strip() or snp.rsid or "Farmaco"
 
@@ -125,6 +137,8 @@ class PharmacogeneticsAPIView(APIView):
                     "genotipo": snp.genotipo,
                     "magnitud": magn,
                     "fenotipo": raw or name,
+                    "freq_chile_percent": freq_chile,
+                    "phenotype_description": extra_info.phenotype_description if extra_info else None,
                     "system_key": sys_key,
                     "system_name": sys_name,
                     "system_desc": sys_desc,
