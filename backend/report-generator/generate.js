@@ -920,47 +920,56 @@ const rsidMasterTemplateEnd = `</body></html>`;
         files.push(path.resolve(summaryOutPath));
       }
 
-      // === OPTIMIZED RSID GENERATION ===
+      // === OPTIMIZED RSID GENERATION (CHUNKED) ===
       if (data.rsidItems.length > 0) {
-        let combinedInnerHtml = "";
-        for (const rawItem of data.rsidItems) {
-          const item = rawItem || {};
-          const pctInfo = formatPercent(item.porcentajeChilenos);
-          const risk = formatRisk(item.riesgo ?? item.risk);
-          const categoryLabel = data.sectionMeta.label || safeText(item.categoria, "Sin clasificar");
+        // Render in chunks of 20 to avoid crashing the browser with a massive DOM
+        const RSID_RENDER_CHUNK_SIZE = 20;
+        const rsidChunks = chunkItems(data.rsidItems, RSID_RENDER_CHUNK_SIZE);
 
-          const filledPage = fillTemplate(rsidBody, {
-            heroNumber: "RS",
-            rsid: escapeHtml(safeText(item.rsid)),
-            phenotype: escapeHtml(safeText(item.fenotipo)),
-            phenotypeDescription: escapeHtml(safeText(item.phenotypeDescription, "N/D")),
-            category: escapeHtml(categoryLabel),
-            riskLabel: escapeHtml(risk.label),
-            riskClass: risk.className,
-            source: escapeHtml(safeText(item.fuente)),
-            chilePercentDisplay: pctInfo.display,
-            chilePercentWidth: pctInfo.width,
-            chilePercentPos: pctInfo.pos,
-            refAllele: escapeHtml(safeText(item.aleloReferencia)),
-            altAllele: escapeHtml(safeText(item.aleloAlternativo)),
-            chromosome: escapeHtml(safeText(item.cromosoma)),
-            position: escapeHtml(safeText(item.posicion)),
-            pageNumber: nextNumberedPage(),
-            pageTotal: totalNumberedPages,
-          });
+        for (let i = 0; i < rsidChunks.length; i++) {
+          const chunk = rsidChunks[i];
+          let combinedInnerHtml = "";
+          
+          for (const rawItem of chunk) {
+            const item = rawItem || {};
+            const pctInfo = formatPercent(item.porcentajeChilenos);
+            const risk = formatRisk(item.riesgo ?? item.risk);
+            const categoryLabel = data.sectionMeta.label || safeText(item.categoria, "Sin clasificar");
 
-          combinedInnerHtml += `<div class="rsid-page">${filledPage}</div>`;
+            const filledPage = fillTemplate(rsidBody, {
+              heroNumber: "RS",
+              rsid: escapeHtml(safeText(item.rsid)),
+              phenotype: escapeHtml(safeText(item.fenotipo)),
+              phenotypeDescription: escapeHtml(safeText(item.phenotypeDescription, "N/D")),
+              category: escapeHtml(categoryLabel),
+              riskLabel: escapeHtml(risk.label),
+              riskClass: risk.className,
+              source: escapeHtml(safeText(item.fuente)),
+              chilePercentDisplay: pctInfo.display,
+              chilePercentWidth: pctInfo.width,
+              chilePercentPos: pctInfo.pos,
+              refAllele: escapeHtml(safeText(item.aleloReferencia)),
+              altAllele: escapeHtml(safeText(item.aleloAlternativo)),
+              chromosome: escapeHtml(safeText(item.cromosoma)),
+              position: escapeHtml(safeText(item.posicion)),
+              pageNumber: nextNumberedPage(),
+              pageTotal: totalNumberedPages,
+            });
+
+            combinedInnerHtml += `<div class="rsid-page">${filledPage}</div>`;
+          }
+
+          const fullRsidHtml = `${rsidMasterTemplateStart}${combinedInnerHtml}${rsidMasterTemplateEnd}`;
+          
+          const rsidPdf = await renderPdfWithRetry(fullRsidHtml);
+          const chunkSuffix = rsidChunks.length > 1 ? `_part${i + 1}` : "";
+          const rsidOutPath = path.join(
+            outDir,
+            `${reportId}_rsid_${data.categoryKey}_combined${chunkSuffix}.pdf`
+          );
+          fs.writeFileSync(rsidOutPath, rsidPdf);
+          files.push(path.resolve(rsidOutPath));
         }
-
-        const fullRsidHtml = `${rsidMasterTemplateStart}${combinedInnerHtml}${rsidMasterTemplateEnd}`;
-        
-        const rsidPdf = await renderPdfWithRetry(fullRsidHtml);
-        const rsidOutPath = path.join(
-          outDir,
-          `${reportId}_rsid_${data.categoryKey}_combined.pdf`
-        );
-        fs.writeFileSync(rsidOutPath, rsidPdf);
-        files.push(path.resolve(rsidOutPath));
       }
     }
 
