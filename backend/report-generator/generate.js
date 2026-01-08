@@ -538,7 +538,13 @@ async function runWithLimit(items, limit, fn) {
   const results = [];
   const executing = [];
   for (const item of items) {
-    const p = Promise.resolve().then(() => fn(item));
+    const p = Promise.resolve().then(async () => {
+        const res = await fn(item);
+        // Small pause to allow GC to catch up
+        if (global.gc) global.gc(); 
+        await new Promise(r => setTimeout(r, 100));
+        return res;
+    });
     results.push(p);
     const e = p.then(() => executing.splice(executing.indexOf(e), 1));
     executing.push(e);
@@ -838,7 +844,7 @@ const rsidMasterTemplateEnd = `</body></html>`;
     });
 
     // === EXECUTE PARALLEL ===
-    const CONCURRENCY_LIMIT = 2; // BACK TO 2 FOR STABILITY
+    const CONCURRENCY_LIMIT = 1; // Limit 1 for 512MB RAM stability in production
     const results = await runWithLimit(tasks, CONCURRENCY_LIMIT, t => t());
     results.sort((a, b) => a.order - b.order);
 
