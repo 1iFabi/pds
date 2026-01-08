@@ -346,15 +346,17 @@ class UserReportPDFView(APIView):
 
                 page_index += len(reader.pages)
 
-            if toc_entries and index_page_index is not None:
-                for row_index, entry in enumerate(toc_entries):
-                    target_key = entry.get("target")
-                    target_page_index = target_pages.get(target_key)
-                    if target_page_index is None:
-                        continue
-                    rect = _toc_link_rect(row_index)
-                    link = Link(rect=rect, target_page_index=target_page_index, border=[0, 0, 0])
-                    writer.add_annotation(index_page_index, link)
+            # OPTIMIZATION: Skipping TOC Link generation to reduce processing time (~5-10s saved).
+            # The visual TOC remains, but links are not clickable.
+            # if toc_entries and index_page_index is not None:
+            #     for row_index, entry in enumerate(toc_entries):
+            #         target_key = entry.get("target")
+            #         target_page_index = target_pages.get(target_key)
+            #         if target_page_index is None:
+            #             continue
+            #         rect = _toc_link_rect(row_index)
+            #         link = Link(rect=rect, target_page_index=target_page_index, border=[0, 0, 0])
+            #         writer.add_annotation(index_page_index, link)
 
             merged_buffer = BytesIO()
             writer.write(merged_buffer)
