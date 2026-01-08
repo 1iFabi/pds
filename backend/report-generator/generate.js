@@ -3,6 +3,7 @@ import path from "node:path";
 import puppeteer from "puppeteer";
 import QRCode from "qrcode";
 import { fileURLToPath } from "node:url";
+import { PDFDocument } from "pdf-lib";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -53,6 +54,7 @@ const chromiumArgs = [
   "--no-first-run",
   "--no-default-browser-check",
   "--disable-features=IsolateOrigins,site-per-process",
+  "--renderer-process-limit=2",
 ];
 
 if (enableSingleProcess) {
@@ -166,14 +168,13 @@ function escapeHtml(value) {
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
+    .replaceAll("\"", "&quot;")
     .replaceAll("'", "&#39;");
 }
 
 function fillTemplate(tpl, vars) {
-  // OPTIMIZATION: Remove external fonts to prevent load timeouts
-  let html = tpl.replace(/<link[^>]*fonts\.googleapis[^>]*>/gi, "")
-                .replace(/<link[^>]*fonts\.gstatic[^>]*>/gi, "");
+  let html = tpl.replace(/<link[^>]*fonts.googleapis[^>]*>/gi, "")
+                .replace(/<link[^>]*fonts.gstatic[^>]*>/gi, "");
   
   for (const [key, value] of Object.entries(vars)) {
     const safeValue = value === undefined || value === null ? "" : String(value);
@@ -258,13 +259,15 @@ function buildIndexRows(entries) {
       const number = escapeHtml(entry.number ?? "");
       const label = escapeHtml(entry.label ?? "");
       const page = escapeHtml(entry.page ?? "");
-      return `
+      return (
+        `
         <div class="toc-row">
           <div class="toc-number">${number}</div>
           <div class="toc-title">${label}</div>
           <div class="toc-page">${page}</div>
         </div>
-      `;
+      `
+      );
     })
     .join("");
 }
@@ -351,12 +354,14 @@ function buildAncestrySummary(top5) {
       const name = escapeHtml(item.country ?? "N/A");
       const pctValue = Number(item.pct);
       const safePct = Number.isFinite(pctValue) ? pctValue : 0;
-      return `
+      return (
+        `
         <div class="ancestry-row">
           <div class="ancestry-name">${name}</div>
           <div class="ancestry-val">${safePct}%</div>
         </div>
-      `;
+      `
+      );
     })
     .join("");
 
@@ -380,7 +385,8 @@ function buildHighlights(items, limit = 4) {
 
   const selected = sorted.slice(0, limit);
   if (!selected.length) {
-    return `
+    return (
+      `
       <div class="highlight-item" style="border-left-color: #cbd5e1;">
         <div class="highlight-icon" style="background: linear-gradient(135deg, #cbd5e1, #94a3b8);">
           ${icons.dna}
@@ -390,7 +396,8 @@ function buildHighlights(items, limit = 4) {
           <div class="highlight-category">No hay datos disponibles</div>
         </div>
       </div>
-    `;
+    `
+    );
   }
 
   return selected
@@ -407,7 +414,8 @@ function buildHighlights(items, limit = 4) {
       const name = escapeHtml(safeText(item.fenotipo));
       const categoryLabel = escapeHtml(meta.label);
 
-      return `
+      return (
+        `
         <div class="highlight-item" style="border-left-color: ${meta.color};">
           <div class="highlight-icon" style="background: ${meta.gradient};">
             ${meta.icon}
@@ -420,7 +428,8 @@ function buildHighlights(items, limit = 4) {
             ${risk.label.toUpperCase()}
           </div>
         </div>
-      `;
+      `
+      );
     })
     .join("");
 }
@@ -435,7 +444,8 @@ function buildAreasOverview(areas) {
       const mid = Number(counts.mid) || 0;
       const low = Number(counts.low) || 0;
 
-      return `
+      return (
+        `
         <div class="area-card">
           <div class="area-title">${escapeHtml(meta.label)}</div>
           <div class="area-counts">
@@ -444,18 +454,21 @@ function buildAreasOverview(areas) {
             <div class="area-count low">${low}</div>
           </div>
         </div>
-      `;
+      `
+      );
     })
     .join("");
 }
 
 function buildSummaryContent(items) {
   if (!items.length) {
-    return `
+    return (
+      `
       <div class="disease-empty">
         Sin hallazgos relevantes para esta seccion.
       </div>
-    `;
+    `
+    );
   }
 
   return items
@@ -470,7 +483,8 @@ function buildSummaryContent(items) {
       const name = escapeHtml(safeText(item.fenotipo));
       const metaValue = escapeHtml(safeText(item.rsid));
 
-      return `
+      return (
+        `
         <div class="disease-card ${risk.className}">
           <div class="disease-badge ${badgeClass}">${risk.label.toUpperCase()}</div>
           <div class="disease-info">
@@ -478,7 +492,8 @@ function buildSummaryContent(items) {
             <div class="disease-meta">Marcador ${metaValue}</div>
           </div>
         </div>
-      `;
+      `
+      );
     })
     .join("");
 }
@@ -503,35 +518,6 @@ function rebalanceChunks(chunks) {
   return [...chunks.slice(0, -2), balancedPrev, balancedLast];
 }
 
-async function renderPdf(browser, html, options = {}) {
-  const { waitForSelector } = options;
-  const page = await browser.newPage();
-  await page.setCacheEnabled(false);
-  try {
-    await page.setContent(html, { waitUntil: "load", timeout: 60000 });
-    if (waitForSelector) {
-      try {
-        await page.waitForSelector(waitForSelector, { timeout: 30000 });
-      } catch {
-        // Ignore render wait timeouts to keep PDF output
-      }
-    }
-    const pdf = await page.pdf({
-      format: "A4",
-      printBackground: true,
-      scale: pdfScale,
-      margin: { top: 0, right: 0, bottom: 0, left: 0 },
-    });
-    return pdf;
-  } finally {
-    try {
-      await page.close();
-    } catch {
-      // Ignore page close errors (browser may have crashed)
-    }
-  }
-}
-
 // === TEMPLATE PARSING HELPERS ===
 function parseHtmlTemplate(htmlContent) {
   const headMatch = htmlContent.match(/<head>([\s\S]*?)<\/head>/i);
@@ -545,6 +531,22 @@ function parseHtmlTemplate(htmlContent) {
   const otherHead = headContent.replace(/<style>[\s\S]*?<\/style>/i, "");
 
   return { otherHead, styleContent, bodyContent };
+}
+
+// Concurrency helper
+async function runWithLimit(items, limit, fn) {
+  const results = [];
+  const executing = [];
+  for (const item of items) {
+    const p = Promise.resolve().then(() => fn(item));
+    results.push(p);
+    const e = p.then(() => executing.splice(executing.indexOf(e), 1));
+    executing.push(e);
+    if (executing.length >= limit) {
+      await Promise.race(executing);
+    }
+  }
+  return Promise.all(results);
 }
 
 // === MAIN ===
@@ -575,41 +577,19 @@ const logoColorDataUrl = fileToDataUrl(logoColorPath, "image/png") || logoDataUr
 const { otherHead: rsidHead, styleContent: rsidStyle, bodyContent: rsidBody } = parseHtmlTemplate(rsidTemplate);
 const rsidMultiPageStyle = `
   ${rsidStyle}
-  
-  /* Overrides for multi-page batching */
-  html, body {
-    height: auto !important;
-    display: block !important;
-    background: #f8fafc;
-  }
-  .rsid-page {
-    width: 210mm;
-    height: 297mm;
-    position: relative;
-    overflow: hidden;
-    background: #f8fafc;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    page-break-after: always;
-  }
-  .rsid-page:last-child {
-    page-break-after: auto;
-  }
+  html, body { height: auto !important; display: block !important; background: #f8fafc; }
+  .rsid-page { width: 210mm; height: 297mm; position: relative; overflow: hidden; background: #f8fafc; margin: 0; padding: 0; display: flex; flex-direction: column; page-break-after: always; }
+  .rsid-page:last-child { page-break-after: auto; }
 `;
 const rsidMasterTemplateStart = `<!doctype html><html lang="es"><head>${rsidHead}<style>${rsidMultiPageStyle}</style></head><body>`;
 const rsidMasterTemplateEnd = `</body></html>`;
 
 (async () => {
   const executablePath = resolveBrowserExecutablePath();
-  const launchOptions = {
-    args: chromiumArgs,
-  };
-  if (executablePath) {
-    launchOptions.executablePath = executablePath;
-  }
+  const launchOptions = { args: chromiumArgs };
+  if (executablePath) launchOptions.executablePath = executablePath;
   const createBrowser = () => puppeteer.launch(launchOptions);
+  
   const safeCloseBrowser = async (browserInstance) => {
     if (!browserInstance) return;
     try {
@@ -618,386 +598,266 @@ const rsidMasterTemplateEnd = `</body></html>`;
       // Ignore close errors
     }
   };
+
   const browserRef = { current: await createBrowser() };
-  const renderPdfWithRetry = async (html, options) => {
+  
+  const renderPdfSafe = async (html, options = {}) => {
+    let page;
     try {
-      return await renderPdf(browserRef.current, html, options);
+        page = await browserRef.current.newPage();
+        // OPTIMIZATION: Allow cache to potentially reuse assets between pages
+        // await page.setCacheEnabled(false); 
+        await page.setContent(html, { waitUntil: "domcontentloaded", timeout: 60000 });
+        if (options.waitForSelector) {
+            await page.waitForSelector(options.waitForSelector, { timeout: 30000 }).catch(() => {});
+        }
+        return await page.pdf({
+            format: "A4",
+            printBackground: true,
+            scale: pdfScale,
+            margin: { top: 0, right: 0, bottom: 0, left: 0 },
+        });
     } catch (err) {
-      if (!shouldRetryBrowser(err)) {
+        if (shouldRetryBrowser(err)) {
+            try { await browserRef.current.close(); } catch {}
+            browserRef.current = await createBrowser();
+            page = await browserRef.current.newPage();
+            await page.setContent(html, { waitUntil: "domcontentloaded", timeout: 60000 });
+            return await page.pdf({ format: "A4", printBackground: true });
+        }
         throw err;
-      }
-      await safeCloseBrowser(browserRef.current);
-      browserRef.current = await createBrowser();
-      return await renderPdf(browserRef.current, html, options);
+    } finally {
+        if (page) try { await page.close(); } catch {}
     }
   };
 
   const manifest = { reports: [] };
 
   for (const person of data.people || []) {
-    const files = [];
+    const masterPdfDoc = await PDFDocument.create();
+    
+    // Preparation logic
     const reportId = safeFileSegment(person.reportId, "reporte");
     const reportLabel = person.reportId || reportId;
-
+    // ... (Stats calculation)
     const snpsAnalyzed = person.summary?.snpsAnalyzed ?? 0;
     const highCount = person.summary?.riskCounts?.high ?? 0;
     const midCount = person.summary?.riskCounts?.mid ?? 0;
     const lowCount = person.summary?.riskCounts?.low ?? 0;
-
     const totalRelevant = highCount + midCount + lowCount || 1;
     const highPct = pct(highCount, totalRelevant);
     const midPct = pct(midCount, totalRelevant);
     const lowPct = pct(lowCount, totalRelevant);
-
-    const coveragePct = snpsAnalyzed
-      ? Math.min(100, Math.round((totalRelevant / snpsAnalyzed) * 100))
-      : 0;
-
-    const geneticScore = Math.max(
-      0,
-      Math.min(100, Math.round(100 - (highPct * 1.5 + midPct * 0.3)))
-    );
+    const coveragePct = snpsAnalyzed ? Math.min(100, Math.round((totalRelevant / snpsAnalyzed) * 100)) : 0;
+    const geneticScore = Math.max(0, Math.min(100, Math.round(100 - (highPct * 1.5 + midPct * 0.3))));
     const markerBorderColor = interpolateColor(geneticScore);
     
-    // OPTIMIZATION: Fetch chart in Node to avoid Puppeteer network timeout
     const chartUrl = getQuickChartUrl({ high: highCount, mid: midCount, low: lowCount });
-    let donutUrl = "";
+    let donutUrl = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
     try {
-      const chartRes = await fetch(chartUrl);
-      if (chartRes.ok) {
-        const arrayBuffer = await chartRes.arrayBuffer();
-        const buffer = Buffer.from(arrayBuffer);
-        donutUrl = `data:image/png;base64,${buffer.toString("base64")}`;
-      } else {
-        console.warn("QuickChart fetch failed:", chartRes.status);
-      }
-    } catch (err) {
-      console.warn("QuickChart fetch error:", err.message);
-    }
-    // Fallback
-    if (!donutUrl) donutUrl = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
+        const chartRes = await fetch(chartUrl);
+        if (chartRes.ok) donutUrl = `data:image/png;base64,${Buffer.from(await chartRes.arrayBuffer()).toString("base64")}`;
+    } catch {}
 
     const ancestryInfo = buildAncestrySummary(person.ancestryTop5 || []);
     const highlightsHtml = buildHighlights(person.rsids || []);
     const areasOverviewHtml = buildAreasOverview(person.areas);
-
-    const qrDataUrl = person.link
-      ? await QRCode.toDataURL(person.link, { margin: 1, width: 256 })
-      : "";
+    const qrDataUrl = person.link ? await QRCode.toDataURL(person.link, { margin: 1, width: 256 }) : "";
 
     const rsidItems = Array.isArray(person.rsids) ? person.rsids : [];
     const rsidsByCategory = Object.fromEntries(categoryOrder.map((key) => [key, []]));
-
     for (const rawItem of rsidItems) {
       const item = rawItem || {};
       const key = normalizeCategory(item.categoria) || item.categoria;
-      if (key && rsidsByCategory[key]) {
-        rsidsByCategory[key].push(item);
-      }
+      if (key && rsidsByCategory[key]) rsidsByCategory[key].push(item);
     }
 
     const categoryData = categoryOrder.map((categoryKey, index) => {
-      const items = rsidsByCategory[categoryKey] || [];
-      let counts = person.areas?.[categoryKey]?.counts || null;
-      if (!counts) {
-        counts = { high: 0, mid: 0, low: 0 };
-        for (const item of items) {
-          const risk = formatRisk(item.riesgo ?? item.risk);
-          if (risk.className === "risk-high") counts.high += 1;
-          else if (risk.className === "risk-mid") counts.mid += 1;
-          else counts.low += 1;
+        const items = rsidsByCategory[categoryKey] || [];
+        let counts = person.areas?.[categoryKey]?.counts || null;
+        if (!counts) {
+            counts = { high: 0, mid: 0, low: 0 };
+            for (const item of items) {
+                const risk = formatRisk(item.riesgo ?? item.risk);
+                if (risk.className === "risk-high") counts.high++;
+                else if (risk.className === "risk-mid") counts.mid++;
+                else counts.low++;
+            }
         }
-      }
-      const sortedItems = items
-        .slice()
-        .sort((a, b) => {
-          const riskDiff = riskPriority(b.riesgo) - riskPriority(a.riesgo);
-          if (riskDiff !== 0) return riskDiff;
-          const magA = Number(a.magnitudEfecto) || 0;
-          const magB = Number(b.magnitudEfecto) || 0;
-          return magB - magA;
+        const sortedItems = items.slice().sort((a, b) => {
+            const riskDiff = riskPriority(b.riesgo) - riskPriority(a.riesgo);
+            if (riskDiff !== 0) return riskDiff;
+            return (Number(b.magnitudEfecto)||0) - (Number(a.magnitudEfecto)||0);
         });
-
-      const limitedItems =
-        maxItemsPerCategory > 0 ? sortedItems.slice(0, maxItemsPerCategory) : sortedItems;
-      const rsidItems = skipRsidPages ? [] : limitedItems;
-      const summaryChunks = rebalanceChunks(chunkItems(limitedItems, summaryPageSize));
-      const sectionMeta = categoryMeta[categoryKey] || { label: categoryKey };
-      const sectionNumber = formatSectionNumber(3 + index);
-
-      return {
-        categoryKey,
-        counts,
-        sortedItems,
-        rsidItems,
-        summaryChunks,
-        sectionMeta,
-        sectionNumber,
-      };
+        const limitedItems = maxItemsPerCategory > 0 ? sortedItems.slice(0, maxItemsPerCategory) : sortedItems;
+        const rsidItems = skipRsidPages ? [] : limitedItems;
+        const summaryChunks = rebalanceChunks(chunkItems(limitedItems, summaryPageSize));
+        return { categoryKey, counts, sortedItems, rsidItems, summaryChunks, sectionMeta: categoryMeta[categoryKey] || { label: categoryKey }, sectionNumber: formatSectionNumber(3 + index) };
     });
 
-    const totalNumberedPages =
-      1 +
-      1 +
-      1 +
-      categoryData.reduce(
-        (sum, entry) => sum + 1 + entry.summaryChunks.length + entry.rsidItems.length,
-        0
-      ) +
-      1;
+    const totalNumberedPages = 1 + 1 + 1 + categoryData.reduce((sum, entry) => sum + 1 + entry.summaryChunks.length + entry.rsidItems.length, 0) + 1;
     let numberedPage = 0;
-    const nextNumberedPage = () => {
-      numberedPage += 1;
-      return numberedPage;
-    };
+    const nextNumberedPage = () => { numberedPage++; return numberedPage; };
 
-    const tocEntries = [];
+    // --- Build Task List ---
+    const tasks = [];
+    
+    // 1. Cover
+    tasks.push(async () => {
+        const html = fillTemplate(coverTemplate, {
+            bgDataUrl: coverBgDataUrl, logoDataUrl, name: escapeHtml(person.displayName ?? person.name ?? ""),
+            reportId: escapeHtml(reportLabel), date: escapeHtml(person.date ?? ""), qrDataUrl,
+        });
+        return { order: 0, buffer: await renderPdfSafe(html) };
+    });
+
+    // 2. Index
     let displayPage = 1;
-    tocEntries.push({
-      target: "intro",
-      label: "Introduccion",
-      number: formatSectionNumber(1),
-      page: displayPage,
-    });
-    displayPage += 1;
-    tocEntries.push({
-      target: "report",
-      label: "Resumen genetico",
-      number: formatSectionNumber(2),
-      page: displayPage,
-    });
-    displayPage += 1;
-    tocEntries.push({
-      target: "ancestry",
-      label: "Ancestria",
-      number: formatSectionNumber(2),
-      page: displayPage,
-    });
-    displayPage += 1;
-
-    for (const data of categoryData) {
-      tocEntries.push({
-        target: `section-${data.categoryKey}`,
-        label: data.sectionMeta.label,
-        number: data.sectionNumber,
-        page: displayPage,
-      });
-      displayPage += 1 + data.summaryChunks.length + data.rsidItems.length;
+    const tocEntries = [
+        { target: "intro", label: "Introduccion", number: formatSectionNumber(1), page: displayPage++ },
+        { target: "report", label: "Resumen genetico", number: formatSectionNumber(2), page: displayPage++ },
+        { target: "ancestry", label: "Ancestria", number: formatSectionNumber(2), page: displayPage++ }
+    ];
+    for (const d of categoryData) {
+        tocEntries.push({ target: `section-${d.categoryKey}`, label: d.sectionMeta.label, number: d.sectionNumber, page: displayPage });
+        displayPage += 1 + d.summaryChunks.length + d.rsidItems.length;
     }
+    tocEntries.push({ target: "closing", label: "Cierre", number: "FIN", page: displayPage });
 
-    tocEntries.push({
-      target: "closing",
-      label: "Cierre",
-      number: "FIN",
-      page: displayPage,
+    tasks.push(async () => {
+        const html = fillTemplate(indexTemplate, { indexRowsHtml: buildIndexRows(tocEntries) });
+        return { order: 1, buffer: await renderPdfSafe(html) };
     });
 
-    const indexRowsHtml = buildIndexRows(tocEntries);
-
-    const coverHtml = fillTemplate(coverTemplate, {
-      bgDataUrl: coverBgDataUrl,
-      logoDataUrl,
-      name: escapeHtml(person.displayName ?? person.name ?? ""),
-      reportId: escapeHtml(reportLabel),
-      date: escapeHtml(person.date ?? ""),
-      qrDataUrl,
-    });
-    const coverPdf = await renderPdfWithRetry(coverHtml);
-    const coverOutPath = path.join(outDir, `${reportId}_portada.pdf`);
-    fs.writeFileSync(coverOutPath, coverPdf);
-    files.push(path.resolve(coverOutPath));
-
-    const indexHtml = fillTemplate(indexTemplate, {
-      indexRowsHtml,
-    });
-    const indexPdf = await renderPdfWithRetry(indexHtml);
-    const indexOutPath = path.join(outDir, `${reportId}_indice.pdf`);
-    fs.writeFileSync(indexOutPath, indexPdf);
-    files.push(path.resolve(indexOutPath));
-
-    const introHtml = fillTemplate(introTemplate, {
-      bgDataUrl,
-      logoColorDataUrl,
-      heroNumber: formatSectionNumber(1),
-      reportId: escapeHtml(reportLabel),
-      date: escapeHtml(person.date ?? ""),
-      pageNumber: nextNumberedPage(),
-      pageTotal: totalNumberedPages,
-    });
-    const introPdf = await renderPdfWithRetry(introHtml);
-    const introOutPath = path.join(outDir, `${reportId}_intro.pdf`);
-    fs.writeFileSync(introOutPath, introPdf);
-    files.push(path.resolve(introOutPath));
-
-    const reportHtmlFilled = fillTemplate(template, {
-      bgDataUrl,
-      logoColorDataUrl,
-      heroNumber: formatSectionNumber(2),
-      name: escapeHtml(person.name ?? ""),
-      displayName: escapeHtml(person.displayName ?? person.name ?? ""),
-      reportId: escapeHtml(reportLabel),
-      date: escapeHtml(person.date ?? ""),
-      snpsAnalyzed,
-      highCount,
-      midCount,
-      lowCount,
-      highPct,
-      midPct,
-      lowPct,
-      coveragePct,
-      donutUrl,
-      geneticScore,
-      markerBorderColor,
-      ancestryMainCountry: ancestryInfo.mainCountry,
-      ancestryMainPct: ancestryInfo.mainPct,
-      ancestrySecondaryRows: ancestryInfo.rowsHtml,
-      highlightsHtml,
-      areasOverviewHtml,
-      pageNumber: nextNumberedPage(),
-      pageTotal: totalNumberedPages,
+    // 3. Intro
+    const introPageNum = nextNumberedPage();
+    tasks.push(async () => {
+        const html = fillTemplate(introTemplate, {
+            bgDataUrl, logoColorDataUrl, heroNumber: formatSectionNumber(1), reportId: escapeHtml(reportLabel),
+            date: escapeHtml(person.date ?? ""), pageNumber: introPageNum, pageTotal: totalNumberedPages,
+        });
+        return { order: 2, buffer: await renderPdfSafe(html) };
     });
 
-    const reportPdf = await renderPdfWithRetry(reportHtmlFilled);
-    const reportOutPath = path.join(outDir, `${reportId}_reporte.pdf`);
-    fs.writeFileSync(reportOutPath, reportPdf);
-    files.push(path.resolve(reportOutPath));
+    // 4. Report
+    const reportPageNum = nextNumberedPage();
+    tasks.push(async () => {
+        const html = fillTemplate(template, {
+            bgDataUrl, logoColorDataUrl, heroNumber: formatSectionNumber(2), name: escapeHtml(person.name ?? ""),
+            displayName: escapeHtml(person.displayName ?? person.name ?? ""), reportId: escapeHtml(reportLabel),
+            date: escapeHtml(person.date ?? ""), snpsAnalyzed, highCount, midCount, lowCount, highPct, midPct, lowPct,
+            coveragePct, donutUrl, geneticScore, markerBorderColor, ancestryMainCountry: ancestryInfo.mainCountry,
+            ancestryMainPct: ancestryInfo.mainPct, ancestrySecondaryRows: ancestryInfo.rowsHtml, highlightsHtml,
+            areasOverviewHtml, pageNumber: reportPageNum, pageTotal: totalNumberedPages,
+        });
+        return { order: 3, buffer: await renderPdfSafe(html) };
+    });
 
+    // 5. Ancestry
+    const ancestryPageNum = nextNumberedPage();
     const ancestryDataJson = JSON.stringify(person.ancestryMap || {});
     const indigenousDataJson = JSON.stringify(person.indigenousData || []);
-    const ancestryHtml = fillTemplate(ancestryTemplate, {
-      bgDataUrl,
-      logoColorDataUrl,
-      heroNumber: formatSectionNumber(2),
-      reportId: escapeHtml(reportLabel),
-      date: escapeHtml(person.date ?? ""),
-      ancestryDataJson,
-      indigenousDataJson,
-      pageNumber: nextNumberedPage(),
-      pageTotal: totalNumberedPages,
-    });
-    const ancestryPdf = await renderPdfWithRetry(ancestryHtml, {
-      waitForSelector: ".country",
-    });
-    const ancestryOutPath = path.join(outDir, `${reportId}_ancestria.pdf`);
-    fs.writeFileSync(ancestryOutPath, ancestryPdf);
-    files.push(path.resolve(ancestryOutPath));
-
-    for (const data of categoryData) {
-      const sectionHtml = fillTemplate(coverSectionTemplate, {
-        sectionNumber: data.sectionNumber,
-        sectionTitle: escapeHtml(data.sectionMeta.label),
-        pageNumber: nextNumberedPage(),
-        pageTotal: totalNumberedPages,
-      });
-      const sectionOutPath = path.join(outDir, `${reportId}_section_${data.categoryKey}.pdf`);
-      const sectionPdf = await renderPdfWithRetry(sectionHtml);
-      fs.writeFileSync(sectionOutPath, sectionPdf);
-      files.push(path.resolve(sectionOutPath));
-
-      for (let index = 0; index < data.summaryChunks.length; index += 1) {
-        const chunk = data.summaryChunks[index];
-        const summaryHtml = fillTemplate(summaryTemplate, {
-          bgDataUrl,
-          logoColorDataUrl,
-          sectionNumber: data.sectionNumber,
-          sectionTitle: data.sectionMeta.label,
-          sectionSubtitle: `Resumen de variantes en ${data.sectionMeta.label} con su nivel de riesgo estimado.`,
-          sectionHigh: data.counts.high ?? 0,
-          sectionMid: data.counts.mid ?? 0,
-          sectionLow: data.counts.low ?? 0,
-          summaryContent: buildSummaryContent(chunk),
-          reportId: escapeHtml(reportLabel),
-          date: escapeHtml(person.date ?? ""),
-          pageNumber: nextNumberedPage(),
-          pageTotal: totalNumberedPages,
+    tasks.push(async () => {
+        const html = fillTemplate(ancestryTemplate, {
+            bgDataUrl, logoColorDataUrl, heroNumber: formatSectionNumber(2), reportId: escapeHtml(reportLabel),
+            date: escapeHtml(person.date ?? ""), ancestryDataJson, indigenousDataJson,
+            pageNumber: ancestryPageNum, pageTotal: totalNumberedPages,
         });
-        const summarySuffix = data.summaryChunks.length > 1
-          ? `_summary_${data.categoryKey}_${index + 1}`
-          : `_summary_${data.categoryKey}`;
-        const summaryOutPath = path.join(outDir, `${reportId}${summarySuffix}.pdf`);
-        const summaryPdf = await renderPdfWithRetry(summaryHtml);
-        fs.writeFileSync(summaryOutPath, summaryPdf);
-        files.push(path.resolve(summaryOutPath));
-      }
+        return { order: 4, buffer: await renderPdfSafe(html, { waitForSelector: ".country" }) };
+    });
 
-      // === OPTIMIZED RSID GENERATION (CHUNKED) ===
-      if (data.rsidItems.length > 0) {
-        // Render in chunks of 20 to avoid crashing the browser with a massive DOM
-        const RSID_RENDER_CHUNK_SIZE = 20;
-        const rsidChunks = chunkItems(data.rsidItems, RSID_RENDER_CHUNK_SIZE);
+    let globalOrder = 5;
 
-        for (let i = 0; i < rsidChunks.length; i++) {
-          const chunk = rsidChunks[i];
-          let combinedInnerHtml = "";
-          
-          for (const rawItem of chunk) {
-            const item = rawItem || {};
-            const pctInfo = formatPercent(item.porcentajeChilenos);
-            const risk = formatRisk(item.riesgo ?? item.risk);
-            const categoryLabel = data.sectionMeta.label || safeText(item.categoria, "Sin clasificar");
-
-            const filledPage = fillTemplate(rsidBody, {
-              heroNumber: "RS",
-              rsid: escapeHtml(safeText(item.rsid)),
-              phenotype: escapeHtml(safeText(item.fenotipo)),
-              phenotypeDescription: escapeHtml(safeText(item.phenotypeDescription, "N/D")),
-              category: escapeHtml(categoryLabel),
-              riskLabel: escapeHtml(risk.label),
-              riskClass: risk.className,
-              source: escapeHtml(safeText(item.fuente)),
-              chilePercentDisplay: pctInfo.display,
-              chilePercentWidth: pctInfo.width,
-              chilePercentPos: pctInfo.pos,
-              refAllele: escapeHtml(safeText(item.aleloReferencia)),
-              altAllele: escapeHtml(safeText(item.aleloAlternativo)),
-              chromosome: escapeHtml(safeText(item.cromosoma)),
-              position: escapeHtml(safeText(item.posicion)),
-              pageNumber: nextNumberedPage(),
-              pageTotal: totalNumberedPages,
+    // 6. Categories
+    for (const data of categoryData) {
+        const secPageNum = nextNumberedPage();
+        const localOrder = globalOrder++;
+        tasks.push(async () => {
+            const html = fillTemplate(coverSectionTemplate, {
+                sectionNumber: data.sectionNumber, sectionTitle: escapeHtml(data.sectionMeta.label),
+                pageNumber: secPageNum, pageTotal: totalNumberedPages,
             });
+            return { order: localOrder, buffer: await renderPdfSafe(html) };
+        });
 
-            combinedInnerHtml += `<div class="rsid-page">${filledPage}</div>`;
-          }
-
-          const fullRsidHtml = `${rsidMasterTemplateStart}${combinedInnerHtml}${rsidMasterTemplateEnd}`;
-          
-          const rsidPdf = await renderPdfWithRetry(fullRsidHtml);
-          const chunkSuffix = rsidChunks.length > 1 ? `_part${i + 1}` : "";
-          const rsidOutPath = path.join(
-            outDir,
-            `${reportId}_rsid_${data.categoryKey}_combined${chunkSuffix}.pdf`
-          );
-          fs.writeFileSync(rsidOutPath, rsidPdf);
-          files.push(path.resolve(rsidOutPath));
+        for (const chunk of data.summaryChunks) {
+            const sumPageNum = nextNumberedPage();
+            const sumOrder = globalOrder++;
+            tasks.push(async () => {
+                const html = fillTemplate(summaryTemplate, {
+                    bgDataUrl, logoColorDataUrl, sectionNumber: data.sectionNumber, sectionTitle: data.sectionMeta.label,
+                    sectionSubtitle: `Resumen de variantes en ${data.sectionMeta.label} con su nivel de riesgo estimado.`, 
+                    sectionHigh: data.counts.high ?? 0, sectionMid: data.counts.mid ?? 0, sectionLow: data.counts.low ?? 0,
+                    summaryContent: buildSummaryContent(chunk), reportId: escapeHtml(reportLabel),
+                    date: escapeHtml(person.date ?? ""), pageNumber: sumPageNum, pageTotal: totalNumberedPages,
+                });
+                return { order: sumOrder, buffer: await renderPdfSafe(html) };
+            });
         }
-      }
+
+        if (data.rsidItems.length > 0) {
+            const RSID_CHUNK_SIZE = 10;
+            const chunks = chunkItems(data.rsidItems, RSID_CHUNK_SIZE);
+            for (const chunk of chunks) {
+                const pagesData = chunk.map(item => ({ item, pageNum: nextNumberedPage() }));
+                const chunkOrder = globalOrder++;
+                tasks.push(async () => {
+                    let inner = "";
+                    for (const { item, pageNum } of pagesData) {
+                        const pctInfo = formatPercent(item.porcentajeChilenos);
+                        const risk = formatRisk(item.riesgo ?? item.risk);
+                        const catLabel = data.sectionMeta.label || safeText(item.categoria, "Sin clasificar");
+                        const pageHtml = fillTemplate(rsidBody, {
+                            heroNumber: "RS", rsid: escapeHtml(safeText(item.rsid)), phenotype: escapeHtml(safeText(item.fenotipo)),
+                            phenotypeDescription: escapeHtml(safeText(item.phenotypeDescription, "N/D")), category: escapeHtml(catLabel),
+                            riskLabel: escapeHtml(risk.label), riskClass: risk.className, source: escapeHtml(safeText(item.fuente)),
+                            chilePercentDisplay: pctInfo.display, chilePercentWidth: pctInfo.width, chilePercentPos: pctInfo.pos,
+                            refAllele: escapeHtml(safeText(item.aleloReferencia)), altAllele: escapeHtml(safeText(item.aleloAlternativo)),
+                            chromosome: escapeHtml(safeText(item.cromosoma)), position: escapeHtml(safeText(item.posicion)),
+                            pageNumber: pageNum, pageTotal: totalNumberedPages,
+                        });
+                        inner += `<div class="rsid-page">${pageHtml}</div>`;
+                    }
+                    const fullHtml = `${rsidMasterTemplateStart}${inner}${rsidMasterTemplateEnd}`;
+                    return { order: chunkOrder, buffer: await renderPdfSafe(fullHtml) };
+                });
+            }
+        }
     }
 
-    const closingHtml = fillTemplate(closingTemplate, {
-      bgDataUrl: coverBgDataUrl,
-      logoDataUrl,
-      displayName: escapeHtml(person.displayName ?? person.name ?? ""),
-      reportId: escapeHtml(reportLabel),
-      date: escapeHtml(person.date ?? ""),
-      link: escapeHtml(person.link ?? ""),
-      qrDataUrl,
-      pageNumber: nextNumberedPage(),
-      pageTotal: totalNumberedPages,
+    // 7. Closing
+    const closingPageNum = nextNumberedPage();
+    const closingOrder = globalOrder++;
+    tasks.push(async () => {
+        const html = fillTemplate(closingTemplate, {
+            bgDataUrl: coverBgDataUrl, logoDataUrl, displayName: escapeHtml(person.displayName ?? person.name ?? ""),
+            reportId: escapeHtml(reportLabel), date: escapeHtml(person.date ?? ""), link: escapeHtml(person.link ?? ""),
+            qrDataUrl, pageNumber: closingPageNum, pageTotal: totalNumberedPages,
+        });
+        return { order: closingOrder, buffer: await renderPdfSafe(html) };
     });
-    const closingPdf = await renderPdfWithRetry(closingHtml);
-    const closingOutPath = path.join(outDir, `${reportId}_cierre.pdf`);
-    fs.writeFileSync(closingOutPath, closingPdf);
-    files.push(path.resolve(closingOutPath));
 
-    manifest.reports.push({ reportId, files, tocEntries });
+    // === EXECUTE PARALLEL ===
+    const CONCURRENCY_LIMIT = 2; // BACK TO 2 FOR STABILITY
+    const results = await runWithLimit(tasks, CONCURRENCY_LIMIT, t => t());
+    results.sort((a, b) => a.order - b.order);
+
+    for (const res of results) {
+        const chunkDoc = await PDFDocument.load(res.buffer);
+        const copied = await masterPdfDoc.copyPages(chunkDoc, chunkDoc.getPageIndices());
+        copied.forEach(p => masterPdfDoc.addPage(p));
+    }
+
+    const finalBytes = await masterPdfDoc.save();
+    const finalPath = path.join(outDir, `${reportId}_completo.pdf`);
+    fs.writeFileSync(finalPath, finalBytes);
+    
+    manifest.reports.push({ reportId, files: [path.resolve(finalPath)], tocEntries, isMerged: true });
   }
 
   await safeCloseBrowser(browserRef.current);
-
-  if (manifestPath) {
-    fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
-  }
-})().catch((err) => {
+  if (manifestPath) fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
+})().catch(err => {
   console.error("Error:", err);
   process.exit(1);
 });
