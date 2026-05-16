@@ -2,6 +2,12 @@
 backend/sequoh/config/credentials.json
 backend/sequoh/config/token.json
 
+# Environment files
+.env
+.env.*
+!.env.example
+!**/.env.example
+
 # Test files
 test_files/
 
