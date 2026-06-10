@@ -12,7 +12,9 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
+import secrets
 from dotenv import load_dotenv
+from django.core.exceptions import ImproperlyConfigured
 
 # Cargar variables de entorno desde .env
 load_dotenv()
@@ -25,7 +27,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-isazy3kl)20lf!i%30g4xj1$s8mjz+an9pq6smoa=$!1-eqzty')
+SECRET_KEY = os.environ.get('SECRET_KEY')
+if not SECRET_KEY:
+    if os.environ.get('ENVIRONMENT', 'development') == 'production' or os.environ.get('RENDER') or os.environ.get('DATABASE_URL'):
+        raise ImproperlyConfigured('SECRET_KEY must be set in the environment for production deployments.')
+    SECRET_KEY = secrets.token_urlsafe(50)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('ENVIRONMENT', 'development') != 'production'

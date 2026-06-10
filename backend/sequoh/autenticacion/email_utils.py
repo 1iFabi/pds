@@ -22,6 +22,7 @@ from django.conf import settings
 import os
 import json
 import logging
+import tempfile
 
 logger = logging.getLogger(__name__)
 
@@ -289,11 +290,18 @@ def get_gmail_service():
             # Preferir credenciales desde ENV si se proporcionaron
             if cred_json_env:
                 try:
-                    temp_path = os.path.join(os.path.dirname(token_path), 'credentials_env.json')
-                    os.makedirs(os.path.dirname(temp_path), exist_ok=True)
-                    with open(temp_path, 'w', encoding='utf-8') as f:
-                        f.write(cred_json_env)
-                    flow = InstalledAppFlow.from_client_secrets_file(temp_path, SCOPES)
+                    temp_path = None
+                    try:
+                        with tempfile.NamedTemporaryFile('w', suffix='.json', delete=False, encoding='utf-8') as f:
+                            f.write(cred_json_env)
+                            temp_path = f.name
+                        flow = InstalledAppFlow.from_client_secrets_file(temp_path, SCOPES)
+                    finally:
+                        if temp_path and os.path.exists(temp_path):
+                            try:
+                                os.unlink(temp_path)
+                            except OSError:
+                                pass
                 except Exception:
                     flow = InstalledAppFlow.from_client_secrets_file(cred_path, SCOPES)
             else:

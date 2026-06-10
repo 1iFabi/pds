@@ -4,6 +4,9 @@ Backend personalizado para envío de emails usando Gmail API
 import os
 import base64
 import logging
+import json
+import tempfile
+from pathlib import Path
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from django.core.mail.backends.base import BaseEmailBackend
@@ -18,6 +21,12 @@ logger = logging.getLogger(__name__)
 # Scopes necesarios para Gmail API
 SCOPES = ['https://www.googleapis.com/auth/gmail.send']
 
+
+def _load_credentials_from_json(raw_json: str) -> Credentials:
+    data = json.loads(raw_json)
+    return Credentials.from_authorized_user_info(data, SCOPES)
+
+
 class GmailBackend(BaseEmailBackend):
     """
     Backend personalizado para Django que usa Gmail API
@@ -28,6 +37,8 @@ class GmailBackend(BaseEmailBackend):
         self.connection = None
         self.credentials_file = getattr(settings, 'GMAIL_CREDENTIALS_FILE', None)
         self.token_file = getattr(settings, 'GMAIL_TOKEN_FILE', None)
+        self.credentials_json = getattr(settings, 'GMAIL_CREDENTIALS_JSON', None) or os.environ.get('GMAIL_CREDENTIALS_JSON')
+        self.token_json = getattr(settings, 'GMAIL_TOKEN_JSON', None) or os.environ.get('GMAIL_TOKEN_JSON')
         
     def open(self):
         """
@@ -38,9 +49,11 @@ class GmailBackend(BaseEmailBackend):
             
         try:
             creds = None
-            
-            # Verificar si ya tenemos token guardado
-            if self.token_file and os.path.exists(self.token_file):
+
+            # Verificar si ya tenemos token guardado en ENV o archivo
+            if self.token_json:
+                creds = _load_credentials_from_json(self.token_json)
+            elif self.token_file and os.path.exists(self.token_file):
                 creds = Credentials.from_authorized_user_file(self.token_file, SCOPES)
             
             # Si no hay credenciales válidas, autenticar
@@ -48,13 +61,27 @@ class GmailBackend(BaseEmailBackend):
                 if creds and creds.expired and creds.refresh_token:
                     creds.refresh(Request())
                 else:
-                    if not self.credentials_file:
-                        logger.error("No se ha configurado GMAIL_CREDENTIALS_FILE")
-                        return False
-                        
-                    flow = InstalledAppFlow.from_client_secrets_file(
-                        self.credentials_file, SCOPES
-                    )
+                    if self.credentials_json:
+                        temp_path = None
+                        try:
+                            with tempfile.NamedTemporaryFile('w', suffix='.json', delete=False, encoding='utf-8') as tmp:
+                                tmp.write(self.credentials_json)
+                                temp_path = tmp.name
+                            flow = InstalledAppFlow.from_client_secrets_file(temp_path, SCOPES)
+                        finally:
+                            if temp_path and os.path.exists(temp_path):
+                                try:
+                                    os.unlink(temp_path)
+                                except OSError:
+                                    pass
+                    else:
+                        if not self.credentials_file:
+                            logger.error("No se ha configurado GMAIL_CREDENTIALS_FILE ni GMAIL_CREDENTIALS_JSON")
+                            return False
+
+                        flow = InstalledAppFlow.from_client_secrets_file(
+                            self.credentials_file, SCOPES
+                        )
                     
                     # Configurar flujo OAuth con parámetros específicos para evitar CSRF
                     try:
@@ -87,8 +114,11 @@ class GmailBackend(BaseEmailBackend):
                 
                 # Guardar credenciales para próximas ejecuciones
                 if self.token_file:
+                    Path(self.token_file).parent.mkdir(parents=True, exist_ok=True)
                     with open(self.token_file, 'w') as token:
                         token.write(creds.to_json())
+                if self.token_json is not None:
+                    logger.info("Credenciales obtenidas desde JSON de entorno; no se persistió token en archivo")
             
             # Crear servicio de Gmail
             self.connection = build('gmail', 'v1', credentials=creds)
