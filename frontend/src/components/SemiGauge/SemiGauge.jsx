@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { RISK_COLORS } from "../../constants/geneticRisk";
 import "./SemiGauge.css";
 
 const SemiGauge = ({ data, riskConfig = {} }) => {
@@ -10,9 +11,9 @@ const SemiGauge = ({ data, riskConfig = {} }) => {
   });
 
   const RISK_CONFIG = {
-    bajo: { color: riskConfig.bajo?.color || "#22c55e", label: riskConfig.bajo?.label || "Riesgo Bajo" },
-    medio: { color: riskConfig.medio?.color || "#eab308", label: riskConfig.medio?.label || "Riesgo Medio" },
-    alto: { color: riskConfig.alto?.color || "#ef4444", label: riskConfig.alto?.label || "Riesgo Alto" },
+    bajo: { color: riskConfig.bajo?.color || RISK_COLORS.bajo, label: riskConfig.bajo?.label || "Riesgo Bajo" },
+    medio: { color: riskConfig.medio?.color || RISK_COLORS.medio, label: riskConfig.medio?.label || "Riesgo Medio" },
+    alto: { color: riskConfig.alto?.color || RISK_COLORS.alto, label: riskConfig.alto?.label || "Riesgo Alto" },
   };
 
   const total = Object.values(data).reduce((sum, count) => sum + count, 0);

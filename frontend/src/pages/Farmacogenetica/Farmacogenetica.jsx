@@ -8,6 +8,7 @@ import GeneticTraitBar from '../../components/GeneticTraitBar/GeneticTraitBar';
 import SunburstChart from '../../components/SunburstChart/SunburstChart';
 import Tooltip from '../../components/Tooltip/Tooltip';
 import { cn } from '../../lib/utils';
+import { getImpactLevel, getImpactLabel } from '../../constants/geneticRisk';
 import "./Farmacogenetica.css";
 
 const hexToRgba = (hex, alpha) => {
@@ -83,20 +84,6 @@ const Farmacogenetica = () => {
       .replace(/\s+/g, ' ')
       .trim()
   );
-
-  // UMBRALES UNIFICADOS (Deben coincidir con SunburstChart.jsx)
-  const getImpactLevel = (magnitud) => {
-    if (magnitud >= 2.5) return 'alto';
-    if (magnitud >= 1.5) return 'medio';
-    return 'bajo';
-  };
-  
-  const getImpactLabel = (magnitud) => {
-      const level = getImpactLevel(magnitud);
-      if (level === 'alto') return 'Alto Impacto';
-      if (level === 'medio') return 'Impacto Medio';
-      return 'Bajo Impacto';
-  };
 
   const toggleGroup = (groupName) => {
     setExpandedGroups(prev => ({ ...prev, [groupName]: !prev[groupName] }));

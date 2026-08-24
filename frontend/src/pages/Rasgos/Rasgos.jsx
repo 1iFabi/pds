@@ -7,6 +7,8 @@ import Sidebar from '../../components/Sidebar/Sidebar';
 import SectionHeader from '../../components/SectionHeader/SectionHeader';
 import Tooltip from '../../components/Tooltip/Tooltip';
 import GeneticTraitBar from '../../components/GeneticTraitBar/GeneticTraitBar';
+import GlossaryCarousel from '../../components/GlossaryCarousel/GlossaryCarousel';
+import '../../styles/cards.css';
 import './Rasgos.css';
 
 const glossaryData = [
@@ -68,31 +70,6 @@ function GroupedActivityGauge({ groupedData }) {
             <span className="text-sm font-bold text-gray-800">{group.value}%</span>
           </div>
         ))}
-      </div>
-    </div>
-  );
-}
-
-function GlossaryCarousel() {
-  const [current, setCurrent] = useState(0);
-  const prev = () => setCurrent((c) => (c - 1 + glossaryData.length) % glossaryData.length);
-  const next = () => setCurrent((c) => (c + 1) % glossaryData.length);
-
-  return (
-    <div className="card-pro card-small-pro glossary-pro">
-      <div className="glossary-pro__content">
-        <span className="glossary-pro__badge">GLOSARIO</span>
-        <div className="glossary-pro__title">{glossaryData[current].term}</div>
-        <p className="glossary-pro__description">{glossaryData[current].description}</p>
-      </div>
-      <div className="glossary-pro__controls">
-        <button className="glossary-pro__arrow" onClick={prev}>‹</button>
-        <div className="glossary-pro__dots">
-          {glossaryData.map((_, i) => (
-            <button key={i} className={`glossary-pro__dot ${i === current ? 'active' : ''}`} onClick={() => setCurrent(i)} />
-          ))}
-        </div>
-        <button className="glossary-pro__arrow" onClick={next}>›</button>
       </div>
     </div>
   );
@@ -183,7 +160,7 @@ const RasgosContent = ({ traits, groupedData, isMobile }) => {
             <GroupedActivityGauge groupedData={groupedData} />
           </div>
         )}
-        <GlossaryCarousel />
+        <GlossaryCarousel terms={glossaryData} />
       </div>
     </div>
   );

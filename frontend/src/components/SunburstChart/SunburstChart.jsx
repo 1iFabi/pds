@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { HelpCircle } from 'lucide-react';
+import { getImpactLevel, getImpactColor } from '../../constants/geneticRisk';
 import './SunburstChart.css';
 
 const SunburstChart = ({ data = [] }) => {
@@ -8,20 +9,6 @@ const SunburstChart = ({ data = [] }) => {
   const [activeTooltipPosition, setActiveTooltipPosition] = useState({ x: 0, y: 0 });
   const [tooltipStyle, setTooltipStyle] = useState({});
   const tooltipRef = useRef(null);
-
-  // UMBRALES UNIFICADOS (Deben coincidir con Farmacogenetica.jsx)
-  const getImpactLevel = (magnitud) => {
-    if (magnitud >= 2.5) return 'alto';
-    if (magnitud >= 1.5) return 'medio';
-    return 'bajo';
-  };
-
-  const getImpactColor = (magnitud) => {
-    const level = getImpactLevel(magnitud);
-    if (level === 'alto') return '#ef4444';
-    if (level === 'medio') return '#f59e0b';
-    return '#10b981';
-  };
 
   useEffect(() => {
     if (activeTooltipContent && tooltipRef.current) {

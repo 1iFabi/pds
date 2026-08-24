@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { API_ENDPOINTS, apiRequest } from '../config/api';
+import '../styles/cards.css';
 import './EmailVerification.css';
 
 const EmailVerification = () => {

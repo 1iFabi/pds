@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+:root {
+    --genomia-blue: #4A90E2;
+    --genomia-blue-dark: #277EAF;
+    --genomia-blue-darker: #357abd;
+}
+
 html {
     padding: 0;
 }

@@ -300,8 +300,8 @@ def get_gmail_service():
                         if temp_path and os.path.exists(temp_path):
                             try:
                                 os.unlink(temp_path)
-                            except OSError:
-                                pass
+                            except OSError as e:
+                                logger.warning("GmailAuth.unlink_temp_file failed: %s", repr(e))
                 except Exception:
                     flow = InstalledAppFlow.from_client_secrets_file(cred_path, SCOPES)
             else:

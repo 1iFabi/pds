@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { HelpCircle } from 'lucide-react';
 import Tooltip from '../Tooltip/Tooltip';
 import { AnimatedCircularProgressBar } from "@/components/ui/animated-circular-progress-bar";
+import '../../styles/cards.css';
 
 export default function CircularProgress({ score }) {
   const [animatedScore, setAnimatedScore] = useState(0);

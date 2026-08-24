@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ChevronDown, ChevronUp, Activity, TrendingUp, Globe } from 'lucide-react';
+import { formatFrequency } from '../lib/utils';
 import './DiseaseCard.css';
 
 const DiseaseCard = ({ disease, level }) => {
@@ -23,13 +24,6 @@ const DiseaseCard = ({ disease, level }) => {
   // Magnitude 0-5
   const magnitude = disease.magnitud_efecto ? parseFloat(disease.magnitud_efecto) : 0;
   const roundedMagnitude = Math.round(magnitude);
-  const formatFrequency = (value) => {
-    if (value === null || value === undefined || value === '') return 'N/D';
-    const parsed = Number(value);
-    if (Number.isNaN(parsed)) return 'N/D';
-    const percent = parsed <= 1 ? parsed * 100 : parsed;
-    return `${percent.toFixed(2)}%`;
-  };
 
   return (
     <div className={`disease-card ${riskClass}`}>

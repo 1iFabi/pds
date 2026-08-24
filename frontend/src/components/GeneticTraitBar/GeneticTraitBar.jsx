@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import NalaTipButton from "../Nala/NalaTipButton";
+import { formatFrequency } from "../../lib/utils";
 import "./GeneticTraitBar.css";
 
 const GeneticTraitBar = ({
@@ -14,6 +15,7 @@ const GeneticTraitBar = ({
   freqChile,
   explanation,
   delay = 0,
+  intensityLevel,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [animate, setAnimate] = useState(false);
@@ -23,7 +25,8 @@ const GeneticTraitBar = ({
     return () => clearTimeout(timer);
   }, [delay]);
 
-  const intensityLevel = percentage >= 66 ? 3 : percentage >= 33 ? 2 : 1;
+  const intensity =
+    typeof intensityLevel === 'number' ? intensityLevel : percentage >= 66 ? 3 : percentage >= 33 ? 2 : 1;
   const toggleCard = () => setIsExpanded(!isExpanded);
 
   const nalaQueries = {
@@ -36,13 +39,6 @@ const GeneticTraitBar = ({
       details.magnitud !== null && details.magnitud !== undefined
         ? `¿Qué significa magnitud ${details.magnitud}?`
         : "magnitud",
-  };
-  const formatFrequency = (value) => {
-    if (value === null || value === undefined || value === '') return 'N/D';
-    const parsed = Number(value);
-    if (Number.isNaN(parsed)) return 'N/D';
-    const percent = parsed <= 1 ? parsed * 100 : parsed;
-    return `${percent.toFixed(2)}%`;
   };
 
   return (
@@ -160,8 +156,8 @@ const GeneticTraitBar = ({
                     key={level}
                     className="genetic-trait-bar__dot"
                     style={{
-                      background: intensityLevel >= level ? impactColor : "#e2e8f0",
-                      boxShadow: intensityLevel >= level ? "0 2px 6px rgba(0,0,0,0.15)" : "none",
+                      background: intensity >= level ? impactColor : "#e2e8f0",
+                      boxShadow: intensity >= level ? "0 2px 6px rgba(0,0,0,0.15)" : "none",
                     }}
                   />
                 ))}

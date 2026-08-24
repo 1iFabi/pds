@@ -360,20 +360,7 @@
   gap: 1.5rem;
 }
 
-.spinner {
-  width: 48px;
-  height: 48px;
-  border: 4px solid rgba(11, 122, 208, 0.2);
-  border-top-color: #0b7ad0;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
 
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
 
 .enfermedades-page__loading p {
   font-size: 1.1rem;
@@ -451,55 +438,13 @@
   justify-content: center;
 }
 
-/* ===== CARD PRO ===== */
+/* ===== CARD PRO (page-specific deltas; base lives in styles/cards.css) ===== */
 .card-pro {
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.06);
-  transition: all 0.3s ease;
   overflow: hidden;
 }
 
-.card-pro:hover {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.08);
-  transform: translateY(-2px);
-}
-
 .card-large-pro {
-  padding: 25px;
   height: 80%;
-  display: flex;
-  flex-direction: column;
-}
-
-.card-small-pro {
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-height: 0;
-}
-
-.card-pro__header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 8px;
-}
-
-.card-pro__header h3 {
-  font-size: 20px;
-  font-weight: 700;
-  color: #111827;
-  margin: 0;
-  line-height: 1.3;
-}
-
-.card-pro__subtitle {
-  font-size: 12px;
-  color: #6B7280;
-  margin: 6px 0 0 0;
-  font-weight: 400;
 }
 
 /* ===== LEGEND PRO ===== */
@@ -661,137 +606,6 @@
   font-size: 24px;
   flex-shrink: 0;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-/* ===== GLOSSARY PRO ===== */
-.glossary-pro {
-  position: relative;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-}
-
-.glossary-pro:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
-}
-
-.glossary-pro__content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-}
-
-.glossary-pro__header {
-  margin-bottom: 12px;
-  flex-shrink: 0;
-}
-
-.glossary-pro__badge {
-  display: inline-block;
-  background: rgba(255, 255, 255, 0.25);
-  padding: 6px 14px;
-  border-radius: 20px;
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  margin-bottom: 14px;
-  backdrop-filter: blur(4px);
-}
-
-.glossary-pro__title {
-  font-size: 24px;
-  font-weight: 800;
-  margin-top: 0;
-  margin-bottom: 12px;
-  line-height: 1.2;
-}
-
-.glossary-pro__description {
-  font-size: 13px;
-  line-height: 1.6;
-  opacity: 0.95;
-  margin: 0;
-  overflow-y: auto;
-  flex: 1;
-  min-height: 0;
-  padding-right: 4px;
-}
-
-.glossary-pro__description::-webkit-scrollbar {
-  width: 4px;
-}
-
-.glossary-pro__description::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 2px;
-}
-
-.glossary-pro__description::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.3);
-  border-radius: 2px;
-}
-
-.glossary-pro__description::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.5);
-}
-
-.glossary-pro__controls {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-top: 12px;
-  margin-top: 12px;
-  border-top: 1px solid rgba(255, 255, 255, 0.2);
-  flex-shrink: 0;
-}
-
-.glossary-pro__arrow {
-  background: rgba(255, 255, 255, 0.15);
-  border: none;
-  color: white;
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-}
-
-.glossary-pro__arrow:hover {
-  background: rgba(255, 255, 255, 0.25);
-  transform: scale(1.1);
-}
-
-.glossary-pro__dots {
-  display: flex;
-  gap: 6px;
-}
-
-.glossary-pro__dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.3);
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s;
-  padding: 0;
-}
-
-.glossary-pro__dot.active {
-  background: white;
-  width: 24px;
-  border-radius: 4px;
-}
-
-.glossary-pro__dot:hover {
-  background: rgba(255, 255, 255, 0.6);
 }
 
 /* ===== RESPONSIVE PRO ===== */
@@ -1066,16 +880,6 @@
 
 .kpi-card-modern:hover {
   transform: translateY(-6px);
-}
-
-/* Glossary Card Animation */
-.glossary-pro {
-  animation: fadeIn 0.6s ease-out 0.4s forwards;
-  opacity: 0;
-}
-
-.glossary-pro:hover {
-  transform: translateY(-4px);
 }
 
 /* Priority Cards Animation */

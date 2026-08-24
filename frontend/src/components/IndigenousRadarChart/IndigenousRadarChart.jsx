@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import ReactECharts from 'echarts-for-react';
 import { API_ENDPOINTS, apiRequest } from '../../config/api';
+import '../../styles/cards.css';
 import './IndigenousRadarChart.css';
 
 const IndigenousRadarChart = () => {

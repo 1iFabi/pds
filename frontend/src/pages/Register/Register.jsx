@@ -300,7 +300,6 @@ const Register = () => {
             <Stepper
               initialStep={1}
               onStepChange={(step) => {
-                console.log('Paso actual:', step);
                 setFieldErrors({}); // Limpiar errores al cambiar de paso
               }}
               onFinalStepCompleted={handleSubmit}

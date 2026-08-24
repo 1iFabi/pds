@@ -72,8 +72,8 @@ class GmailBackend(BaseEmailBackend):
                             if temp_path and os.path.exists(temp_path):
                                 try:
                                     os.unlink(temp_path)
-                                except OSError:
-                                    pass
+                                except OSError as e:
+                                    logger.warning("GmailBackend.unlink_temp_file failed: %s", repr(e))
                     else:
                         if not self.credentials_file:
                             logger.error("No se ha configurado GMAIL_CREDENTIALS_FILE ni GMAIL_CREDENTIALS_JSON")

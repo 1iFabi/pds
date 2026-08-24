@@ -6,6 +6,9 @@ import Sidebar from '../../components/Sidebar/Sidebar';
 import SectionHeader from '../../components/SectionHeader/SectionHeader';
 import SemiGauge from '../../components/SemiGauge/SemiGauge';
 import BiomarkerStats from '../../components/BioMarkerStats/BiomarkerStats';
+import { formatFrequency } from '../../lib/utils';
+import { RISK_COLORS } from '../../constants/geneticRisk';
+import '../../styles/cards.css';
 import './Biomarcadores.css';
 
 const Biomarcadores = () => {
@@ -99,18 +102,10 @@ const Biomarcadores = () => {
     return classes[risk] || 'risk-default';
   };
 
-  const formatFrequency = (value) => {
-    if (value === null || value === undefined || value === '') return 'N/A';
-    const parsed = Number(value);
-    if (Number.isNaN(parsed)) return 'N/A';
-    const percent = parsed <= 1 ? parsed * 100 : parsed;
-    return `${percent.toFixed(2)}%`;
-  };
-
   const biomarkerRiskConfig = {
-    alto: { color: '#ef4444' }, // Rojo
-    medio: { color: '#f59e0b' }, // Ámbar/Amarillo
-    bajo: { color: '#10b981' }, // Verde
+    alto: { color: RISK_COLORS.alto }, // Rojo
+    medio: { color: RISK_COLORS.medio }, // Ámbar/Amarillo
+    bajo: { color: RISK_COLORS.bajo }, // Verde
   };
 
   return (
@@ -250,7 +245,7 @@ const Biomarcadores = () => {
                               <span className="stat-label">FRECUENCIA CHILE</span>
                             </div>
                             <div className="stat-value">
-                              {formatFrequency(bio.userResult?.frequency ?? bio.freq_chile_percent)}
+                              {formatFrequency(bio.userResult?.frequency ?? bio.freq_chile_percent, 'N/A')}
                             </div>
                             <div className="stat-note">Frecuencia estimada en poblacion chilena.</div>
                           </div>
@@ -305,7 +300,7 @@ const Biomarcadores = () => {
                                     </td>
                                     <td>
                                       <span className="frequency-value">
-                                        {formatFrequency(gen.frequency)}
+                                        {formatFrequency(gen.frequency, 'N/A')}
                                       </span>
                                     </td>
                                     <td>

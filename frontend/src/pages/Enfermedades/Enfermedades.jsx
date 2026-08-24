@@ -14,8 +14,10 @@ import { API_ENDPOINTS, apiRequest, clearToken } from '../../config/api';
 import Sidebar from '../../components/Sidebar/Sidebar';
 import PriorityCard from '../../components/PriorityCard/PriorityCard';
 import SectionHeader from '../../components/SectionHeader/SectionHeader';
+import '../../styles/cards.css';
 import './Enfermedades.css';
 import CircularProgress from '../../components/CircularProgress/CircularProgress';
+import GlossaryCarousel from '../../components/GlossaryCarousel/GlossaryCarousel';
 
 function DonutChart({ data, isMobile }) {
   const total = data.reduce((a, b) => a + b.value, 0);
@@ -299,51 +301,6 @@ const glossaryData = [
   }
 ];
 
-function GlossaryCarousel() {
-  const [current, setCurrent] = useState(0);
-  const prev = () =>
-    setCurrent(c => (c - 1 + glossaryData.length) % glossaryData.length);
-  const next = () => setCurrent(c => (c + 1) % glossaryData.length);
-
-  return (
-    <div className="card-pro card-small-pro glossary-pro">
-      <div className="glossary-pro__content">
-        <span className="glossary-pro__badge">GLOSARIO</span>
-        <div className="glossary-pro__title">{glossaryData[current].term}</div>
-        <p className="glossary-pro__description">
-          {glossaryData[current].description}
-        </p>
-      </div>
-      <div className="glossary-pro__controls">
-        <button
-          className="glossary-pro__arrow"
-          onClick={prev}
-          aria-label="Anterior"
-        >
-          ←
-        </button>
-        <div className="glossary-pro__dots">
-          {glossaryData.map((_, i) => (
-            <button
-              key={i}
-              className={`glossary-pro__dot ${i === current ? 'active' : ''}`}
-              onClick={() => setCurrent(i)}
-              aria-label={`Término ${i + 1}`}
-            />
-          ))}
-        </div>
-        <button
-          className="glossary-pro__arrow"
-          onClick={next}
-          aria-label="Siguiente"
-        >
-          → 
-        </button>
-      </div>
-    </div>
-  );
-}
-
 /* ===========================
    Página Enfermedades (con Sidebar)
 =========================== */
@@ -561,7 +518,7 @@ const Enfermedades = () => {
           <DonutChart data={donutData} isMobile={isMobile} />
 
           <div className="kpis-stack">
-            <GlossaryCarousel />
+            <GlossaryCarousel terms={glossaryData} />
             <QuickKPICard />
           </div>
 

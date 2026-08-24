@@ -1,28 +1,27 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Dna, ChevronDown, Sparkles, Menu, X } from 'lucide-react';
+import { Dna, Menu, X } from 'lucide-react';
 import Sidebar from '../../components/Sidebar/Sidebar';
 import SectionHeader from '../../components/SectionHeader/SectionHeader';
 import { API_ENDPOINTS, apiRequest, clearToken } from '../../config/api';
-import NalaTipButton from '../../components/Nala/NalaTipButton';
+import GeneticTraitBar from '../../components/GeneticTraitBar/GeneticTraitBar';
+import { impactColor } from '../../constants/geneticRisk';
+import '../../styles/cards.css';
 import './Biometrics.css';
 
 const Biometrics = () => {
   const [user, setUser] = useState(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [expandedCards, setExpandedCards] = useState({});
   const [biometrics, setBiometrics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [animate, setAnimate] = useState(false);
   const [hoveredMetric, setHoveredMetric] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchUser();
     fetchBiometrics();
-    setTimeout(() => setAnimate(true), 100);
   }, []);
 
   useEffect(() => {
@@ -98,20 +97,6 @@ const Biometrics = () => {
     return 'Bajo';
   };
 
-  const getColor = (impact) => {
-    if (impact === 'high') return '#ef4444';
-    if (impact === 'medium') return '#f59e0b'; // Amarillo
-    return '#10b981';
-  };
-
-  const formatFrequency = (value) => {
-    if (value === null || value === undefined || value === '') return 'N/D';
-    const parsed = Number(value);
-    if (Number.isNaN(parsed)) return 'N/D';
-    const percent = parsed <= 1 ? parsed * 100 : parsed;
-    return `${percent.toFixed(2)}%`;
-  };
-
   const variants = useMemo(() => {
     if (biometrics?.variants?.length) {
       return biometrics.variants.map((v, idx) => ({
@@ -166,13 +151,6 @@ const Biometrics = () => {
       { high: 0, medium: 0, low: 0 }
     );
   }, [variants]);
-
-  const toggleCard = (id) => {
-    setExpandedCards((prev) => ({
-      ...prev,
-      [id]: !prev[id],
-    }));
-  };
 
   return (
     <div className="biometrics-layout">
@@ -309,249 +287,33 @@ const Biometrics = () => {
               {/* Lista de variantes */}
               <div className="bio-traits-list">
                 {variants.map((item, index) => {
-                  const isExpanded = expandedCards[item.id];
-                  const color = getColor(item.impact);
+                  const color = impactColor(item.impact);
                   const baseScore = impactScore(item.impact);
                   const percentage =
                     item.magnitud && !Number.isNaN(item.magnitud)
                       ? Math.min(Math.round((item.magnitud / 3) * 100), 100)
                       : (baseScore / 3) * 100;
 
-                  const nalaQueries = {
-                    rsid: item.rsid ? `¿Qué es un rsID? (${item.rsid})` : "rsid",
-                    genotype: item.genotipo ? `¿Qué significa el genotipo ${item.genotipo}?` : "genotipo",
-                    impacto: item.impact ? `¿Qué significa impacto ${impactLabel(item.impact)}?` : "impacto",
-                    cromopos: "¿Qué significa cromosoma y posición?",
-                    categoria: item.categoria ? `¿Qué significa la categoría ${item.categoria}?` : "categoría",
-                    magnitud:
-                      item.magnitud !== null && item.magnitud !== undefined
-                        ? `¿Qué significa magnitud ${item.magnitud}?`
-                        : "magnitud",
-                  };
-
                   return (
-                    <div key={item.id} className={`trait-bar ${isExpanded ? 'trait-bar--open' : ''}`}>
-                      {/* Header */}
-                      <div className="trait-bar__main-info" onClick={() => toggleCard(item.id)}>
-                        <div
-                          style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'flex-start',
-                            marginBottom: '0.75rem',
-                            gap: '1rem',
-                          }}
-                        >
-                          <h3 className="trait-bar__name" style={{ flex: 1, margin: 0 }}>
-                            {item.fenotipo}
-                          </h3>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569' }}>
-                              {item.rsid}
-                            </span>
-                            {item.genotipo && (
-                              <span
-                                style={{
-                                  fontSize: '0.75rem',
-                                  fontWeight: 700,
-                                  color: '#0b7ad0',
-                                  background: '#e0f2fe',
-                                  padding: '4px 8px',
-                                  borderRadius: '999px',
-                                }}
-                              >
-                                {item.genotipo}
-                              </span>
-                            )}
-                          </div>
-                          <span
-                            style={{
-                              fontSize: '0.85rem',
-                              fontWeight: '700',
-                              color,
-                              whiteSpace: 'nowrap',
-                            }}
-                          >
-                            {percentage.toFixed(0)}% ({impactLabel(item.impact)})
-                          </span>
-                        </div>
-
-                        {/* Barra de progreso */}
-                        <div
-                          style={{
-                            width: '100%',
-                            height: '8px',
-                            background: '#f3f4f6',
-                            borderRadius: '999px',
-                            overflow: 'hidden',
-                            marginBottom: '0.75rem',
-                          }}
-                        >
-                          <div
-                            style={{
-                              height: '100%',
-                              width: animate ? `${percentage}%` : '0%',
-                              background: color,
-                              borderRadius: '999px',
-                              transition: 'width 1s cubic-bezier(0.4, 0, 0.2, 1)',
-                              transitionDelay: `${index * 0.05}s`,
-                            }}
-                          />
-                        </div>
-
-                        {/* Boton toggle */}
-                        <button
-                          style={{
-                            width: '100%',
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            background: 'none',
-                            border: 'none',
-                            cursor: 'pointer',
-                            padding: 0,
-                          }}
-                        >
-                          <span>Ver mas informacion</span>
-                          <ChevronDown
-                            size={16}
-                            style={{
-                              transition: 'transform 0.3s ease',
-                              transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
-                            }}
-                          />
-                        </button>
-                      </div>
-
-                      {/* Contenido expandido */}
-                      {isExpanded && (
-                        <div className="trait-bar__details">
-                          {/* Detalle */}
-                          <div style={{ marginBottom: '1.5rem' }}>
-                            <h4>DETALLE</h4>
-                            <div
-                              className="grid"
-                              style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}
-                            >
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                                <div className="bio-detail-label-row">
-                                  <span style={{ color: '#64748b', fontSize: '0.8rem', fontWeight: '600' }}>
-                                    RS ID
-                                  </span>
-                                  <NalaTipButton query={nalaQueries.rsid} ariaLabel="Pregúntale a Nala sobre RS ID" />
-                                </div>
-                                <span style={{ color: '#1e293b', fontWeight: '700' }}>{item.rsid}</span>
-                              </div>
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                                <div className="bio-detail-label-row">
-                                  <span style={{ color: '#64748b', fontSize: '0.8rem', fontWeight: '600' }}>
-                                    Genotipo
-                                  </span>
-                                  <NalaTipButton query={nalaQueries.genotype} ariaLabel="Pregúntale a Nala sobre genotipo" />
-                                </div>
-                                <span style={{ color: '#1e293b', fontWeight: '700' }}>{item.genotipo || 'NA'}</span>
-                              </div>
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                                <div className="bio-detail-label-row">
-                                  <span style={{ color: '#64748b', fontSize: '0.8rem', fontWeight: '600' }}>
-                                    Impacto
-                                  </span>
-                                  <NalaTipButton query={nalaQueries.impacto} ariaLabel="Pregúntale a Nala sobre impacto" />
-                                </div>
-                                <span style={{ color, fontWeight: '700' }}>{impactLabel(item.impact)}</span>
-                              </div>
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                                <div className="bio-detail-label-row">
-                                  <span style={{ color: '#64748b', fontSize: '0.8rem', fontWeight: '600' }}>
-                                    Cromosoma / Posicion
-                                  </span>
-                                  <NalaTipButton query={nalaQueries.cromopos} ariaLabel="Pregúntale a Nala sobre cromosoma y posición" />
-                                </div>
-                                <span style={{ color: '#1e293b', fontWeight: '700' }}>
-                                  {item.cromosoma || 'NA'} {item.posicion || ''}
-                                </span>
-                              </div>
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                                <div className="bio-detail-label-row">
-                                  <span style={{ color: '#64748b', fontSize: '0.8rem', fontWeight: '600' }}>
-                                    Categoria
-                                  </span>
-                                  <NalaTipButton query={nalaQueries.categoria} ariaLabel="Pregúntale a Nala sobre categoría" />
-                                </div>
-                                <span style={{ color: '#1e293b', fontWeight: '700' }}>
-                                  {item.categoria || 'Sin categoria'}
-                                </span>
-                              </div>
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                                <div className="bio-detail-label-row">
-                                  <span style={{ color: '#64748b', fontSize: '0.8rem', fontWeight: '600' }}>
-                                    Magnitud
-                                  </span>
-                                  <NalaTipButton query={nalaQueries.magnitud} ariaLabel="Pregúntale a Nala sobre magnitud" />
-                                </div>
-                                <span style={{ color: '#1e293b', fontWeight: '700' }}>
-                                  {item.magnitud !== null && item.magnitud !== undefined ? item.magnitud : 'N/A'}
-                                </span>
-                              </div>
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                                <div className="bio-detail-label-row">
-                                  <span style={{ color: '#64748b', fontSize: '0.8rem', fontWeight: '600' }}>
-                                    Frecuencia Chile
-                                  </span>
-                                </div>
-                                <span style={{ color: '#1e293b', fontWeight: '700' }}>
-                                  {formatFrequency(item.freq_chile_percent)}
-                                </span>
-                                <span style={{ color: '#94a3b8', fontSize: '0.75rem' }}>
-                                  Frecuencia estimada en poblacion chilena.
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Analisis */}
-                          <div style={{ marginBottom: '1.5rem' }}>
-                            <h4>INTERPRETACION</h4>
-                            <div
-                              style={{
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                alignItems: 'center',
-                                background: '#f8fafc',
-                                padding: '1rem',
-                                borderRadius: '12px',
-                              }}
-                            >
-                              <span style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: '600' }}>
-                                Intensidad estimada
-                              </span>
-                              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                {[1, 2, 3].map((level) => (
-                                  <div
-                                    key={level}
-                                    style={{
-                                      width: '28px',
-                                      height: '28px',
-                                      borderRadius: '50%',
-                                      background: impactScore(item.impact) >= level ? color : '#e2e8f0',
-                                      boxShadow:
-                                        impactScore(item.impact) >= level ? '0 2px 6px rgba(0,0,0,0.15)' : 'none',
-                                      transition: 'all 0.3s ease',
-                                    }}
-                                  />
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Explicacion */}
-                          <div>
-                            <h4>EXPLICACION</h4>
-                            <p style={{ margin: 0, color: '#475569', lineHeight: 1.6 }}>{item.explanation}</p>
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                    <GeneticTraitBar
+                      key={item.id}
+                      title={item.fenotipo}
+                      rsid={item.rsid}
+                      genotype={item.genotipo}
+                      percentage={percentage}
+                      impactLabel={impactLabel(item.impact)}
+                      impactColor={color}
+                      intensityLevel={baseScore}
+                      details={{
+                        cromosoma: item.cromosoma || 'NA',
+                        posicion: item.posicion || '',
+                        categoria: item.categoria || 'Sin categoría',
+                        magnitud: item.magnitud,
+                      }}
+                      freqChile={item.freq_chile_percent}
+                      explanation={item.explanation}
+                      delay={index * 50}
+                    />
                   );
                 })}
                 {!variants.length && (

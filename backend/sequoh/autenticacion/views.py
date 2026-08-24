@@ -35,6 +35,9 @@ from .roles import (
 )
 import json
 import re
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -157,8 +160,8 @@ class LoginAPIView(APIView):
                                 "error": "Tu cuenta está pendiente de verificación. Revisa tu correo para activar tu cuenta.",
                                 "requires_verification": True
                             }, status=400)
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.warning("LoginAPIView.check_email_verified failed: %s", repr(e))
                 
                 # Determinar qué campo específico está mal
                 error_response = {}
@@ -176,8 +179,9 @@ class LoginAPIView(APIView):
                     else:
                         # El usuario no existe, entonces el email/username está mal
                         error_response["username"] = ["Este correo no está registrado"]
-                except Exception:
+                except Exception as e:
                     # Si hay error en la consulta, devolver error genérico por ambos campos
+                    logger.warning("LoginAPIView.check_user_exists failed: %s", repr(e))
                     error_response = {
                         "username": ["Revisa tu correo"],
                         "password": ["Revisa tu contraseña"]
@@ -772,8 +776,7 @@ class VerifyEmailView(APIView):
                 try:
                     send_welcome_email(user)
                 except Exception as e:
-                    print(f"Error sending welcome email: {e}")
-                    pass
+                    logger.warning("VerifyEmailView.send_welcome_email failed: %s", repr(e))
 
             frontend_login_redirect = getattr(settings, 'FRONTEND_LOGIN_REDIRECT', f"{frontend_base.rstrip('/')}/login?verified=1")
             resp = redirect(frontend_login_redirect)

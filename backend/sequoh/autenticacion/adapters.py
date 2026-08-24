@@ -1,6 +1,11 @@
+import logging
+
 from allauth.account.adapter import DefaultAccountAdapter
 from django.utils.translation import gettext_lazy as _
 from .email_utils import send_email
+
+logger = logging.getLogger(__name__)
+
 
 class GmailAPIAccountAdapter(DefaultAccountAdapter):
     """Adapter de allauth que envía correos vía Gmail API usando email_utils.
@@ -26,9 +31,9 @@ class GmailAPIAccountAdapter(DefaultAccountAdapter):
                 activate_url = context['activate_url'] if isinstance(context, dict) else ''
                 send_verification_email(email, user_name, activate_url)
                 return
-        except Exception:
+        except Exception as e:
             # Si algo sale mal, caemos al flujo genérico
-            pass
+            logger.warning("GmailAPIAccountAdapter.send_verification_email failed: %s", repr(e))
 
         # Flujo genérico: render de allauth, luego envolvemos con branding
         message = self.render_mail(template_prefix, email, context)
